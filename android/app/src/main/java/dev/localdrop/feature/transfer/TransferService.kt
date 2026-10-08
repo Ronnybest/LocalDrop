@@ -584,7 +584,7 @@ class TransferService : Service() {
                 val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
                 builder.setContentTitle(getString(R.string.notification_sending_to, name))
                     .setContentText(TransferText.progressLine(this, progress))
-                    .setProgress(100, percent, false)
+                    .liveProgress(percent)
             }
             is TransferState.Verifying -> builder.setContentTitle(getString(R.string.transfer_verifying)).setProgress(0, 0, true)
             is TransferState.Receiving -> {
@@ -592,7 +592,7 @@ class TransferService : Service() {
                 val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
                 builder.setContentTitle(getString(R.string.notification_receiving_from, name))
                     .setContentText(TransferText.progressLine(this, progress))
-                    .setProgress(100, percent, false)
+                    .liveProgress(percent)
             }
             else -> return
         }
@@ -757,6 +757,21 @@ class TransferService : Service() {
             Toast.makeText(this, "$title. $text", Toast.LENGTH_LONG).show()
         }
     }
+
+    /**
+     * Progress that stays in sight, like the filling drop in the Mac's menu bar: on Android 16+
+     * a Live Update — a status bar chip with the percentage, pinned to the top of the shade and
+     * shown on the lock screen. Older versions show the usual progress bar.
+     */
+    private fun NotificationCompat.Builder.liveProgress(percent: Int): NotificationCompat.Builder =
+        setProgress(100, percent, false)
+            .setStyle(
+                NotificationCompat.ProgressStyle()
+                    .addProgressSegment(NotificationCompat.ProgressStyle.Segment(100))
+                    .setProgress(percent),
+            )
+            .setRequestPromotedOngoing(true)
+            .setShortCriticalText("$percent%")
 
     private fun ongoingBuilder() = NotificationCompat.Builder(this, CHANNEL_PROGRESS)
         .setSmallIcon(R.drawable.ic_stat_localdrop)
