@@ -55,7 +55,13 @@ final class AppModel {
     private let textPanel = TextPanelController()
 
     /// Files on their way to phones (Mac → Android, protocol.md §2.8).
-    private(set) var deliveries: [OutgoingDelivery] = []
+    private(set) var deliveries: [OutgoingDelivery] = [] {
+        didSet { releaseSharedFiles() }
+    }
+    /// Inbox directories of shares from the Share extension that are queued; removed once no
+    /// delivery holds their files any more.
+    @ObservationIgnored private var sharedDirectories: Set<URL> = []
+    @ObservationIgnored private var publishedPhones: [ShareInbox.Phone]?
     let notifications = NotificationController()
     /// Which Settings tab to show; the menu opens Devices directly.
     var settingsTab: SettingsTab = .general
@@ -128,6 +134,9 @@ final class AppModel {
             let store = TrustedDeviceStore(fileURL: try TrustedDeviceStore.defaultLocation())
             store.load()
             trustStore = store
+            store.onChange = { [weak self] in self?.publishSharePhones() }
+            publishSharePhones()
+            listenForShares()
         } catch {
             // Without a store nothing can be trusted or paired; sessions still authenticate.
             Log.app.fault("Trusted devices store unavailable: \(String(describing: error), privacy: .public)")
@@ -215,6 +224,62 @@ final class AppModel {
         } else {
             // The sender stops at its next chunk and reports `.cancelled`.
             delivery.cancelToken.cancel()
+        }
+    }
+
+    // MARK: - Share extension
+
+    /// Tells the Share extension which phones it can offer: paired phones that receive files.
+    private func publishSharePhones() {
+        let phones = (trustStore?.devices ?? [])
+            .filter { $0.capabilities?.contains(ProtocolConstants.receiveCapability) == true }
+            .map { ShareInbox.Phone(deviceId: $0.deviceId, name: $0.deviceName) }
+        guard phones != publishedPhones else { return }
+        publishedPhones = phones
+        ShareInbox.publish(phones)
+    }
+
+    /// Shares arrive as a Darwin notification; ones made while LocalDrop wasn't running are
+    /// waiting in the inbox and are picked up now.
+    private func listenForShares() {
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer else { return }
+                // AppModel lives as long as the app, so the unretained pointer stays valid.
+                let model = Unmanaged<AppModel>.fromOpaque(observer).takeUnretainedValue()
+                DispatchQueue.main.async { MainActor.assumeIsolated { model.takeShares() } }
+            },
+            ShareInbox.requestNotification as CFString,
+            nil,
+            .deliverImmediately
+        )
+        takeShares()
+    }
+
+    private func takeShares() {
+        for (request, directory) in ShareInbox.pendingRequests() where !sharedDirectories.contains(directory) {
+            let files = request.files.map { directory.appendingPathComponent($0) }
+            guard trustStore?.devices.contains(where: { $0.deviceId == request.deviceId }) == true else {
+                Log.transfer.warning("Dropping a share for a device that is no longer paired")
+                try? FileManager.default.removeItem(at: directory)
+                continue
+            }
+            Log.transfer.info("Share extension: \(files.count) file(s) for \(request.deviceId, privacy: .public)")
+            sharedDirectories.insert(directory)
+            send(files, to: request.deviceId)
+            releaseSharedFiles()
+        }
+    }
+
+    /// Deletes the copies made for shares once they are sent, declined or cancelled.
+    private func releaseSharedFiles() {
+        guard !sharedDirectories.isEmpty else { return }
+        let inUse = Set(deliveries.flatMap(\.files).map { $0.deletingLastPathComponent().standardizedFileURL })
+        for directory in sharedDirectories where !inUse.contains(directory.standardizedFileURL) {
+            try? FileManager.default.removeItem(at: directory)
+            sharedDirectories.remove(directory)
         }
     }
 

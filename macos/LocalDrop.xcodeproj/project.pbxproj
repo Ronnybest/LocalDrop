@@ -6,10 +6,41 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D1A000000000000000000201 /* LocalDropShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D1A0000000000000000000A4 /* LocalDropShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D1A000000000000000000202 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A0000000000000000000E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A0000000000000000000E2;
+			remoteInfo = LocalDropShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1A0000000000000000000C7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D1A000000000000000000201 /* LocalDropShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D1A0000000000000000000A1 /* LocalDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A0000000000000000000A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D1A0000000000000000000A3 /* LocalDrop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LocalDrop.entitlements; sourceTree = "<group>"; };
+		D1A0000000000000000000A4 /* LocalDropShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LocalDropShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A0000000000000000000A5 /* ShareInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ShareInfo.plist; sourceTree = "<group>"; };
+		D1A0000000000000000000A6 /* LocalDropShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LocalDropShare.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -18,10 +49,27 @@
 			path = LocalDrop;
 			sourceTree = "<group>";
 		};
+		D1A0000000000000000000B2 /* ShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		D1A0000000000000000000B3 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D1A0000000000000000000C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A0000000000000000000C5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -35,6 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000B1 /* LocalDrop */,
+				D1A0000000000000000000B2 /* ShareExtension */,
+				D1A0000000000000000000B3 /* Shared */,
 				D1A0000000000000000000D3 /* Support */,
 				D1A0000000000000000000D2 /* Products */,
 			);
@@ -44,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000A1 /* LocalDrop.app */,
+				D1A0000000000000000000A4 /* LocalDropShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,6 +104,8 @@
 			children = (
 				D1A0000000000000000000A2 /* Info.plist */,
 				D1A0000000000000000000A3 /* LocalDrop.entitlements */,
+				D1A0000000000000000000A5 /* ShareInfo.plist */,
+				D1A0000000000000000000A6 /* LocalDropShare.entitlements */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -67,13 +120,16 @@
 				D1A0000000000000000000C2 /* Sources */,
 				D1A0000000000000000000C1 /* Frameworks */,
 				D1A0000000000000000000C3 /* Resources */,
+				D1A0000000000000000000C7 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1A000000000000000000203 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D1A0000000000000000000B1 /* LocalDrop */,
+				D1A0000000000000000000B3 /* Shared */,
 			);
 			name = LocalDrop;
 			packageProductDependencies = (
@@ -81,6 +137,29 @@
 			productName = LocalDrop;
 			productReference = D1A0000000000000000000A1 /* LocalDrop.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D1A0000000000000000000E2 /* LocalDropShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A0000000000000000000F3 /* Build configuration list for PBXNativeTarget "LocalDropShare" */;
+			buildPhases = (
+				D1A0000000000000000000C4 /* Sources */,
+				D1A0000000000000000000C5 /* Frameworks */,
+				D1A0000000000000000000C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D1A0000000000000000000B2 /* ShareExtension */,
+				D1A0000000000000000000B3 /* Shared */,
+			);
+			name = LocalDropShare;
+			packageProductDependencies = (
+			);
+			productName = LocalDropShare;
+			productReference = D1A0000000000000000000A4 /* LocalDropShare.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -93,6 +172,9 @@
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					D1A0000000000000000000E1 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					D1A0000000000000000000E2 = {
 						CreatedOnToolsVersion = 27.0;
 					};
 				};
@@ -113,12 +195,20 @@
 			projectRoot = "";
 			targets = (
 				D1A0000000000000000000E1 /* LocalDrop */,
+				D1A0000000000000000000E2 /* LocalDropShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D1A0000000000000000000C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A0000000000000000000C6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +225,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1A0000000000000000000C4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D1A000000000000000000203 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1A0000000000000000000E2 /* LocalDropShare */;
+			targetProxy = D1A000000000000000000202 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D1A000000000000000000101 /* Debug */ = {
@@ -243,6 +348,62 @@
 			};
 			name = Release;
 		};
+		D1A000000000000000000105 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/LocalDropShare.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RD3M3SSSYJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Support/ShareInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D1A000000000000000000106 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/LocalDropShare.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RD3M3SSSYJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Support/ShareInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -260,6 +421,15 @@
 			buildConfigurations = (
 				D1A000000000000000000103 /* Debug */,
 				D1A000000000000000000104 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A0000000000000000000F3 /* Build configuration list for PBXNativeTarget "LocalDropShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A000000000000000000105 /* Debug */,
+				D1A000000000000000000106 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

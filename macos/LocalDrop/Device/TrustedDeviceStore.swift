@@ -31,7 +31,11 @@ nonisolated enum TrustState: Sendable {
 /// Public keys are not secret; only this Mac's private key is, and it stays in the Keychain.
 @Observable
 final class TrustedDeviceStore {
-    private(set) var devices: [TrustedDevice] = []
+    private(set) var devices: [TrustedDevice] = [] {
+        didSet { if devices != oldValue { onChange?() } }
+    }
+    /// Called after any change to `devices`.
+    @ObservationIgnored var onChange: (() -> Void)?
     private let fileURL: URL
 
     init(fileURL: URL) {
