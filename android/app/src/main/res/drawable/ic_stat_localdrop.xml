@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A half-full drop, like the Mac's menu bar icon. Status bar icons are alpha masks: outline
+     plus the lower half filled. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
@@ -5,8 +8,9 @@
     android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M10.5,2h3v12.2l4.4,-4.4 2.1,2.1L12,19.9 4,11.9l2.1,-2.1 4.4,4.4z" />
+        android:fillType="evenOdd"
+        android:pathData="M12,2.2C12,2.2 5.5,9.5 5.5,14.5A6.5,6.5 0,0 0,18.5 14.5C18.5,9.5 12,2.2 12,2.2Z M12,5.1C10.3,7.2 7.3,11.3 7.3,14.5A4.7,4.7 0,0 0,16.7 14.5C16.7,11.3 13.7,7.2 12,5.1Z" />
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M2,18h3v3h14v-3h3v6H2z" />
+        android:pathData="M7.3,14.5A4.7,4.7 0,0 0,16.7 14.5Z" />
 </vector>

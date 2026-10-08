@@ -775,6 +775,7 @@ class TransferService : Service() {
 
     private fun ongoingBuilder() = NotificationCompat.Builder(this, CHANNEL_PROGRESS)
         .setSmallIcon(R.drawable.ic_stat_localdrop)
+        .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
         .setOngoing(true)
         .setOnlyAlertOnce(true)
         .setCategory(NotificationCompat.CATEGORY_PROGRESS)
