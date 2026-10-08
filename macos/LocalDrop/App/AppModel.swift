@@ -1,0 +1,737 @@
+import AppKit
+import Foundation
+import Network
+
+/// Owns the long-lived services of the menu bar app and exposes their state to SwiftUI.
+@Observable
+final class AppModel {
+    enum StartupState: Equatable {
+        /// Reading the identity key. Can block on a system Keychain access prompt.
+        case loadingIdentity
+        case running
+        case failed(reason: String)
+    }
+
+    private(set) var localDevice: LocalDevice
+    private(set) var fingerprint: Data?
+    private(set) var startupState: StartupState = .loadingIdentity
+    private(set) var lanAddresses: [String] = []
+    /// Shown as a hint: on 2.4 GHz, transfers crawl at a few MB/s.
+    private(set) var wifiBand: WiFiBand?
+    /// Devices connected over TCP, newest first. Ended sessions linger briefly so the user sees why.
+    private(set) var connections: [ConnectionEntry] = []
+    private(set) var trustStore: TrustedDeviceStore?
+    private(set) var trustStoreError: String?
+
+    let listener: TCPListener
+    private(set) var advertiser: BLEAdvertiser?
+
+    private var identity: Identity?
+    private var presenceKey: PresenceKey?
+    private let pathMonitor = NWPathMonitor()
+
+    /// While set and in the future, new devices can find and pair with this Mac.
+    private(set) var pairingWindowUntil: Date?
+    static let pairingWindowDuration: TimeInterval = 10 * 60
+    private var presenceTask: Task<Void, Never>?
+    /// Lets the app end live sessions (trust revoked, superseded pairing).
+    private var sessionHandles: [UUID: SessionHandle] = [:]
+    /// Held for the app's lifetime; see `start()`.
+    private var presenceActivity: NSObjectProtocol?
+
+    // Pairing: at most one at a time (protocol/security.md §5).
+    private var pairingPrompt: PairingPrompt?
+    private var pairingDecision: Bool?
+    private var pairingContinuation: CheckedContinuation<Bool, Never>?
+    private var pairingAttempts: [ContinuousClock.Instant] = []
+    private let pairingPanel = PairingPanelController()
+
+    // Incoming transfer: at most one at a time.
+    private(set) var incomingTransfer: IncomingTransfer?
+    private var transferDecision: TransferDecision?
+    private var transferContinuation: CheckedContinuation<TransferDecision, Never>?
+    private var transferCancel: (@Sendable () -> Void)?
+    private let transferPanel = TransferPanelController()
+    private let textPanel = TextPanelController()
+
+    let notifications = NotificationController()
+    /// Which Settings tab to show; the menu opens Devices directly.
+    var settingsTab: SettingsTab = .general
+    let saveFolder = SaveFolder()
+    let loginItem = LoginItem()
+
+    private static let maxActiveSessions = 4
+    private static let maxPairingAttemptsPerMinute = 5
+    private static let endedEntryLifetime: Duration = .seconds(10)
+
+    init() {
+        let device = LocalDevice.loadOrCreate()
+        localDevice = device
+        listener = TCPListener(bonjourName: device.deviceId)
+    }
+
+    func start() {
+        Log.app.info("Starting LocalDrop, deviceId \(self.localDevice.deviceId, privacy: .public)")
+        startupState = .loadingIdentity
+
+        // A windowless agent goes into App Nap when idle, and macOS then treats its Bluetooth
+        // peripheral session as inactive: advertising continues but GATT reads are refused, so
+        // phones see the Mac yet can't connect. Opting out of App Nap keeps it answerable;
+        // idle system sleep stays allowed.
+        presenceActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep],
+            reason: "Answering nearby devices over Bluetooth and the local network"
+        )
+
+        // A sleeping Mac can keep advertising for a while; phones must not see it as nearby.
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                Log.discovery.info("System going to sleep: stopping BLE advertising")
+                // Dark wakes in between run this process without a did-wake.
+                SystemSleep.isAsleep = true
+                self.advertiser?.stop()
+                // A request on screen can't be answered any more; the sender retries after wake.
+                if let transfer = self.incomingTransfer, transfer.phase == .awaitingDecision {
+                    self.resolveTransfer(transfer.entryId, decision: .unattended)
+                }
+            }
+        }
+        workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                SystemSleep.isAsleep = false
+                guard self.listener.port != nil else { return }
+                Log.discovery.info("System woke: resuming BLE advertising")
+                self.advertiser?.start()
+            }
+        }
+        // Belt and braces: the displays waking means someone is at the Mac.
+        workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { _ in
+            SystemSleep.isAsleep = false
+        }
+
+        notifications.onAction = { [weak self] action in self?.handle(action) }
+        notifications.setUp()
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                Task { await self.notifications.refreshAuthorization() }
+            }
+        }
+        loginItem.configureOnFirstLaunch()
+
+        do {
+            let store = TrustedDeviceStore(fileURL: try TrustedDeviceStore.defaultLocation())
+            store.load()
+            trustStore = store
+        } catch {
+            // Without a store nothing can be trusted or paired; sessions still authenticate.
+            Log.app.fault("Trusted devices store unavailable: \(String(describing: error), privacy: .public)")
+            trustStoreError = error.localizedDescription
+        }
+
+        // No transfer can be running yet, so any partial files are leftovers from a crash.
+        Task.detached { IncomingFileWriter.removeLeftovers(in: ReceiveLocation.downloads) }
+        saveFolder.load()
+
+        // Keychain reads may wait for the user to answer a system prompt; keep the UI responsive.
+        Task.detached {
+            let result = Result { () throws(IdentityStoreError) -> (Identity, PresenceKey) in
+                (try IdentityStore.loadOrCreate(), try PresenceKey.loadOrCreate())
+            }
+            await MainActor.run { self.finishStart(with: result) }
+        }
+    }
+
+    /// Removes the device from trusted devices and immediately ends any session with it:
+    /// revoking trust must also revoke access that is already in progress. The presence key is
+    /// rotated so the forgotten device can no longer recognize this Mac over Bluetooth.
+    func forgetTrustedDevice(_ deviceId: String) {
+        do {
+            try trustStore?.forget(deviceId: deviceId)
+        } catch {
+            Log.app.error("Could not forget \(deviceId, privacy: .public): \(String(describing: error), privacy: .public)")
+            return
+        }
+        for entry in connections where !entry.state.isEnded && entry.state.peer?.deviceId == deviceId {
+            sessionHandles[entry.id]?.terminate(.trustRevoked)
+        }
+        do {
+            presenceKey = try PresenceKey.rotate()
+        } catch {
+            Log.crypto.error("Could not rotate presence key: \(error.description, privacy: .public)")
+        }
+        advertiser?.refresh()
+    }
+
+    // MARK: - Presence and pairing mode
+
+    /// Pairing mode: opened for a while from the menu, and always on while nothing is paired.
+    var isPairingModeActive: Bool {
+        if trustStore?.devices.isEmpty ?? true { return true }
+        guard let until = pairingWindowUntil else { return false }
+        return until > Date()
+    }
+
+    func openPairingWindow() {
+        pairingWindowUntil = Date().addingTimeInterval(Self.pairingWindowDuration)
+        Log.app.info("Pairing mode opened for \(Int(Self.pairingWindowDuration / 60)) minutes")
+        advertiser?.refresh()
+        schedulePresenceRefresh()
+    }
+
+    func closePairingWindow() {
+        guard pairingWindowUntil != nil else { return }
+        pairingWindowUntil = nil
+        Log.app.info("Pairing mode closed")
+        advertiser?.refresh()
+        schedulePresenceRefresh()
+    }
+
+    private func currentAdvertisedName() -> String {
+        guard !isPairingModeActive, let presenceKey else { return localDevice.pairingAdvertisedName }
+        let status: PresenceKey.Status = if isBusy {
+            .busy
+        } else if lanAddresses.isEmpty {
+            .noNetwork
+        } else {
+            .available
+        }
+        return presenceKey.advertisedName(at: Date(), status: status)
+    }
+
+    private var isBusy: Bool {
+        pairingPrompt != nil || (incomingTransfer.map { !$0.phase.isFinished } ?? false)
+    }
+
+    /// Network or busy state changed: phones read it from the advertisement within seconds.
+    private func presenceChanged() {
+        advertiser?.refresh()
+    }
+
+    /// Endpoint Info for the GATT read: open in pairing mode, sealed with the presence key otherwise.
+    private func currentEndpointValue() -> Data? {
+        guard let info = currentEndpointInfo() else { return nil }
+        guard !isPairingModeActive, let presenceKey else { return info.encoded() }
+        do {
+            return try info.sealed(with: presenceKey)
+        } catch {
+            Log.crypto.error("Could not seal endpoint info: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Re-advertises at each token slot boundary and when the pairing window ends.
+    private func schedulePresenceRefresh() {
+        presenceTask?.cancel()
+        presenceTask = Task { [weak self] in
+            while !Task.isCancelled {
+                let now = Date()
+                var next = PresenceKey.nextSlotStart(after: now)
+                if let until = self?.pairingWindowUntil, until > now { next = min(next, until) }
+                try? await Task.sleep(for: .seconds(next.timeIntervalSince(now) + 0.5))
+                guard !Task.isCancelled, let self else { return }
+                if let until = self.pairingWindowUntil, until <= Date() {
+                    self.pairingWindowUntil = nil
+                    Log.app.info("Pairing mode expired")
+                }
+                self.advertiser?.refresh()
+            }
+        }
+    }
+
+    /// Re-shows a pending pairing or transfer prompt, e.g. if its window was closed or hidden.
+    func showPrompt(for entryId: UUID) {
+        if let prompt = pairingPrompt, prompt.entryId == entryId {
+            showPairingPanel(prompt)
+        } else if let transfer = incomingTransfer, transfer.entryId == entryId, !transfer.phase.isFinished {
+            showTransferPanel(transfer)
+        }
+    }
+
+    /// A pairing or transfer window that can be brought back: the request, or the progress of a
+    /// transfer (auto-accepted ones start without a window).
+    func hasPendingPrompt(for entryId: UUID) -> Bool {
+        pairingPrompt?.entryId == entryId
+            || (incomingTransfer?.entryId == entryId && incomingTransfer?.phase.isFinished == false)
+    }
+
+    private func showPairingPanel(_ prompt: PairingPrompt) {
+        let entryId = prompt.entryId
+        pairingPanel.show(prompt) { [weak self] accepted in
+            self?.resolvePairing(entryId, accepted: accepted)
+        }
+    }
+
+    private func handle(_ action: NotificationController.Action) {
+        switch action {
+        case .showInFinder(let urls): NSWorkspace.shared.activateFileViewerSelecting(urls)
+        case .openLink(let url): NSWorkspace.shared.open(url)
+        }
+    }
+
+    private func showTransferPanel(_ transfer: IncomingTransfer) {
+        let entryId = transfer.entryId
+        transferPanel.show(
+            transfer,
+            decide: { [weak self] accepted in self?.resolveTransfer(entryId, decision: accepted ? .accept : .decline) },
+            cancel: { [weak self] in self?.cancelIncomingTransfer(entryId) },
+            dismiss: { [weak self] in self?.dismissTransfer(entryId) }
+        )
+    }
+
+    private func finishStart(with result: Result<(Identity, PresenceKey), IdentityStoreError>) {
+        switch result {
+        case .success(let (identity, presenceKey)):
+            self.identity = identity
+            self.presenceKey = presenceKey
+            fingerprint = identity.fingerprint
+            startupState = .running
+            Log.crypto.info("Identity fingerprint \(identity.fingerprint.fingerprintLogPrefix, privacy: .public)…")
+        case .failure(let error):
+            Log.crypto.fault("Cannot load identity: \(error.description, privacy: .public)")
+            startupState = .failed(reason: error.description)
+            return
+        }
+
+        refreshAddresses()
+        pathMonitor.pathUpdateHandler = { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshAddresses() }
+        }
+        pathMonitor.start(queue: .main)
+
+        let advertiser = BLEAdvertiser(
+            nameProvider: { [weak self] in self?.currentAdvertisedName() ?? "" },
+            endpointValueProvider: { [weak self] in self?.currentEndpointValue() }
+        )
+        self.advertiser = advertiser
+        schedulePresenceRefresh()
+
+        listener.onConnection = { [weak self] connection in
+            self?.accept(connection)
+        }
+        listener.onStateChange = { [weak advertiser] state in
+            // Advertise only while the endpoint we publish over BLE is actually reachable.
+            switch state {
+            case .ready:
+                advertiser?.start()
+            case .failed, .stopped:
+                advertiser?.stop()
+            case .starting, .waiting:
+                break
+            }
+        }
+        listener.start()
+    }
+
+    private func accept(_ connection: NWConnection) {
+        guard let identity else {
+            connection.cancel()
+            return
+        }
+        let active = connections.filter { !$0.state.isEnded }.count
+        guard active < Self.maxActiveSessions else {
+            Log.connection.warning("Rejecting \(String(describing: connection.endpoint), privacy: .public): \(active) sessions active")
+            Task.detached { await ServerSession.reject(connection, code: ErrorCode.busy) }
+            return
+        }
+
+        refreshComputerName()
+        let entry = ConnectionEntry(remote: Self.describe(connection.endpoint))
+        connections.insert(entry, at: 0)
+        let session = ServerSession(
+            entryId: entry.id,
+            connection: connection,
+            identity: identity,
+            localDevice: localDevice,
+            coordinator: self
+        )
+        sessionHandles[entry.id] = session.handle
+        // Session I/O and crypto run off the main actor; only state updates hop back.
+        Task.detached { await session.run() }
+    }
+
+    private func updateEntry(_ entryId: UUID, _ state: ConnectionEntry.State) {
+        guard let index = connections.firstIndex(where: { $0.id == entryId }) else { return }
+        connections[index].state = state
+    }
+
+    private static func describe(_ endpoint: NWEndpoint) -> String {
+        if case .hostPort(let host, _) = endpoint {
+            switch host {
+            case .ipv4(let address): return "\(address)"
+            case .ipv6(let address): return "\(address)"
+            case .name(let name, _): return name
+            @unknown default: break
+            }
+        }
+        return String(describing: endpoint)
+    }
+
+    private func refreshAddresses() {
+        let band = NetworkInterfaces.wifiBand()
+        if band != wifiBand {
+            Log.connection.info("Wi-Fi band: \(band.map { String(describing: $0) } ?? "none", privacy: .public)")
+            wifiBand = band
+        }
+        let addresses = NetworkInterfaces.lanAddresses()
+        if addresses != lanAddresses {
+            Log.connection.info("LAN addresses: \(addresses.joined(separator: ", "), privacy: .public)")
+            lanAddresses = addresses
+            presenceChanged()
+        }
+        refreshComputerName()
+    }
+
+    /// The computer name can be changed in System Settings at any time; peers learn it on their
+    /// next connection and update their share targets.
+    private func refreshComputerName() {
+        let currentName = LocalDevice.currentComputerName()
+        if currentName != localDevice.name {
+            Log.app.info("Computer name changed to \(currentName, privacy: .public)")
+            localDevice = LocalDevice(deviceId: localDevice.deviceId, name: currentName)
+        }
+    }
+
+    private func currentEndpointInfo() -> EndpointInfo? {
+        guard let port = listener.port, let fingerprint else { return nil }
+        refreshComputerName()
+        return EndpointInfo(
+            protocolVersion: ProtocolConstants.version,
+            deviceId: localDevice.deviceId,
+            deviceName: localDevice.name,
+            platform: ProtocolConstants.platform,
+            port: port,
+            addresses: NetworkInterfaces.lanAddresses(),
+            fingerprint: fingerprint,
+            busy: isBusy,
+            capabilities: ProtocolConstants.capabilities
+        )
+    }
+
+    // MARK: - Pairing prompt
+
+    private func resolvePairing(_ entryId: UUID, accepted: Bool) {
+        guard pairingPrompt?.entryId == entryId else { return }
+        if let continuation = pairingContinuation {
+            pairingContinuation = nil
+            continuation.resume(returning: accepted)
+        } else {
+            pairingDecision = accepted
+        }
+    }
+
+    // MARK: - Incoming transfer
+
+    private func resolveTransfer(_ entryId: UUID, decision: TransferDecision) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId, transfer.phase == .awaitingDecision else { return }
+        if decision == .accept { transfer.phase = .receiving }
+        if let continuation = transferContinuation {
+            transferContinuation = nil
+            continuation.resume(returning: decision)
+        } else {
+            transferDecision = decision
+        }
+    }
+
+    private func abandonTransferDecision(_ entryId: UUID) {
+        guard incomingTransfer?.entryId == entryId else { return }
+        transferContinuation?.resume(returning: .decline)
+        transferContinuation = nil
+    }
+
+    private func cancelIncomingTransfer(_ entryId: UUID) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId, !transfer.phase.isFinished else { return }
+        Log.transfer.info("User cancelled the incoming transfer")
+        transferCancel?()
+        // The receiver confirms with transferFinished(.cancelled) at its next frame.
+        transferPanel.close()
+    }
+
+    private func dismissTransfer(_ entryId: UUID) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId else { return }
+        transferPanel.close()
+        if transfer.phase.isFinished { incomingTransfer = nil }
+    }
+
+    private func endPairing(_ entryId: UUID) {
+        guard pairingPrompt?.entryId == entryId else { return }
+        pairingContinuation?.resume(returning: false)
+        pairingContinuation = nil
+        pairingDecision = nil
+        pairingPrompt = nil
+        pairingPanel.close()
+        presenceChanged()
+    }
+}
+
+extension AppModel: SessionCoordinator {
+    func trustState(deviceId: String, identityKey: Data) -> TrustState {
+        trustStore?.trustState(deviceId: deviceId, identityKey: identityKey) ?? .unknown
+    }
+
+    func sessionAuthenticated(_ entryId: UUID, peer: PeerInfo, status: SessionStatus) {
+        updateEntry(entryId, .connected(peer, status))
+        if status == .trusted {
+            trustStore?.markSeen(deviceId: peer.deviceId, name: peer.name)
+        }
+    }
+
+    func beginPairing(_ entryId: UUID, peer: PeerInfo, code: String, keyChanged: Bool) throws {
+        guard trustStore != nil else { throw SessionError.storage(trustStoreError ?? "store unavailable") }
+        if let current = pairingPrompt {
+            guard current.peerDeviceId == peer.deviceId else {
+                Log.handshake.warning("Pairing with \(peer.deviceId, privacy: .public) refused: another pairing in progress")
+                throw SessionError.busy
+            }
+            // The same device is retrying; its previous attempt is stale.
+            Log.handshake.info("Pairing with \(peer.deviceId, privacy: .public) supersedes its previous attempt")
+            sessionHandles[current.entryId]?.terminate(.superseded)
+            endPairing(current.entryId)
+        }
+        let now = ContinuousClock.now
+        pairingAttempts.removeAll { now - $0 > .seconds(60) }
+        guard pairingAttempts.count < Self.maxPairingAttemptsPerMinute else {
+            Log.handshake.warning("Pairing with \(peer.deviceId, privacy: .public) refused: rate limit")
+            throw SessionError.busy
+        }
+        pairingAttempts.append(now)
+
+        let prompt = PairingPrompt(entryId: entryId, peerDeviceId: peer.deviceId, peerName: peer.name, code: code, keyChanged: keyChanged)
+        pairingPrompt = prompt
+        pairingDecision = nil
+        updateEntry(entryId, .pairing(peer))
+        showPairingPanel(prompt)
+        presenceChanged()
+    }
+
+    func awaitPairingDecision(_ entryId: UUID) async -> Bool {
+        guard pairingPrompt?.entryId == entryId else { return false }
+        if let decision = pairingDecision { return decision }
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                pairingContinuation = continuation
+            }
+        } onCancel: {
+            Task { @MainActor in self.endPairing(entryId) }
+        }
+    }
+
+    func pairingSucceeded(_ entryId: UUID, peer: PeerInfo) throws {
+        guard let trustStore else { throw SessionError.storage(trustStoreError ?? "store unavailable") }
+        try trustStore.trust(peer)
+        endPairing(entryId)
+        // Paired: stop being discoverable to strangers.
+        pairingWindowUntil = nil
+        advertiser?.refresh()
+        schedulePresenceRefresh()
+        updateEntry(entryId, .connected(peer, .trusted))
+    }
+
+    func acceptPolicy(for peer: PeerInfo) -> AcceptPolicy {
+        guard let record = trustStore?.devices.first(where: { $0.deviceId == peer.deviceId }),
+              record.publicKey == peer.identityKey else { return .ask }
+        return record.effectiveAcceptPolicy
+    }
+
+    func setAcceptPolicy(_ policy: AcceptPolicy, deviceId: String) {
+        do {
+            try trustStore?.setAcceptPolicy(policy, deviceId: deviceId)
+        } catch {
+            Log.app.error("Could not save accept policy: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    func beginIncomingTransfer(_ entryId: UUID, peer: PeerInfo, request: TransferRequest, autoAccepted: Bool, cancel: @escaping @Sendable () -> Void) async throws {
+        if let current = incomingTransfer, !current.phase.isFinished { throw SessionError.busy }
+        transferPanel.close()
+        let transfer = IncomingTransfer(entryId: entryId, peerName: peer.name, request: request)
+        incomingTransfer = transfer
+        transferCancel = cancel
+        presenceChanged()
+        Task { await notifications.refreshAuthorization() }
+        if autoAccepted {
+            // Nothing to decide: progress shows in the menu, the result as a notification.
+            transfer.phase = .receiving
+            transferDecision = .accept
+            return
+        }
+        transferDecision = nil
+        // The request is a banner with visible buttons (notification actions stay hidden until
+        // hover); the result is a notification when allowed.
+        showTransferPanel(transfer)
+    }
+
+    func textReceived(_ text: String, peer: PeerInfo) -> Bool {
+        guard acceptPolicy(for: peer) != .never else { return false }
+        let link = Self.link(in: text)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        if let link { pasteboard.setString(link.absoluteString, forType: .URL) }
+        if notifications.isAuthorized {
+            notifications.postText(text, link: link, peerName: peer.name)
+        } else {
+            textPanel.show(text: text, link: link, peerName: peer.name)
+        }
+        return true
+    }
+
+    /// The text when it is exactly one web link. Links are opened only when the user clicks.
+    private static func link(in text: String) -> URL? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.contains(where: \.isWhitespace),
+              let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+              url.host?.isEmpty == false else { return nil }
+        return url
+    }
+
+    func awaitTransferDecision(_ entryId: UUID) async -> TransferDecision {
+        guard incomingTransfer?.entryId == entryId else { return .decline }
+        if let decision = transferDecision { return decision }
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                transferContinuation = continuation
+            }
+        } onCancel: {
+            Task { @MainActor in self.abandonTransferDecision(entryId) }
+        }
+    }
+
+    func transferRequestGrew(_ entryId: UUID, request: TransferRequest) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId, transfer.phase == .awaitingDecision else { return }
+        transfer.files = request.files
+        transfer.totalSize = request.totalSize
+    }
+
+    func transferStarted(_ entryId: UUID) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId else { return }
+        transfer.phase = .receiving
+    }
+
+    func transferProgress(_ entryId: UUID, bytesReceived: Int64, currentFile: String) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId else { return }
+        transfer.record(bytesReceived: bytesReceived, currentFile: currentFile)
+    }
+
+    func transferFinished(_ entryId: UUID, outcome: TransferOutcome) {
+        guard let transfer = incomingTransfer, transfer.entryId == entryId, !transfer.phase.isFinished else { return }
+        transferContinuation?.resume(returning: .decline)
+        transferContinuation = nil
+        transferCancel = nil
+        let wasReceiving = transfer.phase == .receiving
+        // Phase changes below make the Mac available again.
+        defer { presenceChanged() }
+
+        if notifications.isAuthorized {
+            transferPanel.close()
+            reportByNotification(transfer, outcome: outcome, wasReceiving: wasReceiving)
+            return
+        }
+        // An auto-accepted transfer had no panel; without notifications its result needs one.
+        if !transferPanel.isVisible { showTransferPanel(transfer) }
+        switch outcome {
+        case .completed(let urls):
+            transfer.phase = .completed(urls)
+            transferPanel.closeAfterDelay(.seconds(8)) { [weak self] in self?.dismissTransfer(entryId) }
+        case .declined, .cancelled, .unattended:
+            transfer.phase = .cancelled(String(localized: "Cancelled"))
+            dismissTransfer(entryId)
+        case .timedOut:
+            transfer.phase = .cancelled(String(localized: "The request from \(transfer.peerName) expired"))
+            dismissTransfer(entryId)
+        case .cancelledByPeer:
+            transfer.phase = .cancelled(String(localized: "\(transfer.peerName) cancelled the transfer"))
+            if !wasReceiving { dismissTransfer(entryId) }
+        case .rejectedNoSpace:
+            transfer.phase = .failed(String(localized: "Not enough disk space"))
+        case .failed(let reason):
+            transfer.phase = .failed(reason)
+        }
+    }
+
+    /// Notification counterpart of the panel's final states; the transfer record is cleared at once.
+    private func reportByNotification(_ transfer: IncomingTransfer, outcome: TransferOutcome, wasReceiving: Bool) {
+        let size = ByteCountFormatter.string(fromByteCount: transfer.totalSize, countStyle: .file)
+        switch outcome {
+        case .completed(let urls):
+            transfer.phase = .completed(urls)
+            notifications.postReceived(urls: urls, peerName: transfer.peerName, size: size)
+        case .declined, .cancelled, .timedOut, .unattended:
+            transfer.phase = .cancelled(String(localized: "Cancelled"))
+        case .cancelledByPeer:
+            transfer.phase = .cancelled(String(localized: "Cancelled"))
+            if wasReceiving {
+                notifications.postFailure(title: String(localized: "\(transfer.peerName) cancelled the transfer"), body: transfer.title)
+            }
+        case .rejectedNoSpace:
+            transfer.phase = .failed(String(localized: "Not enough disk space"))
+            notifications.postFailure(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: String(localized: "Not enough disk space"))
+        case .failed(let reason):
+            transfer.phase = .failed(reason)
+            notifications.postFailure(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: reason)
+        }
+        dismissTransfer(transfer.entryId)
+    }
+
+    func transferRejectedForStorage(peer: PeerInfo, request: TransferRequest) {
+        guard incomingTransfer == nil || incomingTransfer?.phase.isFinished == true else { return }
+        let size = ByteCountFormatter.string(fromByteCount: request.totalSize, countStyle: .file)
+        if notifications.isAuthorized {
+            notifications.postFailure(
+                title: String(localized: "Couldn't receive from \(peer.name)"),
+                body: String(localized: "\(peer.name) tried to send \(size), but there isn't enough disk space")
+            )
+            return
+        }
+        let transfer = IncomingTransfer(entryId: UUID(), peerName: peer.name, request: request)
+        transfer.phase = .failed(String(localized: "\(peer.name) tried to send \(size), but there isn't enough disk space"))
+        incomingTransfer = transfer
+        transferPanel.show(transfer, decide: { _ in }, cancel: {}, dismiss: { [weak self] in self?.dismissTransfer(transfer.entryId) })
+    }
+
+    func isPairingAllowed() -> Bool { isPairingModeActive }
+
+    func currentPresenceKey() -> Data? { presenceKey?.raw }
+
+    func sessionEnded(_ entryId: UUID, peer: PeerInfo?, error: SessionError?) {
+        sessionHandles[entryId] = nil
+        transferFinished(entryId, outcome: .failed(error?.userMessage ?? String(localized: "Connection closed")))
+        endPairing(entryId)
+        updateEntry(entryId, .ended(peer, error))
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.endedEntryLifetime)
+            self?.connections.removeAll { $0.id == entryId }
+        }
+    }
+}
+
+/// One TCP connection as shown in the menu.
+struct ConnectionEntry: Identifiable {
+    enum State {
+        case handshaking
+        case connected(PeerInfo, SessionStatus)
+        case pairing(PeerInfo)
+        case ended(PeerInfo?, SessionError?)
+
+        var isEnded: Bool {
+            if case .ended = self { return true }
+            return false
+        }
+
+        var peer: PeerInfo? {
+            switch self {
+            case .handshaking: nil
+            case .connected(let peer, _), .pairing(let peer): peer
+            case .ended(let peer, _): peer
+            }
+        }
+    }
+
+    let id = UUID()
+    let remote: String
+    var state: State = .handshaking
+}

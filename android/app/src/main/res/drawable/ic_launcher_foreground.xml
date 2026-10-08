@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="30"
+        android:translateY="30">
+        <!-- Downward arrow into a tray: "receive nearby". -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M10.5,2h3v12.2l4.4,-4.4 2.1,2.1L12,19.9 4,11.9l2.1,-2.1 4.4,4.4z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M2,18h3v3h14v-3h3v6H2z" />
+    </group>
+</vector>

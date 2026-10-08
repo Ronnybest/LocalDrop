@@ -1,0 +1,1502 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ cancelled the transfer": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ отменил передачу"
+          }
+        }
+      }
+    },
+    "%@ received": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ получен"
+          }
+        }
+      }
+    },
+    "%@ tried to send %@, but there isn't enough disk space": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ пытался отправить %2$@, но на диске недостаточно места"
+          }
+        }
+      }
+    },
+    "%@ wants to send": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ хочет отправить"
+          }
+        }
+      }
+    },
+    "%@ was damaged in transit and was not saved": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ повреждён при передаче и не сохранён"
+          }
+        }
+      }
+    },
+    "%@ will no longer be able to send to this Mac until it pairs again. A transfer in progress stops.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ больше не сможет отправлять на этот Mac, пока не будет привязан снова. Текущая передача остановится."
+          }
+        }
+      }
+    },
+    "%@ — retrying": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — повторная попытка"
+          }
+        }
+      }
+    },
+    "%@/s": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/с"
+          }
+        }
+      }
+    },
+    "%lld files": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файлов"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файл"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files received": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file received"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files received"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла получено"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файлов получено"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файл получен"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла получено"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld%% · %@ of %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld%% · %2$@ из %3$@"
+          }
+        }
+      }
+    },
+    "A new phone pairs once, after both screens show the same code. Paired devices find this Mac without it being visible.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый телефон привязывается один раз — после того как на обоих экранах совпадёт код. Привязанные устройства находят этот Mac и без видимости."
+          }
+        }
+      }
+    },
+    "Accept": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принять"
+          }
+        }
+      }
+    },
+    "All Devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все устройства"
+          }
+        }
+      }
+    },
+    "All good": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё в порядке"
+          }
+        }
+      }
+    },
+    "Allow LocalDrop in System Settings › General › Login Items.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешите LocalDrop в Системных настройках › Основные › Объекты входа."
+          }
+        }
+      }
+    },
+    "Allow LocalDrop in System Settings › Privacy & Security › Bluetooth.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешите LocalDrop в Системных настройках › Конфиденциальность и безопасность › Bluetooth."
+          }
+        }
+      }
+    },
+    "Ask every time": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спрашивать каждый раз"
+          }
+        }
+      }
+    },
+    "Bluetooth": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth"
+          }
+        }
+      }
+    },
+    "Bluetooth is turned off. Phones can't find this Mac.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth выключен. Телефоны не найдут этот Mac."
+          }
+        }
+      }
+    },
+    "Bluetooth unavailable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth недоступен"
+          }
+        }
+      }
+    },
+    "Busy with another device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Занят другим устройством"
+          }
+        }
+      }
+    },
+    "Can't start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удаётся запустить"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменить"
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменено"
+          }
+        }
+      }
+    },
+    "Cancelled on the other device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменено на другом устройстве"
+          }
+        }
+      }
+    },
+    "Change…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить…"
+          }
+        }
+      }
+    },
+    "Choose": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать"
+          }
+        }
+      }
+    },
+    "Closed by the other device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыто другим устройством"
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключено"
+          }
+        }
+      }
+    },
+    "Connected · not paired": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключено · не привязано"
+          }
+        }
+      }
+    },
+    "Connecting from %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение с %@…"
+          }
+        }
+      }
+    },
+    "Connecting…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение…"
+          }
+        }
+      }
+    },
+    "Connection closed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединение закрыто"
+          }
+        }
+      }
+    },
+    "Connection closed by the other device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другое устройство закрыло соединение"
+          }
+        }
+      }
+    },
+    "Could not save the file": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить файл"
+          }
+        }
+      }
+    },
+    "Could not save the trusted device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить доверенное устройство"
+          }
+        }
+      }
+    },
+    "Couldn't receive from %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось получить от %@"
+          }
+        }
+      }
+    },
+    "Decline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклонить"
+          }
+        }
+      }
+    },
+    "Decryption failed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка расшифровки"
+          }
+        }
+      }
+    },
+    "Device identity check failed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось подтвердить подлинность устройства"
+          }
+        }
+      }
+    },
+    "Device key": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ устройства"
+          }
+        }
+      }
+    },
+    "Device key of %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ устройства %@"
+          }
+        }
+      }
+    },
+    "Devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройства"
+          }
+        }
+      }
+    },
+    "Disconnected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключено"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "Everything": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё"
+          }
+        }
+      }
+    },
+    "Files arrive at only a few MB/s on this network. A 5 GHz network — or your phone's 5 GHz hotspot — is many times faster.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В этой сети файлы идут со скоростью всего несколько МБ/с. Сеть 5 ГГц — или точка доступа телефона на 5 ГГц — во много раз быстрее."
+          }
+        }
+      }
+    },
+    "Files received with LocalDrop will be saved in this folder.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файлы, полученные через LocalDrop, будут сохраняться в эту папку."
+          }
+        }
+      }
+    },
+    "Files under 100 MB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файлы до 100 МБ"
+          }
+        }
+      }
+    },
+    "Folder unavailable — saving to Downloads until it's back.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Папка недоступна — пока она не вернётся, файлы сохраняются в «Загрузки»."
+          }
+        }
+      }
+    },
+    "For 10 minutes, phones that aren't paired yet can find this Mac.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В течение 10 минут ещё не привязанные телефоны смогут найти этот Mac."
+          }
+        }
+      }
+    },
+    "Forget": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забыть"
+          }
+        }
+      }
+    },
+    "Forget %@?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забыть %@?"
+          }
+        }
+      }
+    },
+    "Forget %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забыть %@…"
+          }
+        }
+      }
+    },
+    "From %@ · %@ · integrity verified": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "От %1$@ · %2$@ · целостность проверена"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основные"
+          }
+        }
+      }
+    },
+    "If macOS asks, allow LocalDrop to use its device key (Always Allow).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если macOS спросит, разрешите LocalDrop использовать ключ устройства («Разрешать всегда»)."
+          }
+        }
+      }
+    },
+    "Incompatible LocalDrop version — update LocalDrop on both devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несовместимая версия LocalDrop — обновите LocalDrop на обоих устройствах"
+          }
+        }
+      }
+    },
+    "It matches the key shown in LocalDrop on that device. If it ever changes, LocalDrop asks to pair again instead of trusting it.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Он совпадает с ключом, который показывает LocalDrop на том устройстве. Если ключ изменится, LocalDrop попросит привязать устройство заново, а не будет ему доверять."
+          }
+        }
+      }
+    },
+    "Last seen %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Был в сети %@"
+          }
+        }
+      }
+    },
+    "Link from %@ copied": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ссылка от %@ скопирована"
+          }
+        }
+      }
+    },
+    "Local network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Локальная сеть"
+          }
+        }
+      }
+    },
+    "LocalDrop": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop"
+          }
+        }
+      }
+    },
+    "LocalDrop can't start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop не удаётся запустить"
+          }
+        }
+      }
+    },
+    "LocalDrop — receiving": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop — идёт приём"
+          }
+        }
+      }
+    },
+    "LocalDrop — visible to new devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop — виден новым устройствам"
+          }
+        }
+      }
+    },
+    "Make sure %@ shows the same code:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убедитесь, что %@ показывает тот же код:"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя"
+          }
+        }
+      }
+    },
+    "Network error": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка сети"
+          }
+        }
+      }
+    },
+    "No Wi-Fi network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет сети Wi-Fi"
+          }
+        }
+      }
+    },
+    "No devices yet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройств пока нет."
+          }
+        }
+      }
+    },
+    "No response in time": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет ответа вовремя"
+          }
+        }
+      }
+    },
+    "Not connected to Wi-Fi or Ethernet. Phones can't send until it is.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет подключения к Wi-Fi или Ethernet. Пока его нет, телефоны не смогут отправлять."
+          }
+        }
+      }
+    },
+    "Not enough disk space": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недостаточно места на диске"
+          }
+        }
+      }
+    },
+    "Not paired — turn on “Visible to new devices” to pair": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не привязано — включите «Виден новым устройствам», чтобы привязать"
+          }
+        }
+      }
+    },
+    "Nothing — decline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ничего — отклонять"
+          }
+        }
+      }
+    },
+    "Notifications": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления"
+          }
+        }
+      }
+    },
+    "Notifications are off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления выключены"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ОК"
+          }
+        }
+      }
+    },
+    "Off — results show in a window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключены — итоги показываются в окне"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включены"
+          }
+        }
+      }
+    },
+    "On your phone, open LocalDrop and tap “Add a Mac”.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На телефоне откройте LocalDrop и нажмите «Добавить Mac»."
+          }
+        }
+      }
+    },
+    "Only paired devices see it": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видят только привязанные"
+          }
+        }
+      }
+    },
+    "Open Link": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть ссылку"
+          }
+        }
+      }
+    },
+    "Open at Login": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открывать при входе"
+          }
+        }
+      }
+    },
+    "Open for pairing · %lld:%@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыт для привязки · %1$lld:%2$@"
+          }
+        }
+      }
+    },
+    "Open for pairing · 10:00": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыт для привязки · 10:00"
+          }
+        }
+      }
+    },
+    "Pair": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязать"
+          }
+        }
+      }
+    },
+    "Pair with %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка %@"
+          }
+        }
+      }
+    },
+    "Pair with %@?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязать %@?"
+          }
+        }
+      }
+    },
+    "Pairing declined": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка отклонена"
+          }
+        }
+      }
+    },
+    "Pairing declined on the other device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка отклонена на другом устройстве"
+          }
+        }
+      }
+    },
+    "Pairing — compare the code on both devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка — сравните код на обоих устройствах"
+          }
+        }
+      }
+    },
+    "Photos and videos": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фото и видео"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выйти"
+          }
+        }
+      }
+    },
+    "Ready to pair": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готов к привязке"
+          }
+        }
+      }
+    },
+    "Receive": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приём"
+          }
+        }
+      }
+    },
+    "Receiving": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приём"
+          }
+        }
+      }
+    },
+    "Receiving from %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приём от %@"
+          }
+        }
+      }
+    },
+    "Receiving · %lld%%": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приём · %lld%%"
+          }
+        }
+      }
+    },
+    "Removed from trusted devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалено из доверенных устройств"
+          }
+        }
+      }
+    },
+    "Replaced by a new connection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заменено новым подключением"
+          }
+        }
+      }
+    },
+    "Results will show in a window instead.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Итоги будут показываться в окне."
+          }
+        }
+      }
+    },
+    "Save files to": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранять файлы в"
+          }
+        }
+      }
+    },
+    "Security key changed — pair again only if you trust this device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ безопасности изменился — привязывайте заново, только если доверяете этому устройству"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать в Finder"
+          }
+        }
+      }
+    },
+    "Show the request window again": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Снова показать окно запроса"
+          }
+        }
+      }
+    },
+    "Slow Wi-Fi": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Медленный Wi-Fi"
+          }
+        }
+      }
+    },
+    "Slow Wi-Fi (2.4 GHz)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Медленный Wi-Fi (2,4 ГГц)"
+          }
+        }
+      }
+    },
+    "Starting…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запуск…"
+          }
+        }
+      }
+    },
+    "Startup": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запуск"
+          }
+        }
+      }
+    },
+    "Stopped": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Остановлено"
+          }
+        }
+      }
+    },
+    "Text from %@ copied": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст от %@ скопирован"
+          }
+        }
+      }
+    },
+    "The menu next to each device sets which files it can save here without asking. Text and links always go to the clipboard.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Меню рядом с устройством задаёт, какие файлы оно может сохранять здесь без вопроса. Текст и ссылки всегда попадают в буфер обмена."
+          }
+        }
+      }
+    },
+    "The name is this Mac's computer name; change it in System Settings › General › Sharing. Phones show the device key when pairing.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя — это имя компьютера; его можно изменить в Системных настройках › Основные › Общий доступ. Ключ устройства телефоны показывают при привязке."
+          }
+        }
+      }
+    },
+    "The other device sent unexpected data": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другое устройство прислало неожиданные данные"
+          }
+        }
+      }
+    },
+    "The other device stopped responding": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другое устройство перестало отвечать"
+          }
+        }
+      }
+    },
+    "The request from %@ expired": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос от %@ истёк"
+          }
+        }
+      }
+    },
+    "The security key of %@ has changed. This happens after reinstalling LocalDrop — or if another device is impersonating it. Continue only if the device is in front of you.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ безопасности %@ изменился. Так бывает после переустановки LocalDrop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
+          }
+        }
+      }
+    },
+    "This Mac": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот Mac"
+          }
+        }
+      }
+    },
+    "This Mac doesn't support Bluetooth LE advertising.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот Mac не поддерживает рекламу Bluetooth LE."
+          }
+        }
+      }
+    },
+    "Trusted": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доверенное"
+          }
+        }
+      }
+    },
+    "Trusted devices unavailable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доверенные устройства недоступны"
+          }
+        }
+      }
+    },
+    "Turn On": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить"
+          }
+        }
+      }
+    },
+    "Turn On…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить…"
+          }
+        }
+      }
+    },
+    "Use Downloads": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать «Загрузки»"
+          }
+        }
+      }
+    },
+    "Visible to new devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виден новым устройствам"
+          }
+        }
+      }
+    },
+    "Waiting for Keychain access…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание доступа к связке ключей…"
+          }
+        }
+      }
+    },
+    "Waiting for confirmation on %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание подтверждения на %@…"
+          }
+        }
+      }
+    },
+    "Waiting for the network listener": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание сетевого порта"
+          }
+        }
+      }
+    },
+    "Which files from %@ are saved without asking. Text and links always go to the clipboard, unless set to decline.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какие файлы от %@ сохраняются без вопроса. Текст и ссылки всегда попадают в буфер обмена, если не выбрано «отклонять»."
+          }
+        }
+      }
+    },
+    "Your devices can find this Mac nearby": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши устройства находят этот Mac рядом"
+          }
+        }
+      }
+    },
+    "and %lld more": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "and %lld more"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "и ещё %lld"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "и ещё %lld"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "и ещё %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "и ещё %lld"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "never": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "никогда"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

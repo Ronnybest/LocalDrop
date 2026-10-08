@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">LocalDrop</string>
+
+    <string name="devices_searching">Looking for nearby devices…</string>
+    <string name="devices_searching_hint">Open LocalDrop on your Mac and keep Bluetooth on. Both devices need to be on the same Wi-Fi network to send files.</string>
+
+    <string name="device_status_connecting">Connecting…</string>
+    <string name="device_status_unreachable">Not reachable — move closer</string>
+    <string name="device_status_invalid">Sent invalid device information</string>
+    <string name="device_status_incompatible">Incompatible LocalDrop version — update the app</string>
+
+    <string name="discovery_failed_title">Bluetooth scan failed</string>
+
+    <string name="blocker_unsupported_title">Bluetooth LE not available</string>
+    <string name="blocker_unsupported_body">This device doesn\'t support Bluetooth Low Energy, which LocalDrop needs to find nearby devices.</string>
+    <string name="blocker_permissions_title">Allow access to nearby devices</string>
+    <string name="blocker_permissions_body_nearby">LocalDrop uses Bluetooth to find your Mac and other devices nearby. It doesn\'t use your location.</string>
+    <string name="blocker_permissions_body_location">On Android 11, the system requires location permission to scan for Bluetooth devices. LocalDrop only uses it to find nearby devices and never reads or stores your location.</string>
+    <string name="blocker_permissions_denied_hint">The permission was denied. Turn it on in the app settings.</string>
+    <string name="blocker_bluetooth_off_title">Bluetooth is off</string>
+    <string name="blocker_bluetooth_off_body">Turn on Bluetooth to find nearby devices.</string>
+    <string name="blocker_location_off_title">Location is off</string>
+    <string name="blocker_location_off_body">On Android 11, Bluetooth scanning only works while location is turned on. LocalDrop doesn\'t use your location.</string>
+
+    <string name="action_allow">Allow</string>
+    <string name="action_open_app_settings">Open settings</string>
+    <string name="action_turn_on_bluetooth">Turn on Bluetooth</string>
+    <string name="action_open_location_settings">Turn on location</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_pair">Pair</string>
+    <string name="action_decline">Decline</string>
+    <string name="action_done">Done</string>
+    <string name="action_forget">Forget</string>
+    <string name="tile_clipboard_label">Clipboard to Mac</string>
+    <string name="process_text_label">Send to Mac</string>
+    <string name="action_add_tile">Add “Clipboard to Mac” to Quick Settings</string>
+    <string name="tile_no_mac">Pair a Mac first</string>
+    <string name="tile_choose_mac">Choose a Mac</string>
+    <string name="clipboard_empty">Clipboard is empty</string>
+    <string name="action_send_now">Send now</string>
+    <string name="action_discard">Discard</string>
+    <string name="error_rejected_asleep">%1$s is asleep. Wake it up and try again.</string>
+    <string name="queue_waiting_title">Waiting for %1$s</string>
+    <plurals name="queue_waiting_text">
+        <item quantity="one">Sends automatically when it’s nearby and awake · %d item</item>
+        <item quantity="other">Sends automatically when it’s nearby and awake · %d items</item>
+    </plurals>
+    <string name="queue_spooling">Keeping a copy to send later…</string>
+    <string name="queue_parked_title">Not sent to %1$s</string>
+    <string name="queue_parked_text">%1$s wasn’t available for an hour. Kept on this phone for 7 days — tap Try again when it’s nearby, or just open LocalDrop.</string>
+    <string name="queue_not_kept">%1$s wasn’t available, and there wasn’t room on this phone to keep a copy for later.</string>
+    <plurals name="home_waiting">
+        <item quantity="one">%d item waiting to be sent</item>
+        <item quantity="other">%d items waiting to be sent</item>
+    </plurals>
+    <string name="action_make_default">Make default</string>
+    <string name="action_more">More</string>
+    <string name="label_default">Default</string>
+    <string name="action_back">Back</string>
+
+    <string name="pairing_title">Pair with %1$s?</string>
+    <string name="pairing_compare">Make sure %1$s shows the same code:</string>
+    <string name="pairing_key_changed">The security key of %1$s has changed. This happens after reinstalling LocalDrop — or if another device is impersonating it. Continue only if the device is in front of you.</string>
+    <string name="pairing_waiting">Waiting for confirmation on %1$s…</string>
+
+    <string name="trusted_last_seen">Last seen %1$s</string>
+    <string name="trusted_forget_title">Forget %1$s?</string>
+    <string name="trusted_forget_body">You\'ll need to pair again before sending files to this device.</string>
+
+    <string name="share_pick_title">Send to</string>
+    <string name="share_no_devices_title">Add your Mac first</string>
+    <string name="share_no_devices_body">Pair your Mac once in LocalDrop. After that it appears right here when you share.</string>
+    <string name="action_add_mac">Add a Mac</string>
+    <string name="shortcut_send_to">Send to %1$s</string>
+
+    <string name="channel_progress">Transfers in progress</string>
+    <string name="channel_results">Transfer results</string>
+    <string name="channel_pairing">Pairing requests</string>
+    <string name="notification_preparing">Preparing to send…</string>
+    <string name="notification_sending_to">Sending to %1$s</string>
+    <string name="notification_pairing_title">Pair with %1$s</string>
+    <string name="notification_pairing_text">Compare the code on both devices.</string>
+    <string name="notification_pairing_code">Pairing code %1$s</string>
+    <string name="notification_failed_title">Couldn\'t send to %1$s</string>
+    <string name="notification_unknown_device">your Mac</string>
+    <string name="error_not_paired">This Mac is no longer paired. Open LocalDrop to add it again.</string>
+
+    <string name="test_data_body">Send generated data to a paired Mac to measure speed. Integrity is checked with SHA-256. Progress appears in the notification.</string>
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_no_devices">Pair a Mac first.</string>
+    <string name="diagnostics_send_to">Send %1$s of test data</string>
+
+    <string name="home_empty_title">Send files to your Mac from any app</string>
+    <string name="home_empty_body">Pair your Mac once. After that, share a photo or file from any app and pick your Mac — LocalDrop doesn\'t need to be open.</string>
+    <string name="home_how_to_send">To send, share from any app and pick your Mac in the share sheet.</string>
+    <string name="home_your_macs">Your Macs</string>
+    <string name="action_add_another_mac">Add another Mac</string>
+    <string name="add_mac_title">Add a Mac</string>
+    <string name="add_mac_body">On your Mac, open LocalDrop in the menu bar and turn on “Visible to new devices”. Keep it close to this phone and tap it below. You\'ll compare a code once.</string>
+    <string name="presence_nearby_ready">Nearby · ready</string>
+    <string name="presence_nearby_other_network">Nearby · not on the same network</string>
+    <string name="presence_nearby">Nearby</string>
+    <string name="presence_nearby_busy">Nearby · busy</string>
+    <string name="presence_not_nearby">Not nearby or asleep</string>
+    <string name="presence_unknown">Bluetooth is off</string>
+    <string name="device_status_tap_to_pair">Tap to pair</string>
+    <string name="device_status_already_paired">Already paired</string>
+    <string name="paired_title">Paired with %1$s</string>
+    <string name="already_paired_title">%1$s is already paired</string>
+    <string name="paired_body">Share any file from any app and pick %1$s in the share sheet.</string>
+
+    <string name="transfer_connecting">Connecting to %1$s…</string>
+    <string name="transfer_preparing">Preparing…</string>
+    <string name="transfer_waiting">Waiting for %1$s…</string>
+    <string name="transfer_waiting_detail">Accept the transfer on %1$s.</string>
+    <string name="transfer_sending">Sending %1$s</string>
+    <string name="transfer_verifying">Verifying…</string>
+    <string name="transfer_file_of">%1$s (%2$d of %3$d)</string>
+    <string name="transfer_bytes">%1$s of %2$s</string>
+    <string name="transfer_speed">%1$s/s</string>
+    <string name="transfer_completed">Sent to %1$s</string>
+    <string name="text_copied_title">Copied to %1$s</string>
+    <string name="text_copied_body">Paste it on the Mac with ⌘V.</string>
+    <string name="transfer_completed_detail">%1$s in %2$s s · %3$s/s average · integrity verified</string>
+    <string name="transfer_failed_title">Transfer failed</string>
+    <string name="transfer_cancelled">Transfer cancelled</string>
+    <string name="transfer_cancelled_by_peer">%1$s cancelled the transfer.</string>
+
+    <string name="error_not_nearby">%1$s isn\'t nearby or is asleep. Wake it up and keep it close to this phone.</string>
+    <string name="error_nearby_unresponsive">%1$s is nearby but didn\'t respond. Make sure both devices are on the same Wi-Fi, then try again.</string>
+    <string name="error_pairing_unavailable">%1$s isn\'t paired with this phone. On the Mac, open LocalDrop in the menu bar, turn on “Visible to new devices”, then try again.</string>
+    <string name="error_bluetooth_off">Bluetooth is off. Turn it on to find your Mac.</string>
+    <string name="error_bluetooth_permission">LocalDrop needs access to nearby devices. Open LocalDrop to allow it.</string>
+    <string name="error_bluetooth_failed">Bluetooth couldn\'t search for your Mac. Try again.</string>
+    <string name="error_source_unavailable">%1$s can no longer be read. It may have been moved or deleted.</string>
+    <string name="error_rejected_declined">%1$s declined the transfer.</string>
+    <string name="error_rejected_busy">%1$s is receiving another transfer. Try again in a moment.</string>
+    <string name="error_rejected_storage">There isn\'t enough free space on %1$s.</string>
+    <string name="error_rejected_timeout">%1$s didn\'t respond to the request.</string>
+    <string name="error_rejected_other">%1$s rejected the transfer (%2$s).</string>
+    <string name="error_checksum">%1$s was damaged in transit (checksum mismatch) and wasn\'t saved. Try again.</string>
+    <string name="error_write_failed">%1$s couldn\'t save the file.</string>
+
+    <string name="error_no_wifi">Connect to Wi-Fi, or turn on this phone\'s hotspot and connect the Mac to it. LocalDrop sends files directly over the local network and never uses mobile data.</string>
+    <string name="error_refused">%1$s refused the connection. Make sure LocalDrop is running on it.</string>
+    <string name="error_unreachable">Can\'t reach %1$s. Make sure both devices are on the same Wi-Fi network. Some public and guest networks block connections between devices.</string>
+    <string name="error_timeout">%1$s stopped responding.</string>
+    <string name="error_connection_lost">The connection to %1$s was lost.</string>
+    <string name="error_incompatible">%1$s uses an incompatible version of LocalDrop. Update the app on both devices.</string>
+    <string name="error_auth_failed">Couldn\'t verify the identity of %1$s. The connection was closed to keep your data safe.</string>
+    <string name="error_decryption">Data from %1$s failed decryption. The connection was closed to keep your data safe.</string>
+    <string name="error_protocol">%1$s sent an unexpected response.</string>
+    <string name="error_identity">This phone\'s security key is unavailable. Restart the app and try again.</string>
+    <string name="error_peer_busy">%1$s is busy with other devices. Try again in a moment.</string>
+    <string name="error_peer_timeout">%1$s closed the connection because it wasn\'t confirmed in time.</string>
+    <string name="error_peer_auth_failed">%1$s couldn\'t verify this phone\'s identity.</string>
+    <string name="error_peer_not_trusted">%1$s no longer trusts this phone, so the transfer was stopped. Send again to pair.</string>
+    <string name="error_closed_by_peer">%1$s ended the session.</string>
+    <string name="error_pairing_rejected">Pairing was declined on %1$s.</string>
+    <string name="error_storage">Couldn\'t save the paired device on this phone. Free up some storage and try again.</string>
+    <string name="error_peer_generic">%1$s closed the connection (%2$s).</string>
+
+    <plurals name="notification_files">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+</resources>

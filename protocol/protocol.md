@@ -1,0 +1,250 @@
+# LocalDrop Protocol v1
+
+Документ — единственный источник правды для всех реализаций (Android, macOS).
+Реализации не должны полагаться на поведение, которое здесь не описано.
+
+```
+protocolVersion = 1
+```
+
+## 1. Роли
+
+| Роль | Кто в v1 | Что делает |
+|------|----------|------------|
+| **Responder** (server) | macOS | BLE peripheral, GATT server, TCP listener, Bonjour |
+| **Initiator** (client) | Android | BLE central/scanner, открывает TCP-соединение |
+
+Направление передачи файла не зависит от роли: после handshake любая сторона может стать
+отправителем (`transfer_request` может прийти в обе стороны). В v1 реализовано только
+Initiator → Responder (Android → Mac).
+
+## 2. Обнаружение (BLE)
+
+BLE используется **только** для nearby discovery и получения сетевого endpoint.
+Файлы по BLE не передаются.
+
+### 2.1 UUID
+
+| Назначение | UUID |
+|------------|------|
+| LocalDrop Service | `8D232B6B-5901-4AEA-89A2-389415C619EB` |
+| Endpoint Info characteristic (read) | `13391BAF-1674-4EF2-A1E1-AAD175FE6C3F` |
+
+### 2.2 Advertisement
+
+Responder рекламирует `Service UUIDs = [LocalDrop Service]` и `Local Name` в одном из двух
+режимов. macOS `CBPeripheralManager` позволяет рекламировать **только** local name и service
+UUIDs, а 128-битный UUID оставляет под имя 8 символов — поэтому весь сигнал помещается в имя.
+
+| Режим | Local Name | Кто узнаёт устройство |
+|-------|-----------|------------------------|
+| **Приватный** (по умолчанию) | статус + 7 символов: base64url без padding от 5-байтового токена присутствия | Только доверенные устройства, знающие ключ присутствия |
+| **Привязка** | `P` + `shortId` (первые 6 hex-символов `deviceId` без дефисов, lowercase) | Любое устройство рядом — для первой привязки |
+
+**Токен присутствия:**
+
+```
+slot  = floor(unixTimeSeconds / 900)                     // 15 минут
+token = HMAC-SHA256(presenceKey, "localdrop/v1/presence" ‖ u64_BE(slot))[0..5]
+name  = status + base64url_nopad(token)
+status: "L" — готов принимать, "N" — нет локальной сети, "B" — занят (приём или привязка)
+```
+
+Статус меняет первую букву имени, и Responder переизлучает рекламу сразу при его смене —
+Initiator узнаёт «нет сети» или «занят» за секунды, без GATT-чтения. Перед сном Responder
+прекращает рекламу, после пробуждения — возобновляет: спящее устройство не выглядит «рядом».
+
+Responder меняет имя на границе слота. Initiator проверяет слоты `slot−1`, `slot`, `slot+1`
+(допуск на расхождение часов). Посторонний видит каждые 15 минут новые случайные байты.
+
+**Режим привязки** включает пользователь Responder'а (на 10 минут) и он действует сам, пока
+доверенных устройств нет. Вне этого режима Responder отклоняет сессии, требующие привязки
+(`error{pairing_unavailable}`), — посторонний в сети не может инициировать окно с кодом.
+
+Initiator сканирует с `ScanFilter` по Service UUID. Устройство считается исчезнувшим, если
+advertisement не приходил дольше `DEVICE_STALE_TIMEOUT = 8 s`.
+
+Advertisement **не является** доказательством личности: токен — лишь подсказка «этот Mac
+рядом». Личность доказывается только подписью в handshake (см. `security.md`).
+
+### 2.3 Endpoint Info characteristic
+
+Initiator подключается к GATT, запрашивает MTU 247 (best effort), читает characteristic
+(long read; Responder обязан поддерживать `offset`) и отключается.
+
+Значение — CBOR map. В **режиме привязки** — открытое:
+
+| Ключ | Тип | Описание |
+|------|-----|----------|
+| `v` | uint | protocolVersion Responder'а |
+| `id` | tstr | deviceId (UUID, lowercase, с дефисами) |
+| `name` | tstr | человекочитаемое имя ("MacBook Pro") |
+| `platform` | tstr | `"macos"`, `"android"` |
+| `port` | uint | TCP-порт listener'а |
+| `addrs` | array of tstr | IPv4/IPv6 адреса локальных интерфейсов (без loopback) |
+| `fp` | bstr(32) | SHA-256 fingerprint identity public key |
+| `busy` | ?bool | идёт приём или привязка |
+| `caps` | ?[tstr] | возможности устройства (см. §2.6) |
+
+В **приватном режиме** — запечатанное ключом присутствия:
+
+```
+{ "v": 1, "sealed": bstr }
+sealed = nonce(12) ‖ AES-256-GCM(k, nonce, plaintext) ‖ tag(16)
+k      = HKDF-SHA256(ikm = presenceKey, salt = "", info = "localdrop/v1/endpoint", L = 32)
+plaintext = открытая CBOR map из таблицы выше
+```
+
+Значение генерируется на каждое чтение (адреса и порт могут меняться).
+Initiator выбирает адрес из `addrs`, лежащий в той же подсети, что и его Wi-Fi интерфейс;
+при отсутствии совпадения пробует все по очереди (IPv4 первыми).
+
+### 2.4 Bonjour
+
+Responder публикует сервис `_localdrop._tcp` (имя сервиса = deviceId). Initiator может
+разрешить доверенное устройство по имени (§2.5). Bonjour — запасной путь, не механизм
+nearby discovery: в гостевых сетях multicast часто заблокирован.
+
+### 2.5 Поиск доверенного Responder'а
+
+Initiator, знающий устройство, не начинает с discovery:
+
+1. **Последний endpoint:** TCP к адресам и порту успешной прошлой сессии (таймаут 2 s).
+   Responder старается слушать на одном и том же порту между перезапусками.
+2. Если не удалось — параллельно **BLE** (токен присутствия → Endpoint Info) и **Bonjour**
+   (имя = deviceId). Первый успешный handshake побеждает.
+
+Способ получения адреса не влияет на доверие: подлинность подтверждает подпись в handshake.
+
+### 2.6 Capabilities
+
+Устройства объявляют возможности списком строк (`caps` в `client_hello`, `server_hello`,
+Endpoint Info). Неизвестные значения игнорируются. Определены:
+
+| Значение | Смысл |
+|----------|-------|
+| `files` | принимает файлы |
+| `multipleFiles` | принимает несколько файлов в одной передаче |
+| `text` | принимает текст |
+| `clipboardReceive` | принимает сообщение `text` и кладёт его в буфер обмена |
+| `presenceToken` | рекламирует приватный токен присутствия |
+| `autoAccept` | может принимать передачи без вопроса по политике устройства |
+
+### 2.7 Присутствие (модель Initiator'а)
+
+| Состояние | Признак |
+|-----------|---------|
+| `Offline` | нет свежего токена (8 s) — далеко, выключен Bluetooth или спит |
+| `Nearby` | свежий токен устройства (физически рядом, не спит) |
+| `Reachable` | рядом, статус `L`, и текущие адреса из Endpoint Info — в подсети одной из сетей Initiator'а |
+| `Connected` | идёт аутентифицированная сессия |
+| `Busy` | статус `B`, Endpoint Info `busy = true` или отказ `busy` |
+
+## 3. Транспорт
+
+* TCP, одна сессия = одно соединение.
+* Responder слушает на порту прошлого запуска, если он свободен, иначе на любом (`0`);
+  порт публикуется через GATT/Bonjour.
+* `TCP_NODELAY` включён, keepalive включён.
+* Таймауты: connect 10 s; ожидание любого handshake-сообщения 15 s; ожидание решения
+  пользователя (pairing, accept/decline) 120 s; отсутствие данных во время передачи 30 s.
+
+### 3.1 Фрейминг
+
+```
++----------------+----------------------+
+| length: u32 BE | payload: length байт |
++----------------+----------------------+
+```
+
+* `length` ≤ `MAX_FRAME_SIZE = 1 MiB + 64`. Больший фрейм → `error{code="bad_message"}` и закрытие.
+* До установки ключей (сообщения handshake 1–3) payload — открытый CBOR.
+* После — payload = `AES-256-GCM(ciphertext || tag[16])`, plaintext — CBOR. Детали — `security.md`.
+
+## 4. Сериализация: CBOR
+
+Выбран **CBOR (RFC 8949)**, а не Protocol Buffers: не нужен кодогенератор и `protoc` в сборке,
+формат самоописываемый, бинарные данные (`bstr`) без base64. Обе реализации содержат
+минимальный кодек на ~300 строк без внешних зависимостей.
+
+Используемое подмножество:
+
+* major type 0/1 — целые (до 64 бит);
+* major type 2 — `bstr`; major type 3 — `tstr` (UTF-8);
+* major type 4 — array; major type 5 — map;
+* simple values `false`, `true`, `null`.
+
+Не используются: float, tags, indefinite length. Декодер обязан отвергать их
+(`bad_message`). Ключи map — всегда `tstr`. Неизвестные ключи **игнорируются**
+(расширяемость в пределах v1). Отсутствие обязательного ключа → `bad_message`.
+
+Каждое сообщение — map с обязательным ключом `t` (тип сообщения, `tstr`).
+Полный список сообщений — `messages.md`.
+
+## 5. Жизненный цикл соединения
+
+```
+Initiator                                   Responder
+    | --- client_hello (plain) -----------------> |
+    | <-- server_hello (plain) ------------------ |   или error{version_unsupported}
+    | --- client_nonce (plain) -----------------> |
+    |         [обе стороны выводят ключи]         |
+    | <-- server_auth (enc) --------------------- |
+    | --- client_auth (enc) --------------------> |
+    | <-- session_status (enc) ------------------ |   trusted | pairing_required | key_changed
+    |                                             |
+    |   [если pairing_required / key_changed]     |
+    |   оба показывают 6-значный код              |
+    | --- pairing_confirm (enc) ----------------> |
+    | <-- pairing_result (enc) ------------------ |
+    |                                             |
+    | --- transfer_request (enc) ---------------> |
+    | <-- transfer_accept / transfer_reject ----- |
+    | --- file_begin -------------------------->  |
+    | --- file_chunk × N ----------------------->  |
+    | --- file_end (sha256) -------------------->  |
+    | <-- file_result --------------------------- |
+    |   ... следующий файл ...                    |
+    | --- transfer_complete --------------------> |
+    | <-- transfer_result ----------------------- |
+    | --- close --------------------------------> |
+```
+
+Любая сторона может отправить `error` или `cancel` в любой момент после handshake
+и закрыть соединение.
+
+## 6. Версионирование
+
+* `client_hello.v` — максимальная версия Initiator'а, `client_hello.minV` — минимальная.
+* Responder выбирает `max(v ∩ свои версии)`. Если пересечения нет — открытый
+  `error{code="version_unsupported", supported=[...]}` и закрытие.
+* Обе стороны показывают пользователю понятную ошибку
+  ("Устройство использует несовместимую версию LocalDrop. Обновите приложение.").
+
+## 7. Передача файлов
+
+* Чанк: `CHUNK_SIZE = 256 KiB` (константа в коде, не часть протокола — получатель
+  обязан принимать любой размер ≤ `MAX_CHUNK_SIZE = 1 MiB`).
+* Файлы передаются последовательно: `file_begin` → `file_chunk`* → `file_end` → `file_result`.
+* SHA-256 считается потоково на обеих сторонах. Получатель сравнивает свой хеш с
+  `file_end.sha256` и только после совпадения перемещает временный файл на итоговое место.
+* `transferId` (16 байт random) и `fileId` (uint, индекс в `transfer_request.files`)
+  существуют с v1. `file_begin.offset` и `file_chunk.offset` зарезервированы под resume:
+  в v1 отправитель всегда начинает с `0`, получатель отвергает `offset ≠ 0`
+  (`bad_message`), пока resume не реализован.
+
+## 8. Константы
+
+| Имя | Значение |
+|-----|----------|
+| `PROTOCOL_VERSION` | 1 |
+| `MAX_FRAME_SIZE` | 1 048 640 байт (1 MiB + 64) |
+| `CHUNK_SIZE` (отправитель, рекомендованный) | 262 144 байт |
+| `MAX_CHUNK_SIZE` | 1 048 576 байт |
+| `DEVICE_STALE_TIMEOUT` | 8 s |
+| `HANDSHAKE_TIMEOUT` | 15 s |
+| `USER_DECISION_TIMEOUT` | 120 s |
+| `IDLE_TRANSFER_TIMEOUT` | 30 s |
+| `SESSION_IDLE_TIMEOUT` | 120 s |
+| Пределы привязки (Responder) | 1 одновременно, 5 попыток в минуту |
+| Bonjour type | `_localdrop._tcp` |

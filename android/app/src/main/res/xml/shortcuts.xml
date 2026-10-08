@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Direct Share: dynamic shortcuts in this category appear in the Sharesheet as trusted Macs. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <share-target android:targetClass="dev.localdrop.feature.share.ShareTargetActivity">
+        <data android:mimeType="*/*" />
+        <category android:name="dev.localdrop.category.SEND_TO_DEVICE" />
+    </share-target>
+</shortcuts>
