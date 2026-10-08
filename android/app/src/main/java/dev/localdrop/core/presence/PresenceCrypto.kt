@@ -20,6 +20,7 @@ object PresenceCrypto {
     private const val SLOT_SECONDS = 900L
     private val TOKEN_LABEL = "localdrop/v1/presence".toByteArray(Charsets.UTF_8)
     private val ENDPOINT_INFO = "localdrop/v1/endpoint".toByteArray(Charsets.UTF_8)
+    private val PENDING_LABEL = "localdrop/v1/pending".toByteArray(Charsets.UTF_8)
     private const val NONCE_SIZE = 12
     private const val TAG_BITS = 128
 
@@ -32,6 +33,23 @@ object PresenceCrypto {
             doFinal(message)
         }
         return mac.copyOf(TOKEN_SIZE)
+    }
+
+    /** 8-byte tag a Mac advertises while it has files for the phone [deviceId] (protocol.md §2.8). */
+    fun pendingTag(presenceKey: ByteArray, deviceId: String, slot: Long): ByteArray {
+        val message = PENDING_LABEL + deviceId.lowercase().toByteArray(Charsets.UTF_8) +
+            ByteArray(8) { i -> (slot ushr (8 * (7 - i))).toByte() }
+        val mac = Mac.getInstance("HmacSHA256").run {
+            init(SecretKeySpec(presenceKey, "HmacSHA256"))
+            doFinal(message)
+        }
+        return mac.copyOf(8)
+    }
+
+    /** True if [tag] says [presenceKey]'s Mac has files for [deviceId], allowing for clock skew. */
+    fun pendingTagMatches(tag: ByteArray, presenceKey: ByteArray, deviceId: String, nowMillis: Long): Boolean {
+        val current = slot(nowMillis)
+        return (current - 1..current + 1).any { pendingTag(presenceKey, deviceId, it).contentEquals(tag) }
     }
 
     /** The 7 characters after "L" in a private-mode local name. */

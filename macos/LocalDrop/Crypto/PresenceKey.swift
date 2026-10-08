@@ -9,6 +9,7 @@ nonisolated struct PresenceKey: Sendable {
     private static let slotSeconds: Double = 900
     private static let tokenLabel = Data("localdrop/v1/presence".utf8)
     private static let endpointInfo = Data("localdrop/v1/endpoint".utf8)
+    private static let pendingLabel = Data("localdrop/v1/pending".utf8)
 
     let raw: Data
 
@@ -42,6 +43,16 @@ nonisolated struct PresenceKey: Sendable {
         withUnsafeBytes(of: slot.bigEndian) { message.append(contentsOf: $0) }
         let mac = HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: raw))
         return Data(mac).prefix(5)
+    }
+
+    /// 8-byte tag that tells one trusted phone, and only phones that know this key, that files
+    /// wait for it (protocol.md §2.8). Rotates with the slot, like the presence token.
+    func pendingTag(deviceId: String, slot: UInt64) -> Data {
+        var message = Self.pendingLabel
+        message.append(Data(deviceId.lowercased().utf8))
+        withUnsafeBytes(of: slot.bigEndian) { message.append(contentsOf: $0) }
+        let mac = HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: raw))
+        return Data(mac).prefix(8)
     }
 
     /// Status letter of the private-mode name (protocol.md §2.2).

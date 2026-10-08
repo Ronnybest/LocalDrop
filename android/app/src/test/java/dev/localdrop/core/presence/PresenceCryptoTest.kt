@@ -5,6 +5,7 @@ import dev.localdrop.core.discovery.AdvertisedIdentity
 import dev.localdrop.core.discovery.AdvertisedStatus
 import dev.localdrop.core.discovery.BleScanner
 import dev.localdrop.core.protocol.EndpointInfo
+import dev.localdrop.core.protocol.ProtocolConstants
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -58,6 +59,24 @@ class PresenceCryptoTest {
         assertEquals(listOf("files", "presenceToken"), info.capabilities)
         // A rotated key can't open it.
         assertThrows(DecryptionException::class.java) { PresenceCrypto.openEndpoint(ByteArray(32), sealedPayload()) }
+    }
+
+    /** Same vector as the Mac's PresenceKey.pendingTag (CryptoKit HMAC-SHA256). */
+    @Test
+    fun pendingTagMatchesMac() {
+        val key = ByteArray(32) { it.toByte() }
+        val deviceId = "6ca4ee21-7a37-4231-9d3c-dd44fcc81283"
+        assertEquals("9f0cb96cf546c9af", PresenceCrypto.pendingTag(key, deviceId, 1_966_000L).hex())
+        // The tag is for one phone and rotates with the slot.
+        assertFalse(PresenceCrypto.pendingTag(key, "00000000-0000-0000-0000-000000000000", 1_966_000L).contentEquals(PresenceCrypto.pendingTag(key, deviceId, 1_966_000L)))
+        assertFalse(PresenceCrypto.pendingTag(key, deviceId, 1_966_001L).contentEquals(PresenceCrypto.pendingTag(key, deviceId, 1_966_000L)))
+    }
+
+    @Test
+    fun pendingDeliveryUuidCarriesTheTag() {
+        val uuid = java.util.UUID.fromString("137D2908-412B-445F-9F0C-B96CF546C9AF")
+        assertEquals("9f0cb96cf546c9af", ProtocolConstants.pendingDeliveryTag(uuid)!!.hex())
+        assertEquals(null, ProtocolConstants.pendingDeliveryTag(ProtocolConstants.SERVICE_UUID))
     }
 
     private fun sealedPayload(): ByteArray {

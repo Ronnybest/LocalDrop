@@ -10,8 +10,20 @@ object ProtocolConstants {
     val SERVICE_UUID: UUID = UUID.fromString("8D232B6B-5901-4AEA-89A2-389415C619EB")
     val ENDPOINT_INFO_CHARACTERISTIC_UUID: UUID = UUID.fromString("13391BAF-1674-4EF2-A1E1-AAD175FE6C3F")
 
-    /** Advertised by a Mac instead of [SERVICE_UUID] while it has files for a phone (protocol.md §2.8). */
-    val PENDING_DELIVERY_UUID: UUID = UUID.fromString("137D2908-412B-445F-B387-7F321A12185C")
+    /**
+     * While a Mac has files for a phone it advertises, instead of [SERVICE_UUID], a UUID made of
+     * these 8 bytes and the phone's 8-byte delivery tag (protocol.md §2.8). Scan filters match the
+     * prefix with [PENDING_DELIVERY_MASK].
+     */
+    val PENDING_DELIVERY_PREFIX: UUID = UUID(0x137D2908412B445FL, 0L)
+    val PENDING_DELIVERY_MASK: UUID = UUID(-1L, 0L)
+
+    /** The delivery tag in a pending-delivery UUID, or null for any other UUID. */
+    fun pendingDeliveryTag(uuid: UUID): ByteArray? {
+        if (uuid.mostSignificantBits != PENDING_DELIVERY_PREFIX.mostSignificantBits) return null
+        val bits = uuid.leastSignificantBits
+        return ByteArray(8) { i -> (bits ushr (8 * (7 - i))).toByte() }
+    }
 
     /** BLE local name prefix in pairing mode (protocol.md §2.2); private names start with a status letter. */
     const val PAIRING_NAME_PREFIX = "P"

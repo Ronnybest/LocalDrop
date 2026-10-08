@@ -8,8 +8,13 @@ nonisolated enum ProtocolConstants {
 
     @MainActor static let serviceUUID = CBUUID(string: "8D232B6B-5901-4AEA-89A2-389415C619EB")
     @MainActor static let endpointInfoCharacteristicUUID = CBUUID(string: "13391BAF-1674-4EF2-A1E1-AAD175FE6C3F")
-    /// Advertised instead of the service UUID while files wait for a phone (protocol.md §2.8).
-    @MainActor static let pendingDeliveryUUID = CBUUID(string: "137D2908-412B-445F-B387-7F321A12185C")
+    /// While files wait for a phone, its pending-delivery UUID is advertised instead of the
+    /// service UUID: these 8 bytes, then the phone's 8-byte delivery tag (protocol.md §2.8).
+    static let pendingDeliveryPrefix: [UInt8] = [0x13, 0x7D, 0x29, 0x08, 0x41, 0x2B, 0x44, 0x5F]
+
+    @MainActor static func pendingDeliveryUUID(tag: Data) -> CBUUID {
+        CBUUID(data: Data(pendingDeliveryPrefix) + tag.prefix(8))
+    }
 
     /// BLE local name prefixes (protocol.md §2.2): private token, or pairing mode + shortId.
     static let privateNamePrefix = "L"

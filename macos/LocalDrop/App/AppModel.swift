@@ -1,4 +1,5 @@
 import AppKit
+import CoreBluetooth
 import Foundation
 import Network
 
@@ -182,8 +183,16 @@ final class AppModel {
 
     // MARK: - Sending to phones
 
-    /// Advertised as a pending delivery while any phone has files waiting for it.
-    var hasPendingDelivery: Bool { deliveries.contains { $0.phase == .waiting } }
+    /// One pending-delivery UUID per phone with files waiting, addressed to it (protocol.md §2.8).
+    private func pendingDeliveryUUIDs() -> [CBUUID] {
+        guard let presenceKey else { return [] }
+        let slot = PresenceKey.slot(at: Date())
+        var phones: [String] = []
+        for delivery in deliveries where delivery.phase == .waiting && !phones.contains(delivery.deviceId) {
+            phones.append(delivery.deviceId)
+        }
+        return phones.map { ProtocolConstants.pendingDeliveryUUID(tag: presenceKey.pendingTag(deviceId: $0, slot: slot)) }
+    }
 
     func delivery(for deviceId: String) -> OutgoingDelivery? {
         deliveries.first { $0.deviceId == deviceId }
@@ -443,7 +452,7 @@ final class AppModel {
         let advertiser = BLEAdvertiser(
             nameProvider: { [weak self] in self?.currentAdvertisedName() ?? "" },
             endpointValueProvider: { [weak self] in self?.currentEndpointValue() },
-            pendingProvider: { [weak self] in self?.hasPendingDelivery ?? false }
+            pendingProvider: { [weak self] in self?.pendingDeliveryUUIDs() ?? [] }
         )
         self.advertiser = advertiser
         schedulePresenceRefresh()

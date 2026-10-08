@@ -40,9 +40,15 @@ object CompanionLink {
     fun request(context: Context, mac: TrustedDevice, onIntent: (IntentSender) -> Unit) {
         val manager = context.getSystemService(CompanionDeviceManager::class.java) ?: return
         val request = AssociationRequest.Builder().setSingleDevice(true).apply {
-            for (uuid in listOf(ProtocolConstants.SERVICE_UUID, ProtocolConstants.PENDING_DELIVERY_UUID)) {
-                addDeviceFilter(filter(mac, uuid))
-            }
+            addDeviceFilter(filter(mac, ScanFilter.Builder().setServiceUuid(ParcelUuid(ProtocolConstants.SERVICE_UUID)).build()))
+            addDeviceFilter(
+                filter(
+                    mac,
+                    ScanFilter.Builder()
+                        .setServiceUuid(ParcelUuid(ProtocolConstants.PENDING_DELIVERY_PREFIX), ParcelUuid(ProtocolConstants.PENDING_DELIVERY_MASK))
+                        .build(),
+                ),
+            )
         }.build()
         val callback = object : CompanionDeviceManager.Callback() {
             override fun onAssociationPending(intentSender: IntentSender) = onIntent(intentSender)
@@ -67,9 +73,8 @@ object CompanionLink {
     }
 
     /** This Mac's private names for the current token slot and its neighbours (protocol.md §2.2). */
-    private fun filter(mac: TrustedDevice, uuid: java.util.UUID): BluetoothLeDeviceFilter {
-        val builder = BluetoothLeDeviceFilter.Builder()
-            .setScanFilter(ScanFilter.Builder().setServiceUuid(ParcelUuid(uuid)).build())
+    private fun filter(mac: TrustedDevice, scanFilter: ScanFilter): BluetoothLeDeviceFilter {
+        val builder = BluetoothLeDeviceFilter.Builder().setScanFilter(scanFilter)
         mac.presenceKey?.let { key ->
             val slot = PresenceCrypto.slot(System.currentTimeMillis())
             val tokens = (slot - 1..slot + 1).joinToString("|") { Regex.escape(PresenceCrypto.encodeToken(PresenceCrypto.token(key, it))) }

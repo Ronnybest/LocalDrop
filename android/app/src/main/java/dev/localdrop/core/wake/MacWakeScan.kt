@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.PendingIntent
 import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
@@ -21,6 +22,7 @@ import androidx.core.content.ContextCompat
 import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.core.discovery.BluetoothEnvironment
+import dev.localdrop.core.presence.PresenceCrypto
 import dev.localdrop.core.protocol.ProtocolConstants
 import dev.localdrop.feature.transfer.TransferService
 
@@ -45,7 +47,13 @@ object MacWakeScan {
             return
         }
         val scanner = environment.adapter?.bluetoothLeScanner ?: return
-        val filters = listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(ProtocolConstants.PENDING_DELIVERY_UUID)).build())
+        // Any pending delivery from any Mac: the delivery tag rotates every 15 minutes, too often
+        // to keep a filter for this phone's own tag registered. The receiver checks the tag.
+        val filters = listOf(
+            ScanFilter.Builder()
+                .setServiceUuid(ParcelUuid(ProtocolConstants.PENDING_DELIVERY_PREFIX), ParcelUuid(ProtocolConstants.PENDING_DELIVERY_MASK))
+                .build(),
+        )
         // Every match, not FIRST_MATCH: the controller's found/lost tracking reported a Mac
         // starting a delivery only now and then (on a Pixel 8, Android 17). The filter runs in the
         // controller, so nothing is reported while no Mac has files; the receiver drops repeats.
@@ -77,9 +85,10 @@ object MacWakeScan {
 }
 
 /**
- * A Mac advertises files for a phone. Starts receiving at once when Android allows it (a
- * companion-device association with the Mac); otherwise asks with a notification, which starts
- * the transfer when tapped.
+ * A Mac advertises files for a phone. Only the phone the delivery tag is for (protocol.md §2.8)
+ * goes on, to the Mac that has the files: other phones nearby let it be without connecting.
+ * Starts receiving at once when Android allows it (a companion-device association with the Mac);
+ * otherwise asks with a notification, which starts the transfer when tapped.
  */
 class MacWakeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -88,30 +97,57 @@ class MacWakeReceiver : BroadcastReceiver() {
             Log.w(TAG, "Wake scan error $error")
             return
         }
-        // A pending delivery is advertised many times a second; one start is enough.
+        val container = (context.applicationContext as LocalDropApplication).container
+        val store = container.trustedDeviceStore
+        store.load()
+        val me = container.localDevice.deviceId
+        val nowMillis = System.currentTimeMillis()
+        val tags = scanResults(intent)
+            .flatMap { it.scanRecord?.serviceUuids.orEmpty() }
+            .mapNotNull { ProtocolConstants.pendingDeliveryTag(it.uuid) }
+            .distinctBy { it.toList() }
+        val macs = store.devices.value.filter { mac ->
+            val key = mac.presenceKey
+            mac.canSend && key != null && tags.any { PresenceCrypto.pendingTagMatches(it, key, me, nowMillis) }
+        }
+        // A pending delivery is advertised many times a second; one start (or one log line) is enough.
         val now = SystemClock.elapsedRealtime()
-        if (now - lastWakeAt < REPEAT_INTERVAL_MS) return
-        lastWakeAt = now
-        Log.i(TAG, "A Mac has files for this phone")
-        try {
-            TransferService.receive(context)
-        } catch (e: IllegalStateException) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || e !is ForegroundServiceStartNotAllowedException) throw e
-            Log.i(TAG, "No companion association: asking with a notification")
-            notifyTapToReceive(context)
+        if (macs.isEmpty()) {
+            if (now - lastOtherAt >= REPEAT_INTERVAL_MS) {
+                lastOtherAt = now
+                Log.i(TAG, "A Mac has files for another device")
+            }
+            return
+        }
+        for (mac in macs) {
+            if (now - (lastWakeAt[mac.deviceId] ?: Long.MIN_VALUE / 2) < REPEAT_INTERVAL_MS) continue
+            lastWakeAt[mac.deviceId] = now
+            Log.i(TAG, "${mac.deviceId} has files for this phone")
+            try {
+                TransferService.receive(context, mac.deviceId)
+            } catch (e: IllegalStateException) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || e !is ForegroundServiceStartNotAllowedException) throw e
+                Log.i(TAG, "No companion association: asking with a notification")
+                notifyTapToReceive(context, mac.deviceName)
+            }
         }
     }
 
-    private fun notifyTapToReceive(context: Context) {
+    private fun scanResults(intent: Intent): List<ScanResult> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT, ScanResult::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT)
+        }.orEmpty()
+
+    private fun notifyTapToReceive(context: Context, name: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
             return
         }
         TransferService.createChannels(context)
-        val store = (context.applicationContext as LocalDropApplication).container.trustedDeviceStore
-        val name = store.devices.value.filter { it.canSend }.maxByOrNull { it.lastSeenMs }?.deviceName
-            ?: context.getString(R.string.notification_unknown_device)
         val notification = NotificationCompat.Builder(context, TransferService.CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
             .setContentTitle(context.getString(R.string.notification_incoming_tap, name))
@@ -127,9 +163,11 @@ class MacWakeReceiver : BroadcastReceiver() {
         const val TAG = "LD/wake"
         const val REPEAT_INTERVAL_MS = 15_000L
 
-        /** Per process; a new process (after the app was closed) starts receiving at once. */
-        @Volatile
-        var lastWakeAt = Long.MIN_VALUE / 2
+        /** Per Mac and process; a new process (after the app was closed) starts receiving at once. */
+        val lastWakeAt = HashMap<String, Long>()
+
+        /** Deliveries for other phones are only logged, at most this often. */
+        var lastOtherAt = Long.MIN_VALUE / 2
     }
 }
 

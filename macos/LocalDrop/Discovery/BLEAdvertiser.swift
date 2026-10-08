@@ -21,10 +21,15 @@ final class BLEAdvertiser: NSObject {
     private let nameProvider: () -> String
     /// Current Endpoint Info characteristic value (open or sealed), or nil when the TCP listener isn't ready.
     private let endpointValueProvider: () -> Data?
-    /// True while files wait for a phone: advertise the Pending Delivery UUID instead.
-    private let pendingProvider: () -> Bool
+    /// Pending-delivery UUIDs, one per phone with files waiting (protocol.md §2.8); advertised
+    /// instead of the service UUID, taking turns when there are several.
+    private let pendingProvider: () -> [CBUUID]
     private var advertisedName = ""
-    private var advertisedPending = false
+    /// The pending-delivery UUID on air, nil for the service UUID.
+    private var advertisedPending: CBUUID?
+    private var pendingTurn = 0
+    private var turnTimer: Timer?
+    private static let turnInterval: TimeInterval = 3
 
     private var manager: CBPeripheralManager?
     private var service: CBMutableService?
@@ -32,7 +37,7 @@ final class BLEAdvertiser: NSObject {
     /// Snapshot served across a long (multi-request) GATT read so the bytes stay consistent.
     private var pendingReadValue: Data?
 
-    init(nameProvider: @escaping () -> String, endpointValueProvider: @escaping () -> Data?, pendingProvider: @escaping () -> Bool) {
+    init(nameProvider: @escaping () -> String, endpointValueProvider: @escaping () -> Data?, pendingProvider: @escaping () -> [CBUUID]) {
         self.nameProvider = nameProvider
         self.endpointValueProvider = endpointValueProvider
         self.pendingProvider = pendingProvider
@@ -43,7 +48,7 @@ final class BLEAdvertiser: NSObject {
     /// re-advertises if either changed.
     func refresh() {
         guard let manager, wantsAdvertising, manager.state == .poweredOn, service != nil else { return }
-        guard nameProvider() != advertisedName || pendingProvider() != advertisedPending else { return }
+        guard nameProvider() != advertisedName || currentPending() != advertisedPending else { return }
         manager.stopAdvertising()
         // `isAdvertising` still reads true right after stopping, so don't go through the guard
         // in startAdvertising(): that silently left the Mac not advertising at all.
@@ -95,15 +100,38 @@ final class BLEAdvertiser: NSObject {
     }
 
     private func beginAdvertising(_ manager: CBPeripheralManager) {
+        let wasPending = advertisedPending != nil
         advertisedName = nameProvider()
-        advertisedPending = pendingProvider()
+        advertisedPending = currentPending()
         // Two 128-bit UUIDs don't fit in an advertisement: the pending one replaces the service
         // UUID, and phones scan for both (protocol.md §2.8). The GATT service stays the same.
         manager.startAdvertising([
             CBAdvertisementDataLocalNameKey: advertisedName,
-            CBAdvertisementDataServiceUUIDsKey: [advertisedPending ? ProtocolConstants.pendingDeliveryUUID : ProtocolConstants.serviceUUID],
+            CBAdvertisementDataServiceUUIDsKey: [advertisedPending ?? ProtocolConstants.serviceUUID],
         ])
-        if advertisedPending { Log.discovery.info("Advertising pending delivery") }
+        if advertisedPending != nil && !wasPending { Log.discovery.info("Advertising pending delivery") }
+    }
+
+    /// The pending-delivery UUID to advertise now. One UUID fits at a time, so with files for
+    /// several phones their UUIDs take turns; each phone notices its own within seconds.
+    private func currentPending() -> CBUUID? {
+        let pending = pendingProvider()
+        if pending.count > 1 {
+            if turnTimer == nil {
+                turnTimer = Timer.scheduledTimer(withTimeInterval: Self.turnInterval, repeats: true) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        guard let self else { return }
+                        self.pendingTurn += 1
+                        self.refresh()
+                    }
+                }
+            }
+        } else {
+            turnTimer?.invalidate()
+            turnTimer = nil
+            pendingTurn = 0
+        }
+        return pending.isEmpty ? nil : pending[pendingTurn % pending.count]
     }
 }
 
