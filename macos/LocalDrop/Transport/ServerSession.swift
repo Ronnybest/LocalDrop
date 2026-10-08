@@ -178,7 +178,7 @@ nonisolated final class ServerSession {
             case MessageType.text:
                 try await receiver.handleText(next)
             case MessageType.receiveReady:
-                try await serveDeliveries(handshake)
+                guard try await serveDeliveries(handshake) else { return }
             case MessageType.transferAdd:
                 // Sent before the sender read our answer to its request; that answer stands.
                 Log.transfer.info("Ignoring transfer_add after the request was answered")
@@ -190,13 +190,15 @@ nonisolated final class ServerSession {
 
     /// The phone asked for what this Mac has for it (protocol.md §2.8): every waiting delivery
     /// in turn, then `nothing_pending`.
-    private func serveDeliveries(_ handshake: Handshake) async throws {
+    /// - Returns: false when the phone cancelled: it has closed the session, and so has this Mac.
+    private func serveDeliveries(_ handshake: Handshake) async throws -> Bool {
         while let delivery = await coordinator.takeDelivery(for: handshake.peer) {
             let sender = TransferSender(deliveryId: delivery.id, files: delivery.files, channel: handshake.channel,
                                         coordinator: coordinator, token: delivery.token)
             do {
                 let outcome = try await sender.run()
                 await coordinator.deliveryFinished(delivery.id, outcome: outcome)
+                if case .cancelledByPeer = outcome { return false }
             } catch {
                 let reason = (error as? SessionError)?.description ?? String(describing: error)
                 await coordinator.deliveryFinished(delivery.id, outcome: .interrupted(reason))
@@ -204,6 +206,7 @@ nonisolated final class ServerSession {
             }
         }
         try await handshake.channel.send(OutgoingMessages.nothingPending)
+        return true
     }
 
     // MARK: - Pairing
