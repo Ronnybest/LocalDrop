@@ -16,9 +16,27 @@ final class ShareViewController: NSViewController {
                 self?.extensionContext?.cancelRequest(withError: CocoaError(.userCancelled))
             }
         }
-        let hosting = NSHostingView(rootView: ShareView(model: model))
+        // The share sheet takes its size from this controller: pass the SwiftUI size on.
+        let hosting = NSHostingController(rootView: ShareView(model: model))
         hosting.sizingOptions = [.preferredContentSize]
-        view = hosting
+        addChild(hosting)
+        view = NSView()
+        view.addSubview(hosting.view)
+        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hosting.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hosting.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hosting.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hosting.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        let size = hosting.view.fittingSize
+        view.frame = NSRect(origin: .zero, size: size)
+        preferredContentSize = size
+    }
+
+    override func preferredContentSizeDidChange(for viewController: NSViewController) {
+        super.preferredContentSizeDidChange(for: viewController)
+        preferredContentSize = viewController.preferredContentSize
     }
 }
 
