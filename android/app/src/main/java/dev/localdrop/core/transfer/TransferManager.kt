@@ -563,11 +563,18 @@ class TransferManager(
                 throw ConnectionException.SaveFailed(file.name, e)
             }
             var published = false
+            val fileStarted = SystemClock.elapsedRealtime()
+            var networkNs = 0L
+            var writeNs = 0L
+            val cost = channel.receiveCost
+            val costAtStart = Triple(cost.readNs, cost.decryptNs, cost.parseNs)
             try {
                 val digest = MessageDigest.getInstance("SHA-256")
                 var written = 0L
                 while (written < file.size) {
+                    val waitStart = System.nanoTime()
                     val chunk = next("file data")
+                    networkNs += System.nanoTime() - waitStart
                     val data = decoding {
                         chunk.expect(MessageType.FILE_CHUNK)
                         if (chunk.uint("fileId").toInt() != file.fileId || chunk.uint("offset") != written) {
@@ -576,8 +583,10 @@ class TransferManager(
                         chunk.bytes("data")
                     }
                     if (data.isEmpty() || written + data.size > file.size) throw ConnectionException.ProtocolViolation("file_chunk exceeds the announced size")
+                    val writeStart = System.nanoTime()
                     try {
                         writer.write(data, 0, data.size)
+                        writeNs += System.nanoTime() - writeStart
                     } catch (e: IOException) {
                         reportFailure(channel, request.transferId, file.fileId, ErrorCode.WRITE_FAILED)
                         throw ConnectionException.SaveFailed(file.name, e)
@@ -605,7 +614,14 @@ class TransferManager(
                 published = true
                 received += ReceivedFile(writer.uri, writer.displayName(file.name), file.mimeType, file.size)
                 channel.send(TransferMessages.fileResult(request.transferId, file.fileId, ok = true))
-                Log.i(TAG, "Saved file ${file.fileId} (${file.size} bytes, SHA-256 verified)")
+                val elapsedMs = SystemClock.elapsedRealtime() - fileStarted
+                Log.i(
+                    TAG,
+                    "Saved file ${file.fileId} (${file.size} bytes, SHA-256 verified) at ${rate(file.size, elapsedMs)}: " +
+                        "receiving ${networkNs / 1_000_000} ms (network ${(cost.readNs - costAtStart.first) / 1_000_000}, " +
+                        "decrypting ${(cost.decryptNs - costAtStart.second) / 1_000_000}, parsing ${(cost.parseNs - costAtStart.third) / 1_000_000}), " +
+                        "writing ${writeNs / 1_000_000} ms of $elapsedMs ms",
+                )
             } finally {
                 if (!published) writer.discard()
             }

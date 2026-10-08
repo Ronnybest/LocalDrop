@@ -19,6 +19,11 @@ nonisolated final class TransferSender {
     static let acceptanceTimeout: TimeInterval = 180
     static let replyTimeout: TimeInterval = 60
     private static let progressInterval: Duration = .milliseconds(100)
+    /// No data accepted by the network for this long: the phone is gone.
+    private static let stallTimeout: Duration = .seconds(30)
+    /// A cancel from this Mac waits this long for the sender to stop by itself before the
+    /// connection is cut (a send blocked on a full buffer doesn't see the cancel).
+    private static let cancelGrace: Duration = .seconds(2)
 
     private let deliveryId: UUID
     private let files: [URL]
@@ -80,7 +85,11 @@ nonisolated final class TransferSender {
             do {
                 while true {
                     let message = try await channel.receive(timeout: 3600, stage: "receiver")
-                    if message.type == MessageType.cancel { peerCancelled.withLock { $0 = true } }
+                    if message.type == MessageType.cancel {
+                        peerCancelled.withLock { $0 = true }
+                        // The phone stopped reading: a send may be stuck on a full buffer.
+                        await channel.closeConnection()
+                    }
                     await replies.push(.success(message))
                     if message.type == MessageType.cancel || message.type == MessageType.transferResult { break }
                 }
@@ -89,6 +98,28 @@ nonisolated final class TransferSender {
             }
         }
         defer { reader.cancel() }
+        // Unblocks a stuck send: a cancel on this Mac, or no progress at all for a while.
+        let lastProgressAt = OSAllocatedUnfairLock(initialState: ContinuousClock.now)
+        let token = token
+        let watchdog = Task {
+            var cancelledAt: ContinuousClock.Instant?
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                let now = ContinuousClock.now
+                if token.isCancelled { cancelledAt = cancelledAt ?? now }
+                let stalled = now - lastProgressAt.withLock { $0 } > Self.stallTimeout
+                if stalled || cancelledAt.map({ now - $0 > Self.cancelGrace }) == true {
+                    if stalled {
+                        Log.transfer.warning("Delivery stalled; closing the connection")
+                    } else {
+                        Log.transfer.warning("Cancel didn't stop the delivery; closing the connection")
+                    }
+                    await channel.closeConnection()
+                    return
+                }
+            }
+        }
+        defer { watchdog.cancel() }
 
         func reply(_ expected: String) async throws -> Message {
             let message = try await replies.next()
@@ -100,6 +131,9 @@ nonisolated final class TransferSender {
         let started = ContinuousClock.now
         var lastProgress = started
         var sent: Int64 = 0
+        // Where the time goes: reading and hashing the file, or waiting for the network to take data.
+        var readTime = Duration.zero
+        var sendTime = Duration.zero
         do {
             for info in infos {
                 let url = files[info.fileId]
@@ -115,13 +149,18 @@ nonisolated final class TransferSender {
                     }
                     if peerCancelled.withLock({ $0 }) { return .cancelledByPeer }
                     let count = Int(min(Int64(ProtocolConstants.chunkSize), info.size - offset))
+                    let readStart = ContinuousClock.now
                     guard let data = try handle.read(upToCount: count), !data.isEmpty else {
                         throw SessionError.writeFailed("\(info.name) ended early")
                     }
                     hasher.update(data: data)
-                    try await channel.send(OutgoingMessages.fileChunk(transferId, fileId: info.fileId, offset: offset, data: data))
+                    let sendStart = ContinuousClock.now
+                    readTime += sendStart - readStart
+                    try await channel.sendPipelined(OutgoingMessages.fileChunk(transferId, fileId: info.fileId, offset: offset, data: data))
+                    sendTime += ContinuousClock.now - sendStart
                     offset += Int64(data.count)
                     sent += Int64(data.count)
+                    lastProgressAt.withLock { $0 = ContinuousClock.now }
                     let now = ContinuousClock.now
                     if now - lastProgress >= Self.progressInterval {
                         lastProgress = now
@@ -142,10 +181,16 @@ nonisolated final class TransferSender {
             }
         } catch SessionError.transferCancelled(byPeer: true) {
             return .cancelledByPeer
+        } catch {
+            // A connection cut because of a cancel is that cancel, not a network failure.
+            if peerCancelled.withLock({ $0 }) { return .cancelledByPeer }
+            if token.isCancelled { return .cancelled }
+            throw error
         }
         let elapsed = ContinuousClock.now - started
         let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
-        Log.transfer.info("Delivery complete: \(sent) bytes in \(String(format: "%.2f", seconds), privacy: .public) s")
+        let rate = seconds > 0 ? Double(sent) / 1_000_000 / seconds : 0
+        Log.transfer.info("Delivery complete: \(sent) bytes in \(String(format: "%.2f", seconds), privacy: .public) s (\(String(format: "%.1f", rate), privacy: .public) MB/s): reading \(readTime.formatted(.units(allowed: [.milliseconds])), privacy: .public), sending \(sendTime.formatted(.units(allowed: [.milliseconds])), privacy: .public)")
         return .completed(files: infos.count, bytes: sent)
     }
 }

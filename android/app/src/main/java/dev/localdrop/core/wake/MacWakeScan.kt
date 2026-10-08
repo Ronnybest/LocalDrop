@@ -13,6 +13,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.ParcelUuid
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -45,11 +46,12 @@ object MacWakeScan {
         }
         val scanner = environment.adapter?.bluetoothLeScanner ?: return
         val filters = listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(ProtocolConstants.PENDING_DELIVERY_UUID)).build())
+        // Every match, not FIRST_MATCH: the controller's found/lost tracking reported a Mac
+        // starting a delivery only now and then (on a Pixel 8, Android 17). The filter runs in the
+        // controller, so nothing is reported while no Mac has files; the receiver drops repeats.
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
-            .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-            .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+            .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
         try {
             val intent = pendingIntent(context)
@@ -84,6 +86,10 @@ class MacWakeReceiver : BroadcastReceiver() {
             Log.w(TAG, "Wake scan error $error")
             return
         }
+        // A pending delivery is advertised many times a second; one start is enough.
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastWakeAt < REPEAT_INTERVAL_MS) return
+        lastWakeAt = now
         Log.i(TAG, "A Mac has files for this phone")
         try {
             TransferService.receive(context)
@@ -117,6 +123,11 @@ class MacWakeReceiver : BroadcastReceiver() {
 
     private companion object {
         const val TAG = "LD/wake"
+        const val REPEAT_INTERVAL_MS = 15_000L
+
+        /** Per process; a new process (after the app was closed) starts receiving at once. */
+        @Volatile
+        var lastWakeAt = Long.MIN_VALUE / 2
     }
 }
 

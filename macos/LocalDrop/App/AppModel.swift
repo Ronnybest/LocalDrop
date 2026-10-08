@@ -377,6 +377,16 @@ final class AppModel {
             }
         }
         listener.start()
+
+        #if DEBUG
+        // For development: `-LocalDropTestDeliveryFile <path in Downloads> -LocalDropTestDeliveryDevice <deviceId>`
+        // queues a delivery at launch, so Mac → phone can be exercised without clicking.
+        if let path = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryFile"),
+           let device = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryDevice") {
+            Log.transfer.info("Debug: queueing a test delivery")
+            send([URL(fileURLWithPath: path)], to: device)
+        }
+        #endif
     }
 
     private func accept(_ connection: NWConnection) {

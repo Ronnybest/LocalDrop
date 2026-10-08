@@ -19,8 +19,13 @@ import java.io.IOException
 import java.net.Socket
 import java.net.SocketTimeoutException
 
-/** One frame as received: the payload and the exact wire bytes (for the transcript hash). */
-class Frame(val payload: ByteArray, val wire: ByteArray)
+/** One frame as received. [wire] (for the handshake's transcript hash) is built only when asked. */
+class Frame(val payload: ByteArray) {
+    val wire: ByteArray
+        get() = byteArrayOf(
+            (payload.size ushr 24).toByte(), (payload.size ushr 16).toByte(), (payload.size ushr 8).toByte(), payload.size.toByte(),
+        ) + payload
+}
 
 /**
  * Length-prefixed frames (`u32 BE length ‖ payload`, protocol/protocol.md §3.1) over a blocking
@@ -42,7 +47,7 @@ class FramedSocket(private val socket: Socket) {
             }
             val payload = ByteArray(length)
             input.readFully(payload)
-            return Frame(payload, lengthPrefix(length) + payload)
+            return Frame(payload)
         } catch (e: SocketTimeoutException) {
             throw ConnectionException.Timeout(stage)
         } catch (e: EOFException) {
@@ -159,14 +164,26 @@ class SecureChannel(
         }
     }
 
+    /** Where receiving time goes (network, decryption, parsing), for transfer speed logs. */
+    class ReceiveCost(var readNs: Long = 0, var decryptNs: Long = 0, var parseNs: Long = 0)
+
+    val receiveCost = ReceiveCost()
+
     fun receive(timeoutMs: Long, stage: String): Message {
+        val start = System.nanoTime()
         val frame = frames.readFrame(timeoutMs, stage)
+        val read = System.nanoTime()
         val plaintext = try {
             receiveCipher.open(frame.payload)
         } catch (e: DecryptionException) {
             throw ConnectionException.DecryptionFailed()
         }
-        return parseMessage(plaintext)
+        val decrypted = System.nanoTime()
+        val message = parseMessage(plaintext)
+        receiveCost.readNs += read - start
+        receiveCost.decryptNs += decrypted - read
+        receiveCost.parseNs += System.nanoTime() - decrypted
+        return message
     }
 
     fun close() = frames.close()

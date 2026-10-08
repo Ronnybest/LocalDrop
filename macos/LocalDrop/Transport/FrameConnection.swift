@@ -11,6 +11,11 @@ nonisolated final class FrameConnection: @unchecked Sendable {
     private let connection: NWConnection
     private let queue: DispatchQueue
     private var timedOutStage: String?
+    // Pipelined sends (file data): confined to `queue`.
+    private var bytesInFlight = 0
+    private var sendWaiters: [CheckedContinuation<Void, Error>] = []
+    private var pipelineError: Error?
+    private static let pipelineWindow = 4 * 1024 * 1024
 
     var remoteDescription: String { String(describing: connection.endpoint) }
 
@@ -80,24 +85,80 @@ nonisolated final class FrameConnection: @unchecked Sendable {
         guard payload.count <= ProtocolConstants.maxFrameSize else {
             throw SessionError.protocolViolation("outgoing frame too large")
         }
-        var frame = Data(capacity: payload.count + 4)
-        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { frame.append(contentsOf: $0) }
-        frame.append(payload)
+        var built = Data(capacity: payload.count + 4)
+        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { built.append(contentsOf: $0) }
+        built.append(payload)
+        let frame = built
 
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                connection.send(content: frame, completion: .contentProcessed { error in
-                    if let error {
-                        continuation.resume(throwing: SessionError.transport(error.localizedDescription))
-                    } else {
-                        continuation.resume()
-                    }
-                })
+                // On `queue`, like pipelined sends, so frames go out in the order they were sent.
+                queue.async { [connection] in
+                    connection.send(content: frame, completion: .contentProcessed { error in
+                        if let error {
+                            continuation.resume(throwing: SessionError.transport(error.localizedDescription))
+                        } else {
+                            continuation.resume()
+                        }
+                    })
+                }
             }
         } onCancel: { [connection] in
             connection.cancel()
         }
         return frame
+    }
+
+    /// Queues a frame without waiting for the network to take it, as long as less than
+    /// `pipelineWindow` bytes are still on their way. Waiting for each frame instead allows one
+    /// chunk per Wi-Fi round trip: about 10 MB/s. Order is kept: NWConnection sends in call order.
+    func sendFramePipelined(_ payload: Data) async throws {
+        guard payload.count <= ProtocolConstants.maxFrameSize else {
+            throw SessionError.protocolViolation("outgoing frame too large")
+        }
+        var built = Data(capacity: payload.count + 4)
+        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { built.append(contentsOf: $0) }
+        built.append(payload)
+        let frame = built
+        let size = frame.count
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                queue.async { [self] in
+                    if let pipelineError {
+                        continuation.resume(throwing: pipelineError)
+                        return
+                    }
+                    bytesInFlight += size
+                    connection.send(content: frame, completion: .contentProcessed { [self] error in
+                        bytesInFlight -= size
+                        if let error, pipelineError == nil {
+                            pipelineError = SessionError.transport(error.localizedDescription)
+                        }
+                        releaseSendWaiters()
+                    })
+                    if bytesInFlight <= Self.pipelineWindow {
+                        continuation.resume()
+                    } else {
+                        sendWaiters.append(continuation)
+                    }
+                }
+            }
+        } onCancel: { [connection] in
+            connection.cancel()
+        }
+    }
+
+    /// On `queue`: lets queued senders continue as the window frees up, or fails them all.
+    private func releaseSendWaiters() {
+        if let pipelineError {
+            let waiters = sendWaiters
+            sendWaiters = []
+            waiters.forEach { $0.resume(throwing: pipelineError) }
+            return
+        }
+        while bytesInFlight <= Self.pipelineWindow, !sendWaiters.isEmpty {
+            sendWaiters.removeFirst().resume()
+        }
     }
 
     func cancel() {
@@ -184,6 +245,17 @@ actor SecureChannel {
 
     func send(_ message: Message) async throws {
         try await frames.sendFrame(try sendCipher.seal(message.encoded()))
+    }
+
+    /// For file data: queued without waiting for the network (see `FrameConnection.sendFramePipelined`).
+    func sendPipelined(_ message: Message) async throws {
+        try await frames.sendFramePipelined(try sendCipher.seal(message.encoded()))
+    }
+
+    /// Ends the connection at once: pending sends and receives fail. For a peer that cancelled
+    /// while this side is blocked sending into a full buffer.
+    func closeConnection() {
+        frames.cancel()
     }
 
     /// Receives the next message. A peer `error` message is surfaced as `SessionError.peerError`.
