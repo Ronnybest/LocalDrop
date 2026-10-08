@@ -33,6 +33,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- A paired Mac as a companion device: lets a transfer from the Mac start in the background. -->
+    <uses-feature
+        android:name="android.software.companion_device_setup"
+        android:required="false" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
 
     <application
         android:name=".app.LocalDropApplication"
@@ -103,6 +110,20 @@
             android:noHistory="true"
             android:taskAffinity=""
             android:theme="@style/Theme.LocalDrop.Translucent" />
+
+        <!-- Results of the system-held Bluetooth scan that wakes LocalDrop when a Mac has files for it. -->
+        <receiver
+            android:name=".core.wake.MacWakeReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".core.wake.WakeScanRestorer"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".feature.transfer.TransferService"

@@ -36,6 +36,12 @@ sealed class ConnectionException(message: String, cause: Throwable? = null) : Ex
     /** The peer ended the session normally (`close`). */
     class ClosedByPeer : ConnectionException("Closed by peer")
 
+    /** A file received from the Mac couldn't be saved on this phone (storage full, write error). */
+    class SaveFailed(val fileName: String, cause: Throwable?) : ConnectionException("Could not save $fileName", cause)
+
+    /** Not enough free space on this phone for what the Mac wants to send. */
+    class NotEnoughSpace(val needed: Long) : ConnectionException("Not enough space for $needed bytes")
+
     /** The trusted-devices store could not be written. */
     class StorageFailed(cause: Throwable) : ConnectionException("Could not save trusted device", cause)
 

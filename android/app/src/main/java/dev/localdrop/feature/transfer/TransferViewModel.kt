@@ -38,6 +38,10 @@ class TransferViewModel(application: Application, private val transferManager: T
 
     fun cancel() = transferManager.cancel()
 
+    fun acceptIncoming() = transferManager.acceptIncoming()
+
+    fun declineIncoming() = transferManager.declineIncoming()
+
     fun dismiss() = transferManager.dismiss()
 
     companion object {

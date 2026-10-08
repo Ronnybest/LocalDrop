@@ -79,4 +79,37 @@ object TransferMessages {
         MessageType.CANCEL,
         mapOf("transferId" to CborValue.Bytes(transferId), "reason" to CborValue.Text(reason)),
     )
+
+    // region Receiver side (Mac → phone, protocol.md §2.8)
+
+    fun accept(transferId: ByteArray, fileCount: Int) = Message(
+        MessageType.TRANSFER_ACCEPT,
+        mapOf("transferId" to CborValue.Bytes(transferId), "fileCount" to CborValue.UInt(fileCount.toLong())),
+    )
+
+    fun reject(transferId: ByteArray, reason: String) = Message(
+        MessageType.TRANSFER_REJECT,
+        mapOf("transferId" to CborValue.Bytes(transferId), "reason" to CborValue.Text(reason)),
+    )
+
+    fun fileResult(transferId: ByteArray, fileId: Int, ok: Boolean, code: String? = null) = Message(
+        MessageType.FILE_RESULT,
+        buildMap {
+            put("transferId", CborValue.Bytes(transferId))
+            put("fileId", CborValue.UInt(fileId.toLong()))
+            put("ok", CborValue.Bool(ok))
+            code?.let { put("code", CborValue.Text(it)) }
+        },
+    )
+
+    fun transferResult(transferId: ByteArray, completed: Boolean, code: String? = null) = Message(
+        MessageType.TRANSFER_RESULT,
+        buildMap {
+            put("transferId", CborValue.Bytes(transferId))
+            put("status", CborValue.Text(if (completed) "completed" else "failed"))
+            code?.let { put("code", CborValue.Text(it)) }
+        },
+    )
+
+    // endregion
 }

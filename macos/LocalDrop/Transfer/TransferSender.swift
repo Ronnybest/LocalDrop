@@ -1,0 +1,171 @@
+import CryptoKit
+import Foundation
+import os
+
+/// How a delivery to a phone ended.
+nonisolated enum DeliveryOutcome: Sendable {
+    case completed(files: Int, bytes: Int64)
+    /// The phone's user (or its policy) declined, or it couldn't take the files.
+    case rejected(reason: String)
+    case cancelledByPeer
+    case cancelled
+    /// Connection or file trouble: the delivery waits for the phone again.
+    case interrupted(String)
+}
+
+/// Sends one delivery to a phone that asked with `receive_ready` (protocol.md §2.8): the same
+/// transfer messages as phone → Mac, with the roles swapped.
+nonisolated final class TransferSender {
+    static let acceptanceTimeout: TimeInterval = 180
+    static let replyTimeout: TimeInterval = 60
+    private static let progressInterval: Duration = .milliseconds(100)
+
+    private let deliveryId: UUID
+    private let files: [URL]
+    private let channel: SecureChannel
+    private let coordinator: any SessionCoordinator
+    private let token: TransferCancelToken
+
+    init(deliveryId: UUID, files: [URL], channel: SecureChannel, coordinator: any SessionCoordinator, token: TransferCancelToken) {
+        self.deliveryId = deliveryId
+        self.files = files
+        self.channel = channel
+        self.coordinator = coordinator
+        self.token = token
+    }
+
+    func run() async throws -> DeliveryOutcome {
+        let infos: [TransferFileInfo]
+        do {
+            infos = try files.enumerated().map { try OutgoingFile.info($1, fileId: $0) }
+        } catch {
+            return .rejected(reason: String(describing: error))
+        }
+        let transferId = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) })
+        try await channel.send(OutgoingMessages.request(transferId, files: infos))
+        Log.transfer.info("Delivery request sent: \(infos.count) file(s), \(infos.reduce(0) { $0 + $1.size }) bytes")
+
+        let answer: Message
+        do {
+            answer = try await channel.receive(timeout: Self.acceptanceTimeout, stage: "acceptance")
+        } catch SessionError.timeout {
+            // Unanswered on the phone: not retried, or the phone would be asked again and again.
+            try? await channel.send(TransferMessages.cancel(transferId, reason: "timeout"))
+            return .rejected(reason: "timeout")
+        }
+        switch answer.type {
+        case MessageType.transferAccept:
+            break
+        case MessageType.transferReject:
+            return .rejected(reason: (try? answer.text("reason")) ?? "declined")
+        case MessageType.cancel:
+            return .cancelledByPeer
+        default:
+            throw SessionError.protocolViolation("unexpected \(answer.type) instead of transfer_accept")
+        }
+        let accepted = Int(clamping: (try? answer.uint("fileCount")) ?? UInt64(infos.count))
+        let sending = Array(infos.prefix(max(0, min(accepted, infos.count))))
+        await coordinator.deliveryStarted(deliveryId)
+        Log.transfer.info("Delivery accepted: sending \(sending.count) file(s)")
+        return try await stream(sending, transferId: transferId)
+    }
+
+    private func stream(_ infos: [TransferFileInfo], transferId: Data) async throws -> DeliveryOutcome {
+        // The phone may cancel at any time: read its messages alongside sending. The reader stops
+        // after the last reply this transfer expects, so the session's next message isn't consumed.
+        let channel = channel
+        let replies = Replies()
+        let peerCancelled = OSAllocatedUnfairLock(initialState: false)
+        let reader = Task {
+            do {
+                while true {
+                    let message = try await channel.receive(timeout: 3600, stage: "receiver")
+                    if message.type == MessageType.cancel { peerCancelled.withLock { $0 = true } }
+                    await replies.push(.success(message))
+                    if message.type == MessageType.cancel || message.type == MessageType.transferResult { break }
+                }
+            } catch {
+                await replies.push(.failure(error))
+            }
+        }
+        defer { reader.cancel() }
+
+        func reply(_ expected: String) async throws -> Message {
+            let message = try await replies.next()
+            if message.type == MessageType.cancel { throw SessionError.transferCancelled(byPeer: true) }
+            try message.expect(expected)
+            return message
+        }
+
+        let started = ContinuousClock.now
+        var lastProgress = started
+        var sent: Int64 = 0
+        do {
+            for info in infos {
+                let url = files[info.fileId]
+                try await channel.send(OutgoingMessages.fileBegin(transferId, fileId: info.fileId))
+                let handle = try FileHandle(forReadingFrom: url)
+                defer { try? handle.close() }
+                var hasher = SHA256()
+                var offset: Int64 = 0
+                while offset < info.size {
+                    if token.isCancelled {
+                        try? await channel.send(TransferMessages.cancel(transferId, reason: "user_cancelled"))
+                        return .cancelled
+                    }
+                    if peerCancelled.withLock({ $0 }) { return .cancelledByPeer }
+                    let count = Int(min(Int64(ProtocolConstants.chunkSize), info.size - offset))
+                    guard let data = try handle.read(upToCount: count), !data.isEmpty else {
+                        throw SessionError.writeFailed("\(info.name) ended early")
+                    }
+                    hasher.update(data: data)
+                    try await channel.send(OutgoingMessages.fileChunk(transferId, fileId: info.fileId, offset: offset, data: data))
+                    offset += Int64(data.count)
+                    sent += Int64(data.count)
+                    let now = ContinuousClock.now
+                    if now - lastProgress >= Self.progressInterval {
+                        lastProgress = now
+                        await coordinator.deliveryProgress(deliveryId, bytesSent: sent)
+                    }
+                }
+                try await channel.send(OutgoingMessages.fileEnd(transferId, fileId: info.fileId, sha256: Data(hasher.finalize())))
+                let result = try await reply(MessageType.fileResult)
+                guard (try? result.bool("ok")) == true else {
+                    return .rejected(reason: (try? result.text("code")) ?? "failed")
+                }
+                await coordinator.deliveryProgress(deliveryId, bytesSent: sent)
+            }
+            try await channel.send(OutgoingMessages.transferComplete(transferId))
+            let result = try await reply(MessageType.transferResult)
+            guard (try? result.text("status")) == "completed" else {
+                return .rejected(reason: (try? result.text("code")) ?? "failed")
+            }
+        } catch SessionError.transferCancelled(byPeer: true) {
+            return .cancelledByPeer
+        }
+        let elapsed = ContinuousClock.now - started
+        let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        Log.transfer.info("Delivery complete: \(sent) bytes in \(String(format: "%.2f", seconds), privacy: .public) s")
+        return .completed(files: infos.count, bytes: sent)
+    }
+}
+
+/// Messages from the phone, read by one task and awaited by the sender.
+private actor Replies {
+    private var buffered: [Result<Message, any Error>] = []
+    private var waiter: CheckedContinuation<Message, any Error>?
+
+    func push(_ result: Result<Message, any Error>) {
+        if let waiter {
+            self.waiter = nil
+            waiter.resume(with: result)
+        } else {
+            buffered.append(result)
+        }
+    }
+
+    func next() async throws -> Message {
+        if !buffered.isEmpty { return try buffered.removeFirst().get() }
+        return try await withCheckedThrowingContinuation { waiter = $0 }
+    }
+}

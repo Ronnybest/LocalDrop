@@ -22,6 +22,8 @@ object MessageType {
     const val CANCEL = "cancel"
     const val TRANSFER_ADD = "transfer_add"
     const val TEXT = "text"
+    const val RECEIVE_READY = "receive_ready"
+    const val NOTHING_PENDING = "nothing_pending"
     const val TEXT_RESULT = "text_result"
     const val CLOSE = "close"
     const val ERROR = "error"

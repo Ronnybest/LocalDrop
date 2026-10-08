@@ -15,8 +15,9 @@ protocolVersion = 1
 | **Initiator** (client) | Android | BLE central/scanner, открывает TCP-соединение |
 
 Направление передачи файла не зависит от роли: после handshake любая сторона может стать
-отправителем (`transfer_request` может прийти в обе стороны). В v1 реализовано только
-Initiator → Responder (Android → Mac).
+отправителем. Соединение всегда открывает Initiator — Android не держит порт открытым в фоне.
+Чтобы получить файлы от Responder'а, Initiator подключается и отправляет `receive_ready`
+(messages.md); о том, что пора подключиться, Responder сообщает рекламой (§2.8).
 
 ## 2. Обнаружение (BLE)
 
@@ -29,6 +30,7 @@ BLE используется **только** для nearby discovery и пол�
 |------------|------|
 | LocalDrop Service | `8D232B6B-5901-4AEA-89A2-389415C619EB` |
 | Endpoint Info characteristic (read) | `13391BAF-1674-4EF2-A1E1-AAD175FE6C3F` |
+| LocalDrop Pending Delivery (вместо Service, §2.8) | `137D2908-412B-445F-B387-7F321A12185C` |
 
 ### 2.2 Advertisement
 
@@ -129,6 +131,8 @@ Endpoint Info). Неизвестные значения игнорируются
 | `clipboardReceive` | принимает сообщение `text` и кладёт его в буфер обмена |
 | `presenceToken` | рекламирует приватный токен присутствия |
 | `autoAccept` | может принимать передачи без вопроса по политике устройства |
+| `receive` | Initiator: принимает файлы от Responder'а через `receive_ready` |
+| `send` | Responder: может отправлять файлы Initiator'у |
 
 ### 2.7 Присутствие (модель Initiator'а)
 
@@ -139,6 +143,24 @@ Endpoint Info). Неизвестные значения игнорируются
 | `Reachable` | рядом, статус `L`, и текущие адреса из Endpoint Info — в подсети одной из сетей Initiator'а |
 | `Connected` | идёт аутентифицированная сессия |
 | `Busy` | статус `B`, Endpoint Info `busy = true` или отказ `busy` |
+
+### 2.8 Ожидающая доставка
+
+Когда у Responder'а есть файлы для одного из доверенных Initiator'ов, он рекламирует
+**Pending Delivery UUID вместо LocalDrop Service** (два 128-битных UUID не помещаются в
+рекламу), с тем же local name. Initiator'ы ищут оба UUID, поэтому присутствие не прерывается.
+
+Android держит системный BLE-скан с `PendingIntent`, отфильтрованный по Pending Delivery UUID
+(`CALLBACK_TYPE_FIRST_MATCH`, фильтр в контроллере): система будит приложение, даже если
+оно не запущено. Запустить передачу из фона Android разрешает приложению с ассоциацией
+Companion Device Manager с этим Mac (пользователь подтверждает её один раз); без неё
+приложение показывает уведомление «Mac хочет отправить файлы», и передача начинается по
+нажатию. Задержка — секунды при включённом экране, около минуты при выключенном (так система
+доставляет результаты скана во сне).
+
+Получив сигнал, Initiator подключается к своим доверенным Responder'ам с `send` и отправляет
+`receive_ready`. Responder рекламирует Pending Delivery, пока доставка не завершена или не
+отменена.
 
 ## 3. Транспорт
 

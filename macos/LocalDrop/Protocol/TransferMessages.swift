@@ -179,3 +179,43 @@ nonisolated enum TransferMessages {
         Message(type: MessageType.cancel, body: ["transferId": .bytes(transferId), "reason": .text(reason)])
     }
 }
+
+/// Builders for this Mac as the sender (protocol/messages.md, «Передача»; protocol.md §2.8).
+nonisolated enum OutgoingMessages {
+    static func request(_ transferId: Data, files: [TransferFileInfo]) -> Message {
+        let entries: [CBORValue] = files.map { file in
+            var body: [String: CBORValue] = [
+                "fileId": .unsigned(UInt64(file.fileId)),
+                "name": .text(file.name),
+                "mimeType": .text(file.mimeType),
+                "size": .unsigned(UInt64(file.size)),
+            ]
+            if let modified = file.lastModified { body["lastModified"] = .int(modified) }
+            return .map(body)
+        }
+        let total = files.reduce(Int64(0)) { $0 + $1.size }
+        return Message(type: MessageType.transferRequest, body: [
+            "transferId": .bytes(transferId), "files": .array(entries), "totalSize": .unsigned(UInt64(total)),
+        ])
+    }
+
+    static func fileBegin(_ transferId: Data, fileId: Int) -> Message {
+        Message(type: MessageType.fileBegin, body: ["transferId": .bytes(transferId), "fileId": .unsigned(UInt64(fileId)), "offset": .unsigned(0)])
+    }
+
+    static func fileChunk(_ transferId: Data, fileId: Int, offset: Int64, data: Data) -> Message {
+        Message(type: MessageType.fileChunk, body: [
+            "transferId": .bytes(transferId), "fileId": .unsigned(UInt64(fileId)), "offset": .unsigned(UInt64(offset)), "data": .bytes(data),
+        ])
+    }
+
+    static func fileEnd(_ transferId: Data, fileId: Int, sha256: Data) -> Message {
+        Message(type: MessageType.fileEnd, body: ["transferId": .bytes(transferId), "fileId": .unsigned(UInt64(fileId)), "sha256": .bytes(sha256)])
+    }
+
+    static func transferComplete(_ transferId: Data) -> Message {
+        Message(type: MessageType.transferComplete, body: ["transferId": .bytes(transferId)])
+    }
+
+    static var nothingPending: Message { Message(type: MessageType.nothingPending) }
+}

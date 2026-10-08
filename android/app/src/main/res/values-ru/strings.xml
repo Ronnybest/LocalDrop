@@ -171,4 +171,26 @@
         <item quantity="many">%d файлов</item>
         <item quantity="other">%d файла</item>
     </plurals>
+    <string name="action_accept">Принять</string>
+    <string name="action_open">Открыть</string>
+    <string name="incoming_title">%1$s хочет отправить</string>
+    <plurals name="received_files">
+        <item quantity="one">%1$d файл получен от %2$s</item>
+        <item quantity="few">%1$d файла получено от %2$s</item>
+        <item quantity="many">%1$d файлов получено от %2$s</item>
+        <item quantity="other">%1$d файла получено от %2$s</item>
+    </plurals>
+    <string name="received_where">Сохранено в «Загрузки» · целостность проверена</string>
+    <string name="nothing_received">У %1$s сейчас нет файлов для этого телефона.</string>
+    <string name="error_phone_space">На телефоне недостаточно места (нужно %1$s).</string>
+    <string name="error_save_failed">Не удалось сохранить %1$s на телефоне.</string>
+    <string name="channel_incoming">Входящие файлы</string>
+    <string name="notification_receiving_from">Приём от %1$s</string>
+    <string name="notification_incoming_tap">У %1$s есть файлы для вас</string>
+    <string name="notification_incoming_tap_text">Нажмите, чтобы получить.</string>
+    <string name="action_allow_receiving">Получать файлы с этого Mac…</string>
+    <string name="action_receive_automatically">Принимать файлы без вопроса</string>
+    <string name="receiving_needs_link_title">Получение файлов с %1$s</string>
+    <string name="receiving_needs_link_body">Разрешите LocalDrop подключаться к %1$s в фоне, чтобы файлы, отправленные с Mac, приходили, даже когда LocalDrop закрыт. Android спросит один раз.</string>
+    <string name="notification_receive_failed_title">Не удалось получить от %1$s</string>
 </resources>

@@ -8,6 +8,8 @@ nonisolated enum ProtocolConstants {
 
     @MainActor static let serviceUUID = CBUUID(string: "8D232B6B-5901-4AEA-89A2-389415C619EB")
     @MainActor static let endpointInfoCharacteristicUUID = CBUUID(string: "13391BAF-1674-4EF2-A1E1-AAD175FE6C3F")
+    /// Advertised instead of the service UUID while files wait for a phone (protocol.md §2.8).
+    @MainActor static let pendingDeliveryUUID = CBUUID(string: "137D2908-412B-445F-B387-7F321A12185C")
 
     /// BLE local name prefixes (protocol.md §2.2): private token, or pairing mode + shortId.
     static let privateNamePrefix = "L"
@@ -15,7 +17,9 @@ nonisolated enum ProtocolConstants {
     static let shortIdLength = 6
 
     /// What this Mac can do (protocol.md §2.6).
-    static let capabilities = ["files", "multipleFiles", "text", "clipboardReceive", "autoAccept", "presenceToken"]
+    static let capabilities = ["files", "multipleFiles", "text", "clipboardReceive", "autoAccept", "presenceToken", "send"]
+    /// A phone that can receive from this Mac (protocol.md §2.6).
+    static let receiveCapability = "receive"
 
     /// Longest `text` message, in UTF-8 bytes (protocol/messages.md).
     static let maxTextSize = 262_144

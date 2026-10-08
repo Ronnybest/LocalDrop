@@ -4,7 +4,7 @@
 
 # LocalDrop
 
-**Send photos, files and text from Android to your Mac — straight from the share sheet, the way AirDrop does it.**
+**Send photos, files and text between Android and your Mac — straight from the share sheet, the way AirDrop does it.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.txt) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white)
 
@@ -22,6 +22,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 
 ## Features
 
+- **And back.** Send files from the Mac to your phone with ✈ next to it in the menu, or drop them on it. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much.
 - **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **LocalDrop** target sends to your default Mac in one tap.
 - **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
 - **Knows when your Mac is around.** The Mac advertises a private Bluetooth token that only your phones can recognize. The app shows **Nearby · ready**, **busy**, **on another network** or **not nearby**; strangers don't see the Mac at all.
@@ -74,7 +75,7 @@ Over a router every packet crosses the air twice; the phone's hotspot is a direc
 
 ## Limitations
 
-- **Android → Mac only for now.** Sending from the Mac to the phone is the next milestone.
+- **Mac → phone needs one Android approval.** To receive in the background, Android asks once to let LocalDrop connect to the Mac (Companion Device Manager). With the screen off, the phone notices a Mac with files within about a minute; with the screen on, within seconds.
 - **No automatic clipboard sync.** Android 10+ lets only the app on screen read the clipboard, so copied text goes to the Mac with the Quick Settings tile or **Send to Mac** in the selection menu. Apps with their own selection menu, such as Telegram, don't show **Send to Mac**.
 - **Waiting is limited to an hour in the background.** Android doesn't let a background app restart a foreground service, so after an hour a waiting transfer is kept for 7 days and sent when you tap **Try again** or open LocalDrop.
 - **Some guest and public networks** block connections between devices. Use the phone's hotspot there.
@@ -88,6 +89,12 @@ cd macos
 xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Debug -derivedDataPath build \
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Development" DEVELOPMENT_TEAM=<your team ID> build
 open build/Build/Products/Debug/LocalDrop.app
+```
+
+To build a Release copy, install it to `/Applications` and start it:
+
+```bash
+DEVELOPMENT_TEAM=<your team ID> macos/scripts/install.sh
 ```
 
 Or open `macos/LocalDrop.xcodeproj` in Xcode, choose your team under **Signing** and run. Sign with a team: ad-hoc signatures change with every build, and macOS then asks for Keychain access each time.

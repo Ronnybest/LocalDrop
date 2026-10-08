@@ -167,4 +167,24 @@
         <item quantity="one">%d file</item>
         <item quantity="other">%d files</item>
     </plurals>
+    <string name="action_accept">Accept</string>
+    <string name="action_open">Open</string>
+    <string name="incoming_title">%1$s wants to send</string>
+    <plurals name="received_files">
+        <item quantity="one">%1$d file received from %2$s</item>
+        <item quantity="other">%1$d files received from %2$s</item>
+    </plurals>
+    <string name="received_where">Saved in Downloads · integrity verified</string>
+    <string name="nothing_received">%1$s has nothing for this phone right now.</string>
+    <string name="error_phone_space">Not enough free space on this phone (%1$s needed).</string>
+    <string name="error_save_failed">%1$s couldn\'t be saved on this phone.</string>
+    <string name="channel_incoming">Incoming files</string>
+    <string name="notification_receiving_from">Receiving from %1$s</string>
+    <string name="notification_incoming_tap">%1$s has files for you</string>
+    <string name="notification_incoming_tap_text">Tap to receive them.</string>
+    <string name="action_allow_receiving">Receive files from this Mac…</string>
+    <string name="action_receive_automatically">Accept files without asking</string>
+    <string name="receiving_needs_link_title">Receive files from %1$s</string>
+    <string name="receiving_needs_link_body">Allow LocalDrop to connect to %1$s in the background, so files you send from the Mac arrive even when LocalDrop is closed. Android asks once.</string>
+    <string name="notification_receive_failed_title">Couldn\'t receive from %1$s</string>
 </resources>

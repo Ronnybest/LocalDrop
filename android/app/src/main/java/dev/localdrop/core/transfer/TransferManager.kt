@@ -1,5 +1,6 @@
 package dev.localdrop.core.transfer
 
+import android.content.ContentResolver
 import android.os.SystemClock
 import android.util.Log
 import dev.localdrop.core.crypto.randomBytes
@@ -25,7 +26,12 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.Socket
 import java.security.MessageDigest
+import dev.localdrop.core.protocol.ErrorCode
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
@@ -76,6 +82,16 @@ sealed interface TransferState {
     /** Text was put on the receiver's clipboard. */
     data class TextCopied(val peerName: String) : TransferState
 
+    /** The Mac offers files to this phone; its user decides (notification) unless the Mac is auto-accepted. */
+    data class AwaitingLocalDecision(val peerName: String, val summary: TransferSummary) : TransferState
+    data class Receiving(val peerName: String, val progress: TransferProgress) : TransferState
+
+    /** Files from the Mac were saved in Downloads. */
+    data class Received(val peerName: String, val files: List<ReceivedFile>) : TransferState
+
+    /** The Mac had nothing (more) for this phone, or everything was declined. */
+    data class NothingReceived(val peerName: String) : TransferState
+
     /** Pair-only session finished; [newlyPaired] is false when the devices already trusted each other. */
     data class Paired(val peerName: String, val newlyPaired: Boolean) : TransferState
     data class Failed(val peerName: String, val error: ConnectionException) : TransferState
@@ -107,6 +123,10 @@ class TransferManager(
     private val connector: PeerConnector,
     private val handshakeClient: HandshakeClient,
     private val trustStore: TrustedDeviceStore,
+    /** Where received files are saved (MediaStore Downloads). */
+    private val contentResolver: ContentResolver,
+    /** Free bytes on the volume that holds Downloads. */
+    private val freeSpace: () -> Long,
 ) {
     private val _state = MutableStateFlow<TransferState>(TransferState.Idle)
     val state: StateFlow<TransferState> = _state.asStateFlow()
@@ -148,9 +168,57 @@ class TransferManager(
     /** Connects only to pair (or confirm existing trust); no transfer follows. */
     fun pair(endpoint: EndpointInfo): Boolean = start(SendTarget.Endpoint(endpoint), source = null)
 
+    /**
+     * Connects to a trusted Mac and takes what it has for this phone (protocol.md §2.8).
+     * [autoAccept]: the user lets this Mac send without asking.
+     */
+    fun receive(device: TrustedDevice, autoAccept: Boolean): Boolean =
+        start(SendTarget.Trusted(device), source = null, receive = ReceiveOptions(autoAccept))
+
+    private class ReceiveOptions(val autoAccept: Boolean)
+
+    /**
+     * Connects to a trusted Mac only to exchange names and capabilities — after an update the
+     * Mac learns this phone can receive, and the phone learns the Mac can send — without any
+     * visible state. Separate from [state]: it may run next to a real session.
+     */
+    suspend fun exchangeInfo(device: TrustedDevice): Boolean = withContext(Dispatchers.IO) {
+        val established = try {
+            establish(SendTarget.Trusted(device))
+        } catch (e: ConnectionException) {
+            Log.i(TAG, "Info exchange with ${device.deviceId} failed: ${e.message}")
+            return@withContext false
+        }
+        try {
+            val session = established.session
+            if (session.status != SessionStatus.Trusted) return@withContext false
+            val peer = session.peer
+            trustStore.markSeen(peer.deviceId, peer.name)
+            trustStore.rememberSessionInfo(peer.deviceId, session.presenceKey, peer.capabilities)
+            trustStore.rememberEndpoint(peer.deviceId, established.addresses, established.port)
+            sendQuietly(session.channel, Message(MessageType.CLOSE))
+            Log.i(TAG, "Exchanged info with ${peer.deviceId}: ${peer.capabilities}")
+            true
+        } finally {
+            closeQuietly(established.socket)
+        }
+    }
+
+    @Volatile
+    private var pendingDecision: CompletableDeferred<Boolean>? = null
+
+    /** This phone's user accepted the files the Mac offers. */
+    fun acceptIncoming() {
+        pendingDecision?.complete(true)
+    }
+
+    fun declineIncoming() {
+        pendingDecision?.complete(false)
+    }
+
     val isBusy: Boolean get() = _state.value.let { it !is TransferState.Idle && !it.isFinal() }
 
-    private fun start(target: SendTarget, source: TransferSource?): Boolean {
+    private fun start(target: SendTarget, source: TransferSource?, receive: ReceiveOptions? = null): Boolean {
         val peerName = target.name
         val connecting = TransferState.Connecting(peerName)
         val current = _state.value
@@ -177,6 +245,8 @@ class TransferManager(
                         false
                     }
                     SessionStatus.PairingRequired, SessionStatus.KeyChanged -> {
+                        // Receiving never pairs: the Mac stopped trusting this phone.
+                        if (receive != null) throw ConnectionException.PeerError(ErrorCode.NOT_TRUSTED, null)
                         val pairing = TransferState.Pairing(peer, session.pairingCode, session.status == SessionStatus.KeyChanged, false)
                         if (!_state.compareAndSet(connecting, pairing)) return@launch
                         awaitPairingResult(session.channel, peer)
@@ -185,7 +255,9 @@ class TransferManager(
                 }
                 // Trust is settled here; next time, connect straight to this endpoint.
                 trustStore.rememberEndpoint(peer.deviceId, established.addresses, established.port)
-                if (source == null) {
+                if (receive != null) {
+                    runReceive(session.channel, peer, receive)
+                } else if (source == null) {
                     advance(TransferState.Paired(peer.name, newlyPaired))
                 } else if (advance(TransferState.Preparing(peer.name))) {
                     val text = source.clipboardText
@@ -391,6 +463,191 @@ class TransferManager(
     fun dismiss() {
         _state.update { if (it.isFinal()) TransferState.Idle else it }
     }
+
+    // region Receive (Mac → phone)
+
+    private suspend fun runReceive(channel: SecureChannel, peer: PeerIdentity, options: ReceiveOptions) {
+        channel.send(Message(MessageType.RECEIVE_READY))
+        Log.i(TAG, "receive_ready sent to ${peer.deviceId}")
+        val received = mutableListOf<ReceivedFile>()
+        var next = readAsync(channel, DELIVERY_WAIT_MS, "delivery")
+        while (true) {
+            val message = next.await()
+            when (message.type) {
+                MessageType.NOTHING_PENDING -> break
+                MessageType.TRANSFER_REQUEST -> {
+                    val request = decoding { IncomingRequest.parse(message) }
+                    next = receiveTransfer(channel, peer, request, options, received)
+                }
+                MessageType.CANCEL -> throw ConnectionException.CancelledByPeer()
+                else -> throw ConnectionException.ProtocolViolation("unexpected ${message.type} while waiting for a delivery")
+            }
+        }
+        Log.i(TAG, "Delivery from ${peer.deviceId} done: ${received.size} file(s) saved")
+        advance(if (received.isEmpty()) TransferState.NothingReceived(peer.name) else TransferState.Received(peer.name, received))
+    }
+
+    /**
+     * A blocking read that isn't a child of the session's coroutine: it can't be cancelled, and
+     * the session closes the socket (ending the read) only after its own scope has finished.
+     */
+    private fun readAsync(channel: SecureChannel, timeoutMs: Long, stage: String): Deferred<Message> =
+        scope.async(Dispatchers.IO) { channel.receive(timeoutMs, stage) }
+
+    /** One `transfer_request`. Returns the read in flight for the Mac's next message. */
+    private suspend fun receiveTransfer(
+        channel: SecureChannel,
+        peer: PeerIdentity,
+        request: IncomingRequest,
+        options: ReceiveOptions,
+        received: MutableList<ReceivedFile>,
+    ): Deferred<Message> {
+        activeTransferId = request.transferId
+        val summary = TransferSummary(request.files.size, request.totalSize, request.files.first().name)
+        Log.i(TAG, "Delivery offered: ${request.files.size} file(s), ${request.totalSize} bytes")
+        if (freeSpace() < request.totalSize + RECEIVE_SPACE_MARGIN) {
+            channel.send(TransferMessages.reject(request.transferId, "insufficient_storage"))
+            throw ConnectionException.NotEnoughSpace(request.totalSize)
+        }
+
+        // The Mac may cancel while this phone's user decides, so its next message is read meanwhile.
+        val peerMessage = readAsync(channel, DECISION_TIMEOUT_MS + REPLY_TIMEOUT_MS, "decision")
+        val decision = CompletableDeferred<Boolean>().also { pendingDecision = it }
+        if (options.autoAccept) decision.complete(true) else advance(TransferState.AwaitingLocalDecision(peer.name, summary))
+        val accepted = withTimeoutOrNull(DECISION_TIMEOUT_MS) {
+            select<Boolean?> {
+                decision.onAwait { it }
+                peerMessage.onAwait { null }
+            }
+        }
+        pendingDecision = null
+        when {
+            accepted == null && peerMessage.isCompleted -> {
+                val message = peerMessage.await()
+                if (message.type == MessageType.CANCEL) throw ConnectionException.CancelledByPeer()
+                throw ConnectionException.ProtocolViolation("unexpected ${message.type} before the decision")
+            }
+            accepted != true -> {
+                Log.i(TAG, if (accepted == null) "Delivery not answered in time" else "Delivery declined")
+                channel.send(TransferMessages.reject(request.transferId, if (accepted == null) "timeout" else "declined"))
+                activeTransferId = null
+                return peerMessage
+            }
+        }
+
+        channel.send(TransferMessages.accept(request.transferId, request.files.size))
+        Log.i(TAG, "Delivery accepted${if (options.autoAccept) " automatically" else ""}")
+        val progress = ReceiveProgress(peer.name, request)
+        progress.emit(force = true)
+        var buffered: Deferred<Message>? = peerMessage
+        suspend fun next(stage: String): Message {
+            val inFlight = buffered
+            buffered = null
+            val message = inFlight?.await() ?: channel.receive(REPLY_TIMEOUT_MS, stage)
+            if (message.type == MessageType.CANCEL) throw ConnectionException.CancelledByPeer()
+            return message
+        }
+
+        for (file in request.files) {
+            val begin = next("file_begin")
+            decoding {
+                begin.expect(MessageType.FILE_BEGIN)
+                if (begin.uint("fileId").toInt() != file.fileId || begin.uint("offset") != 0L) {
+                    throw ConnectionException.ProtocolViolation("file_begin out of order")
+                }
+            }
+            val writer = try {
+                DownloadWriter.create(contentResolver, file)
+            } catch (e: IOException) {
+                reportFailure(channel, request.transferId, file.fileId, ErrorCode.WRITE_FAILED)
+                throw ConnectionException.SaveFailed(file.name, e)
+            }
+            var published = false
+            try {
+                val digest = MessageDigest.getInstance("SHA-256")
+                var written = 0L
+                while (written < file.size) {
+                    val chunk = next("file data")
+                    val data = decoding {
+                        chunk.expect(MessageType.FILE_CHUNK)
+                        if (chunk.uint("fileId").toInt() != file.fileId || chunk.uint("offset") != written) {
+                            throw ConnectionException.ProtocolViolation("file_chunk out of order")
+                        }
+                        chunk.bytes("data")
+                    }
+                    if (data.isEmpty() || written + data.size > file.size) throw ConnectionException.ProtocolViolation("file_chunk exceeds the announced size")
+                    try {
+                        writer.write(data, 0, data.size)
+                    } catch (e: IOException) {
+                        reportFailure(channel, request.transferId, file.fileId, ErrorCode.WRITE_FAILED)
+                        throw ConnectionException.SaveFailed(file.name, e)
+                    }
+                    digest.update(data)
+                    written += data.size
+                    progress.add(file, data.size.toLong())
+                }
+                val end = next("file_end")
+                val expected = decoding {
+                    end.expect(MessageType.FILE_END)
+                    if (end.uint("fileId").toInt() != file.fileId) throw ConnectionException.ProtocolViolation("file_end out of order")
+                    end.bytes("sha256")
+                }
+                if (!MessageDigest.isEqual(digest.digest(), expected)) {
+                    reportFailure(channel, request.transferId, file.fileId, ErrorCode.CHECKSUM_MISMATCH)
+                    throw ConnectionException.ReceiverFailed(ErrorCode.CHECKSUM_MISMATCH, file.name)
+                }
+                try {
+                    writer.publish()
+                } catch (e: IOException) {
+                    reportFailure(channel, request.transferId, file.fileId, ErrorCode.WRITE_FAILED)
+                    throw ConnectionException.SaveFailed(file.name, e)
+                }
+                published = true
+                received += ReceivedFile(writer.uri, writer.displayName(file.name), file.mimeType, file.size)
+                channel.send(TransferMessages.fileResult(request.transferId, file.fileId, ok = true))
+                Log.i(TAG, "Saved file ${file.fileId} (${file.size} bytes, SHA-256 verified)")
+            } finally {
+                if (!published) writer.discard()
+            }
+        }
+        val complete = next("transfer_complete")
+        decoding { complete.expect(MessageType.TRANSFER_COMPLETE) }
+        channel.send(TransferMessages.transferResult(request.transferId, completed = true))
+        activeTransferId = null
+        return readAsync(channel, DELIVERY_WAIT_MS, "delivery")
+    }
+
+    private fun reportFailure(channel: SecureChannel, transferId: ByteArray, fileId: Int, code: String) {
+        sendQuietly(channel, TransferMessages.fileResult(transferId, fileId, ok = false, code = code))
+        sendQuietly(channel, TransferMessages.transferResult(transferId, completed = false, code = code))
+    }
+
+    /** Progress of a delivery, emitted at most every [PROGRESS_INTERVAL_MS]. */
+    private inner class ReceiveProgress(private val peerName: String, private val request: IncomingRequest) {
+        private var bytes = 0L
+        private var lastEmitAt = 0L
+        private var current = request.files.first()
+        private val samples = ArrayDeque<Pair<Long, Long>>()
+
+        fun add(file: IncomingFile, count: Long) {
+            current = file
+            bytes += count
+            emit(force = false)
+        }
+
+        fun emit(force: Boolean) {
+            val now = SystemClock.elapsedRealtime()
+            if (!force && now - lastEmitAt < PROGRESS_INTERVAL_MS) return
+            lastEmitAt = now
+            samples.addLast(now to bytes)
+            while (samples.size > 1 && now - samples.first().first > SPEED_WINDOW_MS) samples.removeFirst()
+            val (firstTime, firstBytes) = samples.first()
+            val speed = if (samples.size > 1 && now > firstTime) (bytes - firstBytes) * 1000 / (now - firstTime) else 0
+            advance(TransferState.Receiving(peerName, TransferProgress(bytes, request.totalSize, current.name, current.fileId, request.files.size, speed)))
+        }
+    }
+
+    // endregion
 
     // region Transfer
 
@@ -736,6 +993,15 @@ class TransferManager(
         const val CANCEL_GRACE_MS = 2_000L
         const val PEER_EXPLANATION_WAIT_MS = 500L
 
+        /** The Mac answers `receive_ready` at once; after a delivery it sends the next one or `nothing_pending`. */
+        const val DELIVERY_WAIT_MS = 30_000L
+
+        /** Shorter than the Mac's acceptance timeout (180 s), so this phone's `timeout` answer arrives first. */
+        const val DECISION_TIMEOUT_MS = 170_000L
+
+        /** Downloads keeps this much free beyond what the Mac sends. */
+        const val RECEIVE_SPACE_MARGIN = 200L * 1024 * 1024
+
         /** protocol/messages.md: a transfer has at most 1000 files. */
         const val MAX_FILES = 1000
     }
@@ -743,7 +1009,8 @@ class TransferManager(
 
 fun TransferState.isFinal(): Boolean =
     this is TransferState.Completed || this is TransferState.Failed || this is TransferState.Cancelled ||
-        this is TransferState.Paired || this is TransferState.TextCopied
+        this is TransferState.Paired || this is TransferState.TextCopied ||
+        this is TransferState.Received || this is TransferState.NothingReceived
 
 fun TransferState.peerName(): String = when (this) {
     TransferState.Idle -> ""
@@ -755,6 +1022,10 @@ fun TransferState.peerName(): String = when (this) {
     is TransferState.Verifying -> peerName
     is TransferState.Completed -> peerName
     is TransferState.TextCopied -> peerName
+    is TransferState.AwaitingLocalDecision -> peerName
+    is TransferState.Receiving -> peerName
+    is TransferState.Received -> peerName
+    is TransferState.NothingReceived -> peerName
     is TransferState.Paired -> peerName
     is TransferState.Failed -> peerName
     is TransferState.Cancelled -> peerName

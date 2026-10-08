@@ -1,6 +1,7 @@
 package dev.localdrop.feature.transfer
 
 import android.Manifest
+import android.app.DownloadManager
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
@@ -26,6 +27,7 @@ import androidx.core.content.ContextCompat
 import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.app.MainActivity
+import dev.localdrop.core.device.TrustedDevice
 import dev.localdrop.core.queue.AvailabilityTrigger
 import dev.localdrop.core.queue.QueuedTransfer
 import dev.localdrop.core.queue.SpoolSpaceException
@@ -121,6 +123,10 @@ class TransferService : Service() {
     private val items = mutableListOf<OutgoingTransfer>()
     private var current: Batch? = null
     private var currentDeviceName = ""
+
+    /** Macs to take files from (Mac → phone, protocol.md §2.8), and the one being received from. */
+    private val receiveQueue = ArrayDeque<String>()
+    private var receiving: TrustedDevice? = null
     private var spoolJob: Job? = null
     private var watchJob: Job? = null
     private var retryJob: Job? = null
@@ -158,6 +164,9 @@ class TransferService : Service() {
                 retryAllNow()
             }
             ACTION_DISCARD -> discardParked()
+            ACTION_RECEIVE -> enqueueReceive(intent.getStringExtra(EXTRA_DEVICE_ID))
+            ACTION_ACCEPT_INCOMING -> manager.acceptIncoming()
+            ACTION_DECLINE_INCOMING -> manager.declineIncoming()
             ACTION_CANCEL -> cancelAll()
             ACTION_CONFIRM_PAIRING -> manager.confirmPairing()
             ACTION_DECLINE_PAIRING -> manager.declinePairing()
@@ -264,9 +273,39 @@ class TransferService : Service() {
         scope.launch(Dispatchers.IO) { outgoingStore.remove(queued.id) }
     }
 
+    /**
+     * A Mac has files for this phone (its pending delivery was seen, or the user tapped the
+     * notification): connect to it — or, when unknown, to every Mac that can send — and take them.
+     */
+    private fun enqueueReceive(deviceId: String?) {
+        notifications.cancel(INCOMING_NOTIFICATION_ID)
+        val macs = if (deviceId != null) {
+            listOfNotNull(container.trustedDeviceStore.find(deviceId))
+        } else {
+            container.trustedDeviceStore.devices.value.filter { it.canSend }
+                .sortedWith(compareByDescending<TrustedDevice> { it.isDefault }.thenByDescending { it.lastSeenMs })
+        }
+        for (mac in macs) {
+            if (mac.deviceId !in receiveQueue && receiving?.deviceId != mac.deviceId) receiveQueue.addLast(mac.deviceId)
+        }
+        Log.i(TAG, "Receiving from ${receiveQueue.size} Mac(s)")
+    }
+
     /** Starts the next due send when the manager is free; otherwise keeps waiting ones scheduled. */
     private fun pump() {
-        if (current != null || spoolJob != null || manager.isBusy) return
+        if (current != null || receiving != null || spoolJob != null || manager.isBusy) return
+        // A Mac is waiting for this phone to take its files: that goes first.
+        while (receiveQueue.isNotEmpty()) {
+            val mac = container.trustedDeviceStore.find(receiveQueue.removeFirst()) ?: continue
+            if (!manager.receive(mac, mac.receiveAutomatically)) {
+                receiveQueue.addFirst(mac.deviceId)
+                return
+            }
+            receiving = mac
+            currentDeviceName = mac.deviceName
+            acquireLocks()
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         park(items.filter { item -> item.waitingSinceMs?.let { now - it >= MAX_WAIT_MS } == true })
         while (true) {
@@ -340,6 +379,10 @@ class TransferService : Service() {
     }
 
     private fun onState(state: TransferState) {
+        if (receiving != null) {
+            onReceiveState(state)
+            return
+        }
         // States of sessions this service didn't start (pair-only from the app) aren't ours.
         // Stopping is decided only after start commands are handled (onStartCommand, finishCurrent);
         // this collector already sees Idle in onCreate, before the first command is queued.
@@ -450,6 +493,31 @@ class TransferService : Service() {
         if (kept.isNotEmpty()) showParked(kept)
     }
 
+    private fun onReceiveState(state: TransferState) {
+        when {
+            state is TransferState.Idle -> {
+                receiving = null
+                notifications.cancel(INCOMING_NOTIFICATION_ID)
+                releaseLocks()
+                pump()
+                stopIfIdle()
+            }
+            state.isFinal() -> {
+                notifications.cancel(INCOMING_NOTIFICATION_ID)
+                postReceiveResult(state)
+                manager.dismiss()
+            }
+            state is TransferState.AwaitingLocalDecision -> {
+                showIncoming(state)
+                updateOngoing(state)
+            }
+            else -> {
+                notifications.cancel(INCOMING_NOTIFICATION_ID)
+                updateOngoing(state)
+            }
+        }
+    }
+
     private fun finishCurrent() {
         current = null
         releaseLocks()
@@ -458,7 +526,7 @@ class TransferService : Service() {
     }
 
     private fun stopIfIdle() {
-        if (current == null && items.isEmpty() && spoolJob == null && !manager.isBusy) {
+        if (current == null && items.isEmpty() && spoolJob == null && !manager.isBusy && receiving == null && receiveQueue.isEmpty()) {
             watchJob?.cancel()
             watchJob = null
             retryJob?.cancel()
@@ -517,6 +585,15 @@ class TransferService : Service() {
                     .setProgress(100, percent, false)
             }
             is TransferState.Verifying -> builder.setContentTitle(getString(R.string.transfer_verifying)).setProgress(0, 0, true)
+            is TransferState.AwaitingLocalDecision -> builder.setContentTitle(getString(R.string.incoming_title, name))
+                .setContentText(TransferText.summaryLine(this, state.summary))
+            is TransferState.Receiving -> {
+                val progress = state.progress
+                val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
+                builder.setContentTitle(getString(R.string.notification_receiving_from, name))
+                    .setContentText(TransferText.progressLine(this, progress))
+                    .setProgress(100, percent, false)
+            }
             else -> return
         }
         builder.addAction(0, getString(R.string.action_cancel), serviceIntent(ACTION_CANCEL, REQUEST_CANCEL))
@@ -607,6 +684,55 @@ class TransferService : Service() {
         }
     }
 
+    /** The Mac's offer, with visible Accept and Decline; it is also the transfer screen's prompt. */
+    private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
+        val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
+            .setSmallIcon(R.drawable.ic_stat_localdrop)
+            .setContentTitle(getString(R.string.incoming_title, state.peerName))
+            .setContentText(TransferText.summaryLine(this, state.summary))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(openAppIntent())
+            .addAction(0, getString(R.string.action_decline), serviceIntent(ACTION_DECLINE_INCOMING, REQUEST_DECLINE_INCOMING))
+            .addAction(0, getString(R.string.action_accept), serviceIntent(ACTION_ACCEPT_INCOMING, REQUEST_ACCEPT_INCOMING))
+            .build()
+        notifyIfAllowed(INCOMING_NOTIFICATION_ID, notification)
+    }
+
+    private fun postReceiveResult(state: TransferState) {
+        val name = currentDeviceName
+        when (state) {
+            is TransferState.Received -> {
+                val files = state.files
+                val first = files.first()
+                // One file opens in its app; several open the Downloads list.
+                val open = if (files.size == 1) {
+                    Intent(Intent.ACTION_VIEW).setDataAndType(first.uri, first.mimeType).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } else {
+                    Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+                }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val openIntent = PendingIntent.getActivity(this, REQUEST_OPEN_RECEIVED, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                val text = if (files.size == 1) first.name else getString(R.string.received_where)
+                val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
+                    .setSmallIcon(R.drawable.ic_stat_localdrop)
+                    .setContentTitle(resources.getQuantityString(R.plurals.received_files, files.size, files.size, name))
+                    .setContentText(text)
+                    .setAutoCancel(true)
+                    .setContentIntent(openIntent)
+                    .addAction(0, getString(R.string.action_open), openIntent)
+                    .build()
+                notifyIfAllowed(resultNotificationId++, notification)
+            }
+            is TransferState.Failed -> postResult(getString(R.string.notification_receive_failed_title, name), TransferText.error(this, state.error, name))
+            is TransferState.Cancelled -> if (state.byPeer) {
+                postResult(getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
+            }
+            else -> Unit
+        }
+    }
+
     private fun postResult(title: String, text: String) {
         val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
@@ -686,6 +812,9 @@ class TransferService : Service() {
         private const val ACTION_CANCEL = "dev.localdrop.action.CANCEL"
         private const val ACTION_RESUME = "dev.localdrop.action.RESUME"
         private const val ACTION_DISCARD = "dev.localdrop.action.DISCARD"
+        private const val ACTION_RECEIVE = "dev.localdrop.action.RECEIVE"
+        private const val ACTION_ACCEPT_INCOMING = "dev.localdrop.action.ACCEPT_INCOMING"
+        private const val ACTION_DECLINE_INCOMING = "dev.localdrop.action.DECLINE_INCOMING"
         private const val ACTION_CONFIRM_PAIRING = "dev.localdrop.action.CONFIRM_PAIRING"
         private const val ACTION_DECLINE_PAIRING = "dev.localdrop.action.DECLINE_PAIRING"
         private const val EXTRA_DEVICE_ID = "deviceId"
@@ -695,6 +824,8 @@ class TransferService : Service() {
         private const val CHANNEL_PROGRESS = "transfer_progress"
         private const val CHANNEL_RESULTS = "transfer_results"
         private const val CHANNEL_PAIRING = "pairing"
+        const val CHANNEL_INCOMING = "incoming"
+        const val INCOMING_NOTIFICATION_ID = 4
         private const val ONGOING_NOTIFICATION_ID = 1
         private const val PAIRING_NOTIFICATION_ID = 2
         private const val PARKED_NOTIFICATION_ID = 3
@@ -705,6 +836,10 @@ class TransferService : Service() {
         private const val REQUEST_OPEN = 4
         private const val REQUEST_RESUME = 5
         private const val REQUEST_DISCARD = 6
+        private const val REQUEST_ACCEPT_INCOMING = 7
+        private const val REQUEST_DECLINE_INCOMING = 8
+        private const val REQUEST_OPEN_RECEIVED = 9
+        private const val REQUEST_RECEIVE = 10
         private const val TIMER_SLACK_MS = 50L
         private const val PROGRESS_NOTIFICATION_INTERVAL_MS = 1_000L
         private const val MAX_LOCK_MS = 6 * 60 * 60 * 1000L
@@ -723,6 +858,21 @@ class TransferService : Service() {
             }
             ContextCompat.startForegroundService(context, intent)
         }
+
+        /**
+         * Takes the files a Mac has for this phone. Allowed from the background only with a
+         * companion-device association; callers fall back to [receiveOnTap].
+         */
+        fun receive(context: Context, deviceId: String? = null) {
+            ContextCompat.startForegroundService(context, receiveIntent(context, deviceId))
+        }
+
+        /** The same, started by a tap on a notification (always allowed). */
+        fun receiveOnTap(context: Context): PendingIntent =
+            PendingIntent.getForegroundService(context, REQUEST_RECEIVE, receiveIntent(context, null), PendingIntent.FLAG_IMMUTABLE)
+
+        private fun receiveIntent(context: Context, deviceId: String?) =
+            Intent(context, TransferService::class.java).setAction(ACTION_RECEIVE).putExtra(EXTRA_DEVICE_ID, deviceId)
 
         /** Retries kept sends now (LocalDrop was opened). Call only from the foreground. */
         fun resume(context: Context) {
@@ -748,6 +898,8 @@ class TransferService : Service() {
                         .setName(context.getString(R.string.channel_results)).build(),
                     NotificationChannelCompat.Builder(CHANNEL_PAIRING, NotificationManagerCompat.IMPORTANCE_HIGH)
                         .setName(context.getString(R.string.channel_pairing)).build(),
+                    NotificationChannelCompat.Builder(CHANNEL_INCOMING, NotificationManagerCompat.IMPORTANCE_HIGH)
+                        .setName(context.getString(R.string.channel_incoming)).build(),
                 ),
             )
         }

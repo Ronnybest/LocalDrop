@@ -20,11 +20,26 @@ struct DeviceListItem: Identifiable {
     var receivingFraction: Double?
     /// Connection entry with a pairing or transfer prompt waiting for the user.
     var pendingPromptEntryId: UUID?
+    /// Files on their way to this device, if any.
+    var delivery: OutgoingDelivery?
+
+    /// A paired phone whose LocalDrop can receive from this Mac.
+    var canReceive: Bool {
+        isTrusted && trustedDevice?.capabilities?.contains(ProtocolConstants.receiveCapability) == true
+    }
 }
 
 extension AppModel {
     /// Connected devices first (newest first), then the remaining trusted devices by last seen.
     var deviceList: [DeviceListItem] {
+        rawDeviceList.map { item in
+            var item = item
+            item.delivery = delivery(for: item.id)
+            return item
+        }
+    }
+
+    private var rawDeviceList: [DeviceListItem] {
         let trusted = trustStore?.devices ?? []
         var items: [DeviceListItem] = []
         var listedDeviceIds = Set<String>()
@@ -69,6 +84,16 @@ extension DeviceListItem {
 
     /// What the device is doing now, or when it was last seen.
     var status: (tint: Color, text: String) {
+        if let delivery {
+            switch delivery.phase {
+            case .waiting:
+                return (.accentColor, String(localized: "Waiting to send \(delivery.title)"))
+            case .awaitingAcceptance:
+                return (.accentColor, String(localized: "Waiting for acceptance on the phone"))
+            case .sending:
+                return (.accentColor, String(localized: "Sending · \(Int(delivery.fraction * 100))%"))
+            }
+        }
         if let fraction = receivingFraction {
             return (.accentColor, String(localized: "Receiving · \(Int(fraction * 100))%"))
         }
@@ -103,6 +128,8 @@ extension DeviceListItem {
 struct DeviceSummaryRow: View {
     let item: DeviceListItem
     let showPrompt: (UUID) -> Void
+    var send: ((String) -> Void)?
+    var cancelDelivery: ((UUID) -> Void)?
 
     var body: some View {
         let status = item.status
@@ -122,7 +149,34 @@ struct DeviceSummaryRow: View {
                     .glassButton()
                     .help("Show the request window again")
             }
+            DeliveryActions(item: item, send: send, cancelDelivery: cancelDelivery)
         }
+    }
+}
+
+/// Send to a phone, or cancel what is on its way.
+private struct DeliveryActions: View {
+    let item: DeviceListItem
+    let send: ((String) -> Void)?
+    let cancelDelivery: ((UUID) -> Void)?
+
+    var body: some View {
+        if let delivery = item.delivery, let cancelDelivery {
+            CircleButton(symbol: "xmark", help: String(localized: "Cancel sending")) { cancelDelivery(delivery.id) }
+        } else if item.canReceive, let send {
+            CircleButton(symbol: "paperplane", help: String(localized: "Send files to \(item.name)")) { send(item.id) }
+        }
+    }
+}
+
+extension View {
+    /// Files dropped on a phone's row are sent to it.
+    func sendsDroppedFiles(to item: DeviceListItem, using drop: @escaping ([URL], String) -> Void) -> some View {
+        dropDestination(for: URL.self) { urls, _ in
+            guard item.canReceive, !urls.isEmpty else { return false }
+            drop(urls, item.id)
+            return true
+        } isTargeted: { _ in }
     }
 }
 
@@ -132,6 +186,8 @@ struct DeviceDetailRow: View {
     let forget: (TrustedDevice) -> Void
     let showPrompt: (UUID) -> Void
     let setAcceptPolicy: (AcceptPolicy, String) -> Void
+    var send: ((String) -> Void)?
+    var cancelDelivery: ((UUID) -> Void)?
     @State private var showsKey = false
 
     var body: some View {
@@ -156,6 +212,7 @@ struct DeviceDetailRow: View {
             if let entryId = item.pendingPromptEntryId {
                 Button("Show") { showPrompt(entryId) }
             }
+            DeliveryActions(item: item, send: send, cancelDelivery: cancelDelivery)
             if item.isTrusted, let record = item.trustedDevice {
                 Picker("Receive", selection: Binding(
                     get: { record.effectiveAcceptPolicy },

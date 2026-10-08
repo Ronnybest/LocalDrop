@@ -89,7 +89,8 @@ final class NotificationController: NSObject {
         post(id: UUID().uuidString, content: content)
     }
 
-    func postFailure(title: String, body: String) {
+    /// A plain notification: a result, a failure, a note.
+    func postMessage(title: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body

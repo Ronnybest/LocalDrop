@@ -10,12 +10,18 @@ object ProtocolConstants {
     val SERVICE_UUID: UUID = UUID.fromString("8D232B6B-5901-4AEA-89A2-389415C619EB")
     val ENDPOINT_INFO_CHARACTERISTIC_UUID: UUID = UUID.fromString("13391BAF-1674-4EF2-A1E1-AAD175FE6C3F")
 
+    /** Advertised by a Mac instead of [SERVICE_UUID] while it has files for a phone (protocol.md §2.8). */
+    val PENDING_DELIVERY_UUID: UUID = UUID.fromString("137D2908-412B-445F-B387-7F321A12185C")
+
     /** BLE local name prefix in pairing mode (protocol.md §2.2); private names start with a status letter. */
     const val PAIRING_NAME_PREFIX = "P"
     const val SHORT_ID_LENGTH = 6
 
     /** What this phone can do (protocol.md §2.6). */
-    val CAPABILITIES = listOf("files", "multipleFiles", "text")
+    val CAPABILITIES = listOf("files", "multipleFiles", "text", "receive")
+
+    /** The Mac can send to this phone (protocol.md §2.6). */
+    const val CAP_SEND = "send"
 
     /** The peer takes a `text` message straight to its clipboard (protocol.md §2.6). */
     const val CAP_CLIPBOARD_RECEIVE = "clipboardReceive"

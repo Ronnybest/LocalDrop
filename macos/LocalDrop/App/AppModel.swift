@@ -54,6 +54,8 @@ final class AppModel {
     private let transferPanel = TransferPanelController()
     private let textPanel = TextPanelController()
 
+    /// Files on their way to phones (Mac → Android, protocol.md §2.8).
+    private(set) var deliveries: [OutgoingDelivery] = []
     let notifications = NotificationController()
     /// Which Settings tab to show; the menu opens Devices directly.
     var settingsTab: SettingsTab = .general
@@ -164,6 +166,56 @@ final class AppModel {
             Log.crypto.error("Could not rotate presence key: \(error.description, privacy: .public)")
         }
         advertiser?.refresh()
+    }
+
+    // MARK: - Sending to phones
+
+    /// Advertised as a pending delivery while any phone has files waiting for it.
+    var hasPendingDelivery: Bool { deliveries.contains { $0.phase == .waiting } }
+
+    func delivery(for deviceId: String) -> OutgoingDelivery? {
+        deliveries.first { $0.deviceId == deviceId }
+    }
+
+    /// Queues files for a paired phone. They go when the phone connects, which it does on its
+    /// own when it sees the pending delivery advertised; files added meanwhile join the same request.
+    func send(_ urls: [URL], to deviceId: String) {
+        let files = urls.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true }
+        guard !files.isEmpty, let record = trustStore?.devices.first(where: { $0.deviceId == deviceId }) else { return }
+        if let waiting = deliveries.first(where: { $0.deviceId == deviceId && $0.phase == .waiting }) {
+            waiting.add(files)
+        } else {
+            deliveries.append(OutgoingDelivery(deviceId: deviceId, deviceName: record.deviceName, files: files))
+        }
+        Log.transfer.info("Queued \(files.count) file(s) for \(deviceId, privacy: .public)")
+        advertiser?.refresh()
+    }
+
+    /// Lets the user pick files for a phone. The menu bar app has no window, so the panel comes forward itself.
+    func chooseFiles(for deviceId: String) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.prompt = String(localized: "Send")
+        NSApp.activate()
+        panel.begin { [weak self] response in
+            guard response == .OK else { return }
+            let urls = panel.urls
+            MainActor.assumeIsolated { self?.send(urls, to: deviceId) }
+        }
+    }
+
+    func cancelDelivery(_ id: UUID) {
+        guard let delivery = deliveries.first(where: { $0.id == id }) else { return }
+        if delivery.phase == .waiting {
+            deliveries.removeAll { $0.id == id }
+            Log.transfer.info("Cancelled a waiting delivery")
+            advertiser?.refresh()
+        } else {
+            // The sender stops at its next chunk and reports `.cancelled`.
+            delivery.cancelToken.cancel()
+        }
     }
 
     // MARK: - Presence and pairing mode
@@ -304,7 +356,8 @@ final class AppModel {
 
         let advertiser = BLEAdvertiser(
             nameProvider: { [weak self] in self?.currentAdvertisedName() ?? "" },
-            endpointValueProvider: { [weak self] in self?.currentEndpointValue() }
+            endpointValueProvider: { [weak self] in self?.currentEndpointValue() },
+            pendingProvider: { [weak self] in self?.hasPendingDelivery ?? false }
         )
         self.advertiser = advertiser
         schedulePresenceRefresh()
@@ -475,7 +528,7 @@ extension AppModel: SessionCoordinator {
     func sessionAuthenticated(_ entryId: UUID, peer: PeerInfo, status: SessionStatus) {
         updateEntry(entryId, .connected(peer, status))
         if status == .trusted {
-            trustStore?.markSeen(deviceId: peer.deviceId, name: peer.name)
+            trustStore?.markSeen(deviceId: peer.deviceId, name: peer.name, capabilities: peer.capabilities)
         }
     }
 
@@ -665,14 +718,14 @@ extension AppModel: SessionCoordinator {
         case .cancelledByPeer:
             transfer.phase = .cancelled(String(localized: "Cancelled"))
             if wasReceiving {
-                notifications.postFailure(title: String(localized: "\(transfer.peerName) cancelled the transfer"), body: transfer.title)
+                notifications.postMessage(title: String(localized: "\(transfer.peerName) cancelled the transfer"), body: transfer.title)
             }
         case .rejectedNoSpace:
             transfer.phase = .failed(String(localized: "Not enough disk space"))
-            notifications.postFailure(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: String(localized: "Not enough disk space"))
+            notifications.postMessage(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: String(localized: "Not enough disk space"))
         case .failed(let reason):
             transfer.phase = .failed(reason)
-            notifications.postFailure(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: reason)
+            notifications.postMessage(title: String(localized: "Couldn't receive from \(transfer.peerName)"), body: reason)
         }
         dismissTransfer(transfer.entryId)
     }
@@ -681,7 +734,7 @@ extension AppModel: SessionCoordinator {
         guard incomingTransfer == nil || incomingTransfer?.phase.isFinished == true else { return }
         let size = ByteCountFormatter.string(fromByteCount: request.totalSize, countStyle: .file)
         if notifications.isAuthorized {
-            notifications.postFailure(
+            notifications.postMessage(
                 title: String(localized: "Couldn't receive from \(peer.name)"),
                 body: String(localized: "\(peer.name) tried to send \(size), but there isn't enough disk space")
             )
@@ -694,6 +747,55 @@ extension AppModel: SessionCoordinator {
     }
 
     func isPairingAllowed() -> Bool { isPairingModeActive }
+
+    func takeDelivery(for peer: PeerInfo) -> (id: UUID, files: [URL], token: TransferCancelToken)? {
+        guard trustState(deviceId: peer.deviceId, identityKey: peer.identityKey) == .trusted,
+              let delivery = deliveries.first(where: { $0.deviceId == peer.deviceId && $0.phase == .waiting }) else { return nil }
+        delivery.phase = .awaitingAcceptance
+        delivery.bytesSent = 0
+        advertiser?.refresh()
+        return (delivery.id, delivery.files, delivery.cancelToken)
+    }
+
+    func deliveryStarted(_ id: UUID) {
+        deliveries.first { $0.id == id }?.phase = .sending
+    }
+
+    func deliveryProgress(_ id: UUID, bytesSent: Int64) {
+        deliveries.first { $0.id == id }?.bytesSent = bytesSent
+    }
+
+    func deliveryFinished(_ id: UUID, outcome: DeliveryOutcome) {
+        guard let delivery = deliveries.first(where: { $0.id == id }) else { return }
+        defer { advertiser?.refresh() }
+        switch outcome {
+        case .interrupted(let reason):
+            // Kept: the Mac advertises it again and the phone retries when it can.
+            Log.transfer.warning("Delivery interrupted (\(reason, privacy: .public)); waiting for the phone again")
+            delivery.phase = .waiting
+            delivery.bytesSent = 0
+            return
+        case .completed(let files, let bytes):
+            let size = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+            notifications.postMessage(
+                title: String(localized: "Sent to \(delivery.deviceName)"),
+                body: files == 1 ? "\(delivery.title) · \(size)" : String(localized: "\(files) files · \(size)")
+            )
+        case .rejected(let reason):
+            let body = switch reason {
+            case "declined": String(localized: "Declined on the phone")
+            case "timeout": String(localized: "No answer on the phone")
+            case "insufficient_storage": String(localized: "Not enough space on the phone")
+            default: reason
+            }
+            notifications.postMessage(title: String(localized: "\(delivery.deviceName) didn't take the files"), body: body)
+        case .cancelledByPeer:
+            notifications.postMessage(title: String(localized: "\(delivery.deviceName) cancelled the transfer"), body: delivery.title)
+        case .cancelled:
+            break
+        }
+        deliveries.removeAll { $0.id == id }
+    }
 
     func currentPresenceKey() -> Data? { presenceKey?.raw }
 

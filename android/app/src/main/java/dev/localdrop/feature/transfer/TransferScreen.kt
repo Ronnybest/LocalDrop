@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -43,12 +44,15 @@ fun TransferScreen(
     onDeclinePairing: () -> Unit,
     onCancel: () -> Unit,
     onDismiss: () -> Unit,
+    onAcceptIncoming: () -> Unit = {},
+    onDeclineIncoming: () -> Unit = {},
 ) {
     BackHandler {
         when (state) {
             is TransferState.Completed, is TransferState.Failed, is TransferState.Cancelled, is TransferState.Paired,
-            is TransferState.TextCopied,
+            is TransferState.TextCopied, is TransferState.Received, is TransferState.NothingReceived,
             -> onDismiss()
+            is TransferState.AwaitingLocalDecision -> onDeclineIncoming()
             is TransferState.Pairing -> onDeclinePairing()
             else -> onCancel()
         }
@@ -95,6 +99,47 @@ fun TransferScreen(
                         textAlign = TextAlign.Center,
                     )
                     Button(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
+                }
+                is TransferState.AwaitingLocalDecision -> {
+                    val context = LocalContext.current
+                    Text(
+                        stringResource(R.string.incoming_title, state.peerName),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        TransferText.summaryLine(context, state.summary),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(onClick = onDeclineIncoming) { Text(stringResource(R.string.action_decline)) }
+                        Button(onClick = onAcceptIncoming) { Text(stringResource(R.string.action_accept)) }
+                    }
+                }
+                is TransferState.Receiving -> ProgressContent(state.progress, verifying = false, onCancel, receivingFrom = state.peerName)
+                is TransferState.Received -> {
+                    Text(
+                        pluralStringResource(R.plurals.received_files, state.files.size, state.files.size, state.peerName),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        stringResource(R.string.received_where),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    Button(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
+                }
+                is TransferState.NothingReceived -> {
+                    Text(
+                        stringResource(R.string.nothing_received, state.peerName),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                    Button(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
                 }
                 is TransferState.TextCopied -> {
                     Text(
@@ -166,12 +211,14 @@ private fun Waiting(title: String, onCancel: () -> Unit, detail: String? = null)
 }
 
 @Composable
-private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCancel: () -> Unit) {
+private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCancel: () -> Unit, receivingFrom: String? = null) {
     val context = LocalContext.current
     val fraction = if (progress.totalBytes > 0) progress.bytesSent.toFloat() / progress.totalBytes else 1f
     Text(
         if (verifying) {
             stringResource(R.string.transfer_verifying)
+        } else if (receivingFrom != null) {
+            stringResource(R.string.notification_receiving_from, receivingFrom)
         } else {
             stringResource(R.string.transfer_sending, Formatter.formatShortFileSize(context, progress.totalBytes))
         },

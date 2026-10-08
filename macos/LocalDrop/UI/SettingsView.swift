@@ -155,8 +155,11 @@ private struct DevicesSettings: View {
                         item: item,
                         forget: { pendingForget = $0 },
                         showPrompt: model.showPrompt,
-                        setAcceptPolicy: model.setAcceptPolicy
+                        setAcceptPolicy: model.setAcceptPolicy,
+                        send: model.chooseFiles,
+                        cancelDelivery: model.cancelDelivery
                     )
+                    .sendsDroppedFiles(to: item, using: model.send)
                 }
             } header: {
                 Text("Devices")

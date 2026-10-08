@@ -89,6 +89,9 @@ struct LocalDropApp: App {
             if let transfer = model.incomingTransfer, transfer.phase == .receiving {
                 Image(nsImage: Self.progressIcon(transfer.fraction))
                     .accessibilityLabel("LocalDrop — receiving")
+            } else if let delivery = model.deliveries.first(where: { $0.phase == .sending }) {
+                Image(nsImage: Self.progressIcon(delivery.fraction))
+                    .accessibilityLabel("LocalDrop — sending")
             } else if model.isPairingModeActive {
                 Image(nsImage: Self.visibleIcon)
                     .accessibilityLabel("LocalDrop — visible to new devices")

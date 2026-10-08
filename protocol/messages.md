@@ -235,6 +235,18 @@ Initiator может **отозвать** подтверждение: `pairing_c
 действие владельца доверенного устройства. Получатель никогда не открывает ссылку сам —
 только по нажатию пользователя.
 
+### `receive_ready` (Initiator → Responder, Enc: yes)
+
+Initiator готов принять файлы, которые Responder для него приготовил (protocol.md §2.8).
+Пустое тело. Responder отвечает `transfer_request` (роли Sender/Receiver меняются: Responder
+отправляет, Initiator принимает, сообщения те же) или `nothing_pending`. После каждого
+`transfer_result`/`transfer_reject` Responder присылает следующий `transfer_request` или
+`nothing_pending`; Initiator затем закрывает сессию (`close`).
+
+### `nothing_pending` (Responder → Initiator, Enc: yes)
+
+Для этого Initiator'а ничего нет. Пустое тело.
+
 ### Порядок и правила передачи
 
 * В сессии одновременно идёт не больше одной передачи. Следующий `transfer_request` или `text`

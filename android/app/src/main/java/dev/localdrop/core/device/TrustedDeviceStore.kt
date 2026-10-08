@@ -5,6 +5,7 @@ import androidx.core.util.AtomicFile
 import dev.localdrop.core.protocol.Cbor
 import dev.localdrop.core.protocol.CborException
 import dev.localdrop.core.protocol.CborValue
+import dev.localdrop.core.protocol.ProtocolConstants
 import dev.localdrop.core.protocol.bytes
 import dev.localdrop.core.protocol.text
 import dev.localdrop.core.protocol.uint
@@ -32,6 +33,8 @@ class TrustedDevice(
     val capabilities: List<String> = emptyList(),
     /** Chosen by the user; see [defaultDevice]. */
     val isDefault: Boolean = false,
+    /** Files this Mac sends are saved without asking. */
+    val receiveAutomatically: Boolean = false,
 ) {
     fun copy(
         deviceName: String = this.deviceName,
@@ -41,9 +44,14 @@ class TrustedDevice(
         presenceKey: ByteArray? = this.presenceKey,
         capabilities: List<String> = this.capabilities,
         isDefault: Boolean = this.isDefault,
+        receiveAutomatically: Boolean = this.receiveAutomatically,
     ) = TrustedDevice(
         deviceId, deviceName, publicKey, fingerprint, firstSeenMs, lastSeenMs, lastAddresses, lastPort, presenceKey, capabilities, isDefault,
+        receiveAutomatically,
     )
+
+    /** The Mac can send files to this phone (it runs a LocalDrop with `send`). */
+    val canSend: Boolean get() = ProtocolConstants.CAP_SEND in capabilities
 }
 
 /**
@@ -124,6 +132,7 @@ class TrustedDeviceStore(private val file: File, private val clock: () -> Long =
                 deviceId, deviceName, publicKey, fingerprint, previous?.firstSeenMs ?: now, now,
                 previous?.lastAddresses.orEmpty(), previous?.lastPort, presenceKey ?: previous?.presenceKey, capabilities,
                 previous?.isDefault ?: false,
+                previous?.receiveAutomatically ?: false,
             )
         write(updated)
         Log.i(TAG, "Trusted $deviceId")
@@ -157,6 +166,14 @@ class TrustedDeviceStore(private val file: File, private val clock: () -> Long =
         val key = presenceKey ?: current.presenceKey
         if (current.presenceKey.contentEqualsNullable(key) && current.capabilities == capabilities) return
         update(deviceId) { it.copy(presenceKey = key, capabilities = capabilities) }
+    }
+
+    @Synchronized
+    @Throws(IOException::class)
+    fun setReceiveAutomatically(deviceId: String, enabled: Boolean) {
+        load()
+        if (_devices.value.none { it.deviceId == deviceId }) return
+        write(_devices.value.map { if (it.deviceId == deviceId) it.copy(receiveAutomatically = enabled) else it })
     }
 
     /** Makes [deviceId] the default Mac; every other device stops being default. */
@@ -225,6 +242,7 @@ class TrustedDeviceStore(private val file: File, private val clock: () -> Long =
                                     it.lastPort?.let { port -> "lastPort" to CborValue.UInt(port.toLong()) },
                                     it.presenceKey?.let { key -> "presenceKey" to CborValue.Bytes(key) },
                                     if (it.isDefault) "default" to CborValue.Bool(true) else null,
+                                    if (it.receiveAutomatically) "autoRecv" to CborValue.Bool(true) else null,
                                 ).toMap(),
                             )
                         },
@@ -254,6 +272,7 @@ class TrustedDeviceStore(private val file: File, private val clock: () -> Long =
                     capabilities = (map.entries["caps"] as? CborValue.Array)?.items
                         ?.mapNotNull { (it as? CborValue.Text)?.value }.orEmpty(),
                     isDefault = (map.entries["default"] as? CborValue.Bool)?.value ?: false,
+                    receiveAutomatically = (map.entries["autoRecv"] as? CborValue.Bool)?.value ?: false,
                 )
             }
         }

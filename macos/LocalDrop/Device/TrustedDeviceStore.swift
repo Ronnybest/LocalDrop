@@ -90,11 +90,13 @@ final class TrustedDeviceStore {
         Log.app.info("Trusted \(peer.deviceId, privacy: .public), fingerprint \(peer.fingerprint.fingerprintLogPrefix, privacy: .public)…")
     }
 
-    func markSeen(deviceId: String, name: String) {
+    /// After a trusted session: the device's current name and what it can do now (it may have been updated).
+    func markSeen(deviceId: String, name: String, capabilities: [String]) {
         guard let index = devices.firstIndex(where: { $0.deviceId == deviceId }) else { return }
         var updated = devices
         updated[index].lastSeen = Date()
         updated[index].deviceName = name
+        updated[index].capabilities = capabilities
         do {
             try save(updated)
             devices = updated

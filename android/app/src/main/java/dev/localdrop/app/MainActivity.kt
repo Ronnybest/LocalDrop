@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import dev.localdrop.app.ui.LocalDropTheme
+import dev.localdrop.core.wake.MacWakeScan
 import dev.localdrop.feature.transfer.TransferService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,9 +25,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        val container = (application as LocalDropApplication).container
+        // The system drops the wake scan when Bluetooth is turned off; LocalDrop running renews it.
+        MacWakeScan.register(this, container.bluetoothEnvironment)
+        container.applicationScope.launch { container.capabilityAnnouncer.announce() }
         // Opening LocalDrop is a moment the Mac may be around: kept sends get another try. Only
         // the foreground may start the service, which is why a parked send waits for this.
-        val store = (application as LocalDropApplication).container.outgoingStore
+        val store = container.outgoingStore
         lifecycleScope.launch {
             val waiting = withContext(Dispatchers.IO) {
                 store.load()

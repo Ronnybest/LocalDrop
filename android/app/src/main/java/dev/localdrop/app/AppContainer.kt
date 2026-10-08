@@ -1,9 +1,11 @@
 package dev.localdrop.app
 
 import android.content.Context
+import android.os.StatFs
 import dev.localdrop.core.crypto.IdentityKey
 import dev.localdrop.core.crypto.KeystoreIdentityKey
 import dev.localdrop.core.device.LocalDevice
+import dev.localdrop.core.device.CapabilityAnnouncer
 import dev.localdrop.core.device.TrustedDeviceStore
 import dev.localdrop.core.discovery.BleScanner
 import dev.localdrop.core.discovery.BonjourResolver
@@ -69,6 +71,8 @@ class AppContainer(context: Context) {
     private val bleScanner = BleScanner(bluetoothEnvironment)
     private val gattReader = GattEndpointReader(appContext)
 
+    val capabilityAnnouncer by lazy { CapabilityAnnouncer(appContext, trustedDeviceStore, transferManager) }
+
     val transferManager: TransferManager by lazy {
         TransferManager(
             scope = applicationScope,
@@ -81,6 +85,9 @@ class AppContainer(context: Context) {
                 trustLookup = trustedDeviceStore::trustState,
             ),
             trustStore = trustedDeviceStore,
+            contentResolver = appContext.contentResolver,
+            // Downloads lives on the primary external volume, like the app's external files dir.
+            freeSpace = { appContext.getExternalFilesDir(null)?.let { StatFs(it.path).availableBytes } ?: 0L },
         )
     }
 }

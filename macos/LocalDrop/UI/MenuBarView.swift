@@ -55,9 +55,12 @@ struct MenuBarView: View {
                         VStack(spacing: 0) {
                             let recent = Array(devices.prefix(Self.recentDeviceCount))
                             ForEach(Array(recent.enumerated()), id: \.element.id) { index, item in
-                                DeviceSummaryRow(item: item, showPrompt: model.showPrompt)
+                                DeviceSummaryRow(item: item, showPrompt: model.showPrompt,
+                                                 send: model.chooseFiles, cancelDelivery: model.cancelDelivery)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
+                                    .contentShape(Rectangle())
+                                    .sendsDroppedFiles(to: item, using: model.send)
                                 if index < recent.count - 1 {
                                     Divider().padding(.leading, 54)
                                 }

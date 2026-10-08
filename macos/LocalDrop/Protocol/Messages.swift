@@ -22,6 +22,8 @@ nonisolated enum MessageType {
     static let transferResult = "transfer_result"
     static let cancel = "cancel"
     static let text = "text"
+    static let receiveReady = "receive_ready"
+    static let nothingPending = "nothing_pending"
     static let textResult = "text_result"
     static let close = "close"
     static let error = "error"

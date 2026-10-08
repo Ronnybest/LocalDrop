@@ -21,7 +21,10 @@ final class BLEAdvertiser: NSObject {
     private let nameProvider: () -> String
     /// Current Endpoint Info characteristic value (open or sealed), or nil when the TCP listener isn't ready.
     private let endpointValueProvider: () -> Data?
+    /// True while files wait for a phone: advertise the Pending Delivery UUID instead.
+    private let pendingProvider: () -> Bool
     private var advertisedName = ""
+    private var advertisedPending = false
 
     private var manager: CBPeripheralManager?
     private var service: CBMutableService?
@@ -29,16 +32,18 @@ final class BLEAdvertiser: NSObject {
     /// Snapshot served across a long (multi-request) GATT read so the bytes stay consistent.
     private var pendingReadValue: Data?
 
-    init(nameProvider: @escaping () -> String, endpointValueProvider: @escaping () -> Data?) {
+    init(nameProvider: @escaping () -> String, endpointValueProvider: @escaping () -> Data?, pendingProvider: @escaping () -> Bool) {
         self.nameProvider = nameProvider
         self.endpointValueProvider = endpointValueProvider
+        self.pendingProvider = pendingProvider
         super.init()
     }
 
-    /// Re-reads the name (token slot changed, pairing mode toggled) and re-advertises if needed.
+    /// Re-reads the name (token slot changed, pairing mode toggled) and the pending state, and
+    /// re-advertises if either changed.
     func refresh() {
         guard let manager, wantsAdvertising, manager.state == .poweredOn, service != nil else { return }
-        guard nameProvider() != advertisedName else { return }
+        guard nameProvider() != advertisedName || pendingProvider() != advertisedPending else { return }
         manager.stopAdvertising()
         // `isAdvertising` still reads true right after stopping, so don't go through the guard
         // in startAdvertising(): that silently left the Mac not advertising at all.
@@ -91,10 +96,14 @@ final class BLEAdvertiser: NSObject {
 
     private func beginAdvertising(_ manager: CBPeripheralManager) {
         advertisedName = nameProvider()
+        advertisedPending = pendingProvider()
+        // Two 128-bit UUIDs don't fit in an advertisement: the pending one replaces the service
+        // UUID, and phones scan for both (protocol.md §2.8). The GATT service stays the same.
         manager.startAdvertising([
             CBAdvertisementDataLocalNameKey: advertisedName,
-            CBAdvertisementDataServiceUUIDsKey: [ProtocolConstants.serviceUUID],
+            CBAdvertisementDataServiceUUIDsKey: [advertisedPending ? ProtocolConstants.pendingDeliveryUUID : ProtocolConstants.serviceUUID],
         ])
+        if advertisedPending { Log.discovery.info("Advertising pending delivery") }
     }
 }
 

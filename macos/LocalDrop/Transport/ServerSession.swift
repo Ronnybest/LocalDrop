@@ -49,6 +49,12 @@ protocol SessionCoordinator: AnyObject, Sendable {
     func transferRejectedForStorage(peer: PeerInfo, request: TransferRequest)
     /// Puts text from a trusted device on the clipboard. Returns false if its policy declines everything.
     func textReceived(_ text: String, peer: PeerInfo) -> Bool
+
+    /// The next delivery waiting for this phone, now being offered to it; nil when none.
+    func takeDelivery(for peer: PeerInfo) -> (id: UUID, files: [URL], token: TransferCancelToken)?
+    func deliveryStarted(_ id: UUID)
+    func deliveryProgress(_ id: UUID, bytesSent: Int64)
+    func deliveryFinished(_ id: UUID, outcome: DeliveryOutcome)
 }
 
 /// Responder side of one TCP session (protocol/protocol.md §5, protocol/security.md §3, §5).
@@ -174,6 +180,8 @@ nonisolated final class ServerSession {
                 pending = try await receiver.handle(next)
             case MessageType.text:
                 try await receiver.handleText(next)
+            case MessageType.receiveReady:
+                try await serveDeliveries(handshake)
             case MessageType.transferAdd:
                 // Sent before the sender read our answer to its request; that answer stands.
                 Log.transfer.info("Ignoring transfer_add after the request was answered")
@@ -181,6 +189,24 @@ nonisolated final class ServerSession {
                 throw SessionError.protocolViolation("unexpected \(next.type)")
             }
         }
+    }
+
+    /// The phone asked for what this Mac has for it (protocol.md §2.8): every waiting delivery
+    /// in turn, then `nothing_pending`.
+    private func serveDeliveries(_ handshake: Handshake) async throws {
+        while let delivery = await coordinator.takeDelivery(for: handshake.peer) {
+            let sender = TransferSender(deliveryId: delivery.id, files: delivery.files, channel: handshake.channel,
+                                        coordinator: coordinator, token: delivery.token)
+            do {
+                let outcome = try await sender.run()
+                await coordinator.deliveryFinished(delivery.id, outcome: outcome)
+            } catch {
+                let reason = (error as? SessionError)?.description ?? String(describing: error)
+                await coordinator.deliveryFinished(delivery.id, outcome: .interrupted(reason))
+                throw error
+            }
+        }
+        try await handshake.channel.send(OutgoingMessages.nothingPending)
     }
 
     // MARK: - Pairing

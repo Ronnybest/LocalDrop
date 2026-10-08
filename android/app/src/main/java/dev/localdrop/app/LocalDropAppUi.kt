@@ -29,6 +29,8 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
             onConfirmPairing = transferViewModel::confirmPairing,
             onDeclinePairing = transferViewModel::declinePairing,
             onCancel = transferViewModel::cancel,
+            onAcceptIncoming = transferViewModel::acceptIncoming,
+            onDeclineIncoming = transferViewModel::declineIncoming,
             onDismiss = {
                 if (transfer is TransferState.Paired) screen = Screen.Home
                 transferViewModel.dismiss()

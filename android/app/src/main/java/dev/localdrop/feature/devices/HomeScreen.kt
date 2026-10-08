@@ -10,12 +10,17 @@ import androidx.annotation.RequiresApi
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import dev.localdrop.feature.clipboard.ClipboardTileService
+import dev.localdrop.core.wake.CompanionLink
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
@@ -84,6 +89,16 @@ class HomeViewModel(private val store: TrustedDeviceStore, presenceMonitor: Pres
     val presence: StateFlow<Map<String, DevicePresence>> = presenceMonitor.observe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
+    fun setReceiveAutomatically(deviceId: String, enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                store.setReceiveAutomatically(deviceId, enabled)
+            } catch (e: IOException) {
+                Log.e("LD/trust", "Could not save the receive setting for $deviceId", e)
+            }
+        }
+    }
+
     fun makeDefault(deviceId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -148,7 +163,14 @@ private const val TILE_PREFS = "tile"
 private const val KEY_TILE_ADDED = "added"
 
 @Composable
-private fun DeviceMenu(canMakeDefault: Boolean, onMakeDefault: () -> Unit, onForget: () -> Unit) {
+private fun DeviceMenu(
+    canMakeDefault: Boolean,
+    onMakeDefault: () -> Unit,
+    onForget: () -> Unit,
+    /** null when the Mac can't send to this phone. */
+    receiveAutomatically: Boolean?,
+    onReceiveAutomatically: (Boolean) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
@@ -161,6 +183,16 @@ private fun DeviceMenu(canMakeDefault: Boolean, onMakeDefault: () -> Unit, onFor
                     onClick = {
                         expanded = false
                         onMakeDefault()
+                    },
+                )
+            }
+            if (receiveAutomatically != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_receive_automatically)) },
+                    trailingIcon = { Checkbox(checked = receiveAutomatically, onCheckedChange = null) },
+                    onClick = {
+                        expanded = false
+                        onReceiveAutomatically(!receiveAutomatically)
                     },
                 )
             }
@@ -203,6 +235,12 @@ fun HomeScreen(
     val presence by viewModel.presence.collectAsStateWithLifecycle()
     val waiting by viewModel.waiting.collectAsStateWithLifecycle()
     var pendingForget by remember { mutableStateOf<TrustedDevice?>(null) }
+    val context = LocalContext.current
+    // Receiving from a Mac in the background needs one companion-device approval (Android rule).
+    var linked by remember { mutableStateOf(CompanionLink.isLinked(context)) }
+    val linkApproval = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+        linked = CompanionLink.isLinked(context)
+    }
 
     Scaffold(
         topBar = {
@@ -222,6 +260,18 @@ fun HomeScreen(
                     }
                 }
             } else {
+                val sender = devices.filter { it.canSend }.maxByOrNull { it.lastSeenMs }
+                if (!linked && sender != null) {
+                    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.receiving_needs_link_title, sender.deviceName), style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.receiving_needs_link_body, sender.deviceName), style = MaterialTheme.typography.bodyMedium)
+                            Button(onClick = {
+                                CompanionLink.request(context, sender) { linkApproval.launch(IntentSenderRequest.Builder(it).build()) }
+                            }) { Text(stringResource(R.string.action_allow)) }
+                        }
+                    }
+                }
                 Text(
                     stringResource(R.string.home_how_to_send),
                     style = MaterialTheme.typography.bodyMedium,
@@ -273,6 +323,8 @@ fun HomeScreen(
                                     canMakeDefault = devices.size > 1 && !device.isDefault,
                                     onMakeDefault = { viewModel.makeDefault(device.deviceId) },
                                     onForget = { pendingForget = device },
+                                    receiveAutomatically = if (device.canSend) device.receiveAutomatically else null,
+                                    onReceiveAutomatically = { viewModel.setReceiveAutomatically(device.deviceId, it) },
                                 )
                             },
                         )

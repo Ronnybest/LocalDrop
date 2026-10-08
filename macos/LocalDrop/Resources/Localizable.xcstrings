@@ -1,12 +1,32 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ — retrying": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — повторная попытка"
+          }
+        }
+      }
+    },
     "%@ cancelled the transfer": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ отменил передачу"
+          }
+        }
+      }
+    },
+    "%@ didn't take the files": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не принял файлы"
           }
         }
       }
@@ -57,16 +77,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ больше не сможет отправлять на этот Mac, пока не будет привязан снова. Текущая передача остановится."
-          }
-        }
-      }
-    },
-    "%@ — retrying": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — повторная попытка"
           }
         }
       }
@@ -129,6 +139,22 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld files · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld files · %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файлов: %1$lld · %2$@"
           }
         }
       }
@@ -336,6 +362,16 @@
         }
       }
     },
+    "Cancel sending": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменить отправку"
+          }
+        }
+      }
+    },
     "Cancelled": {
       "localizations": {
         "ru": {
@@ -492,6 +528,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отклонить"
+          }
+        }
+      }
+    },
+    "Declined on the phone": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклонено на телефоне"
           }
         }
       }
@@ -746,16 +792,6 @@
         }
       }
     },
-    "LocalDrop can't start": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LocalDrop не удаётся запустить"
-          }
-        }
-      }
-    },
     "LocalDrop — receiving": {
       "localizations": {
         "ru": {
@@ -766,12 +802,32 @@
         }
       }
     },
+    "LocalDrop — sending": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop — идёт отправка"
+          }
+        }
+      }
+    },
     "LocalDrop — visible to new devices": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "LocalDrop — виден новым устройствам"
+          }
+        }
+      }
+    },
+    "LocalDrop can't start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop не удаётся запустить"
           }
         }
       }
@@ -806,12 +862,22 @@
         }
       }
     },
-    "No Wi-Fi network": {
+    "never": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нет сети Wi-Fi"
+            "value": "никогда"
+          }
+        }
+      }
+    },
+    "No answer on the phone": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На телефоне не ответили"
           }
         }
       }
@@ -836,6 +902,16 @@
         }
       }
     },
+    "No Wi-Fi network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет сети Wi-Fi"
+          }
+        }
+      }
+    },
     "Not connected to Wi-Fi or Ethernet. Phones can't send until it is.": {
       "localizations": {
         "ru": {
@@ -852,6 +928,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Недостаточно места на диске"
+          }
+        }
+      }
+    },
+    "Not enough space on the phone": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На телефоне недостаточно места"
           }
         }
       }
@@ -896,6 +982,16 @@
         }
       }
     },
+    "Off — results show in a window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключены — итоги показываются в окне"
+          }
+        }
+      }
+    },
     "OK": {
       "extractionState": "stale",
       "localizations": {
@@ -903,16 +999,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ОК"
-          }
-        }
-      }
-    },
-    "Off — results show in a window": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выключены — итоги показываются в окне"
           }
         }
       }
@@ -957,16 +1043,6 @@
         }
       }
     },
-    "Open Link": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыть ссылку"
-          }
-        }
-      }
-    },
     "Open at Login": {
       "localizations": {
         "ru": {
@@ -993,6 +1069,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открыт для привязки · 10:00"
+          }
+        }
+      }
+    },
+    "Open Link": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть ссылку"
           }
         }
       }
@@ -1027,6 +1113,16 @@
         }
       }
     },
+    "Pairing — compare the code on both devices": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка — сравните код на обоих устройствах"
+          }
+        }
+      }
+    },
     "Pairing declined": {
       "localizations": {
         "ru": {
@@ -1043,16 +1139,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Привязка отклонена на другом устройстве"
-          }
-        }
-      }
-    },
-    "Pairing — compare the code on both devices": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Привязка — сравните код на обоих устройствах"
           }
         }
       }
@@ -1107,22 +1193,22 @@
         }
       }
     },
-    "Receiving from %@": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приём от %@"
-          }
-        }
-      }
-    },
     "Receiving · %lld%%": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Приём · %lld%%"
+          }
+        }
+      }
+    },
+    "Receiving from %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приём от %@"
           }
         }
       }
@@ -1173,6 +1259,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ключ безопасности изменился — привязывайте заново, только если доверяете этому устройству"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
+          }
+        }
+      }
+    },
+    "Send files to %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить файлы на %@"
+          }
+        }
+      }
+    },
+    "Sending · %lld%%": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправка · %lld%%"
+          }
+        }
+      }
+    },
+    "Sent to %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправлено на %@"
           }
         }
       }
@@ -1417,12 +1543,12 @@
         }
       }
     },
-    "Waiting for Keychain access…": {
+    "Waiting for acceptance on the phone": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ожидание доступа к связке ключей…"
+            "value": "Ждём подтверждения на телефоне"
           }
         }
       }
@@ -1437,12 +1563,32 @@
         }
       }
     },
+    "Waiting for Keychain access…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание доступа к связке ключей…"
+          }
+        }
+      }
+    },
     "Waiting for the network listener": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Ожидание сетевого порта"
+          }
+        }
+      }
+    },
+    "Waiting to send %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ждёт отправки: %@"
           }
         }
       }
@@ -1463,16 +1609,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваши устройства находят этот Mac рядом"
-          }
-        }
-      }
-    },
-    "never": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "никогда"
           }
         }
       }

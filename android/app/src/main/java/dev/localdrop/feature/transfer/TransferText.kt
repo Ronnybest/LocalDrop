@@ -6,6 +6,7 @@ import dev.localdrop.R
 import dev.localdrop.core.discovery.DiscoveryBlocker
 import dev.localdrop.core.protocol.ErrorCode
 import dev.localdrop.core.transfer.TransferProgress
+import dev.localdrop.core.transfer.TransferSummary
 import dev.localdrop.core.transport.ConnectionException
 
 /** User-facing wording shared by the in-app screen and the notifications. */
@@ -34,6 +35,8 @@ object TransferText {
         is ConnectionException.IdentityUnavailable -> context.getString(R.string.error_identity)
         is ConnectionException.PairingRejected -> context.getString(R.string.error_pairing_rejected, peer)
         is ConnectionException.StorageFailed -> context.getString(R.string.error_storage)
+        is ConnectionException.SaveFailed -> context.getString(R.string.error_save_failed, error.fileName)
+        is ConnectionException.NotEnoughSpace -> context.getString(R.string.error_phone_space, Formatter.formatShortFileSize(context, error.needed))
         is ConnectionException.CancelledByPeer -> context.getString(R.string.transfer_cancelled_by_peer, peer)
         is ConnectionException.SourceUnavailable -> context.getString(R.string.error_source_unavailable, error.fileName)
         is ConnectionException.TransferRejected -> when (error.reason) {
@@ -58,6 +61,16 @@ object TransferText {
             ErrorCode.PAIRING_UNAVAILABLE -> context.getString(R.string.error_pairing_unavailable, peer)
             else -> context.getString(R.string.error_peer_generic, peer, error.code)
         }
+    }
+
+    /** "IMG_2841.jpg · 42 MB" or "3 files · 1.2 GB" */
+    fun summaryLine(context: Context, summary: TransferSummary): String {
+        val what = if (summary.fileCount == 1) {
+            summary.firstFileName
+        } else {
+            context.resources.getQuantityString(R.plurals.notification_files, summary.fileCount, summary.fileCount)
+        }
+        return "$what · ${Formatter.formatShortFileSize(context, summary.totalBytes)}"
     }
 
     /** "IMG_2841.jpg · 42 MB of 428 MB · 12 MB/s" */

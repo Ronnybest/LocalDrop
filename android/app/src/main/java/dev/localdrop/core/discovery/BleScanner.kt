@@ -106,7 +106,9 @@ class BleScanner(private val environment: BluetoothEnvironment) {
             }
         }
 
-        val filters = listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(ProtocolConstants.SERVICE_UUID)).build())
+        // A Mac with files for a phone advertises the pending-delivery UUID instead (protocol.md §2.8).
+        val filters = listOf(ProtocolConstants.SERVICE_UUID, ProtocolConstants.PENDING_DELIVERY_UUID)
+            .map { ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build() }
         val settings = ScanSettings.Builder()
             .setScanMode(if (background) ScanSettings.SCAN_MODE_BALANCED else ScanSettings.SCAN_MODE_LOW_LATENCY)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
