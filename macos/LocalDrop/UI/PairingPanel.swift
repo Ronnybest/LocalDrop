@@ -65,9 +65,8 @@ private struct PairingView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: prompt.keyChanged ? "exclamationmark.shield.fill" : "lock.shield.fill")
-                .font(.system(size: 40))
-                .foregroundStyle(prompt.keyChanged ? Color.orange : Color.accentColor)
+            IconBadge(symbol: prompt.keyChanged ? "exclamationmark.shield.fill" : "lock.shield.fill",
+                      tint: prompt.keyChanged ? .orange : .accentColor, size: 60)
 
             Text("Pair with \(prompt.peerName)?")
                 .font(.title3.weight(.semibold))
@@ -89,15 +88,23 @@ private struct PairingView: View {
             Text(prompt.code)
                 .font(.system(size: 36, weight: .semibold, design: .monospaced))
                 .textSelection(.disabled)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 8)
+                .glassCard(cornerRadius: 16)
 
             switch prompt.phase {
             case .awaitingUser:
                 HStack(spacing: 12) {
-                    Button("Decline") { decide(false) }
-                        .keyboardShortcut(.cancelAction)
-                    Button("Pair") { decide(true) }
-                        .keyboardShortcut(.defaultAction)
-                        .buttonStyle(.borderedProminent)
+                    Button { decide(false) } label: {
+                        Text("Decline").frame(maxWidth: .infinity)
+                    }
+                    .keyboardShortcut(.cancelAction)
+                    .glassButton()
+                    Button { decide(true) } label: {
+                        Text("Pair").frame(maxWidth: .infinity)
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .glassButton(prominent: true)
                 }
                 .controlSize(.large)
             case .awaitingPeer:
@@ -109,9 +116,10 @@ private struct PairingView: View {
                 }
             }
         }
-        .padding(.horizontal, 28)
-        .padding(.top, 36)
-        .padding(.bottom, 24)
-        .frame(width: 360)
+        .padding(.horizontal, 26)
+        .padding(.top, 28)
+        .padding(.bottom, 22)
+        .frame(maxWidth: .infinity)
+        .panelCard(width: 380, cornerRadius: 30)
     }
 }

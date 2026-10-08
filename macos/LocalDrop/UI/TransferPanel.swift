@@ -95,6 +95,8 @@ final class TransferPanelController {
     var isVisible: Bool { panel.isVisible }
 }
 
+/// One compact line, like a system notification: icon, what's happening, actions on the right.
+/// While receiving, a thin progress bar runs along the bottom edge.
 private struct TransferView: View {
     let transfer: IncomingTransfer
     let decide: (Bool) -> Void
@@ -102,103 +104,102 @@ private struct TransferView: View {
     let dismiss: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 28))
-                .foregroundStyle(iconColor)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 6) {
-                content
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .monospacedDigit()
+                }
+                Spacer(minLength: 8)
+                actions
+            }
+            if transfer.phase == .receiving {
+                ProgressView(value: transfer.fraction)
+                    .progressViewStyle(.linear)
+                    .controlSize(.small)
             }
         }
-        .padding(16)
-        .frame(width: 360, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .panelCard(width: 360, cornerRadius: 22)
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var actions: some View {
         switch transfer.phase {
         case .awaitingDecision:
-            Text("\(transfer.peerName) wants to send")
-                .font(.headline)
-            fileSummary
-            HStack {
-                Spacer()
-                Button("Decline") { decide(false) }
+            HStack(spacing: 8) {
+                CircleButton(symbol: "xmark", help: String(localized: "Decline")) { decide(false) }
                     .keyboardShortcut(.cancelAction)
                 Button("Accept") { decide(true) }
                     .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
+                    .glassButton(prominent: true)
             }
-            .padding(.top, 2)
-
         case .receiving:
-            Text("Receiving from \(transfer.peerName)")
-                .font(.headline)
-            Text(transfer.files.count == 1 ? transfer.files[0].name : transfer.currentFile)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            ProgressView(value: transfer.fraction)
-            HStack {
-                Text(progressLine)
-                    .font(.caption.monospacedDigit())
+            HStack(spacing: 10) {
+                Text("\(Int(transfer.fraction * 100))%")
+                    .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
-                Spacer()
-                Button("Cancel", action: cancel)
-                    .controlSize(.small)
+                CircleButton(symbol: "xmark", help: String(localized: "Cancel"), action: cancel)
             }
-
         case .completed(let urls):
-            Text(urls.count == 1 ? String(localized: "\(urls[0].lastPathComponent) received") : String(localized: "\(urls.count) files received"))
-                .font(.headline)
-                .lineLimit(2)
-            Text("From \(transfer.peerName) · \(bytes(transfer.totalSize)) · integrity verified")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack {
-                Spacer()
-                Button("Show in Finder") {
+            HStack(spacing: 8) {
+                Button("Show") {
                     NSWorkspace.shared.activateFileViewerSelecting(urls)
                     dismiss()
                 }
-                Button("Done", action: dismiss)
-                    .keyboardShortcut(.defaultAction)
+                .glassButton()
+                CircleButton(symbol: "xmark", help: String(localized: "Close"), action: dismiss)
+                    .keyboardShortcut(.cancelAction)
             }
-
-        case .failed(let reason), .cancelled(let reason):
-            Text(reason)
-                .font(.headline)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Spacer()
-                Button("OK", action: dismiss)
-                    .keyboardShortcut(.defaultAction)
-            }
+        case .failed, .cancelled:
+            CircleButton(symbol: "xmark", help: String(localized: "Close"), action: dismiss)
+                .keyboardShortcut(.cancelAction)
         }
     }
 
-    private var fileSummary: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(transfer.files.prefix(3), id: \.fileId) { file in
-                Text(file.name).lineLimit(1).truncationMode(.middle)
-            }
-            if transfer.files.count > 3 {
-                Text("and \(transfer.files.count - 3) more").foregroundStyle(.secondary)
-            }
-            Text(bytes(transfer.totalSize))
-                .foregroundStyle(.secondary)
+    private var title: String {
+        switch transfer.phase {
+        case .awaitingDecision: transfer.peerName
+        case .receiving: transfer.title
+        case .completed(let urls):
+            urls.count == 1 ? String(localized: "\(urls[0].lastPathComponent) received") : String(localized: "\(urls.count) files received")
+        case .failed(let reason), .cancelled(let reason): reason
         }
-        .font(.callout)
+    }
+
+    private var subtitle: String {
+        switch transfer.phase {
+        case .awaitingDecision:
+            "\(transfer.title) · \(bytes(transfer.totalSize))"
+        case .receiving:
+            String(localized: "\(bytes(transfer.bytesReceived)) of \(bytes(transfer.totalSize))")
+                + (transfer.bytesPerSecond > 0 ? " · " + String(localized: "\(bytes(Int64(transfer.bytesPerSecond)))/s") : "")
+        case .completed:
+            String(localized: "From \(transfer.peerName) · integrity verified")
+        case .failed, .cancelled:
+            transfer.title
+        }
     }
 
     private var icon: String {
         switch transfer.phase {
-        case .awaitingDecision, .receiving: "arrow.down.circle.fill"
+        case .awaitingDecision, .receiving: "arrow.down.circle"
         case .completed: "checkmark.circle.fill"
         case .failed: "exclamationmark.triangle.fill"
-        case .cancelled: "xmark.circle.fill"
+        case .cancelled: "xmark.circle"
         }
     }
 
@@ -206,19 +207,9 @@ private struct TransferView: View {
         switch transfer.phase {
         case .awaitingDecision, .receiving: .accentColor
         case .completed: .green
-        case .failed: .red
+        case .failed: .orange
         case .cancelled: .secondary
         }
-    }
-
-    /// "42% · 120 MB of 284 MB · 12 MB/s"
-    private var progressLine: String {
-        let percent = Int(transfer.fraction * 100)
-        var line = String(localized: "\(percent)% · \(bytes(transfer.bytesReceived)) of \(bytes(transfer.totalSize))")
-        if transfer.bytesPerSecond > 0 {
-            line += " · " + String(localized: "\(bytes(Int64(transfer.bytesPerSecond)))/s")
-        }
-        return line
     }
 
     private func bytes(_ count: Int64) -> String {

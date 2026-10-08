@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+/// A borderless panel still takes keyboard focus (Return/Escape on its buttons) when clicked.
+private final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
 /// A floating window for prompts that must be seen without opening the menu (a menu bar app
 /// has no window of its own).
 final class FloatingPanel: NSObject, NSWindowDelegate {
@@ -24,23 +29,21 @@ final class FloatingPanel: NSObject, NSWindowDelegate {
         close()
         self.style = style
         self.onUserClose = onUserClose
-        var styleMask: NSWindow.StyleMask = [.titled, .fullSizeContentView]
-        styleMask.insert(style == .alert ? .closable : .nonactivatingPanel)
-        let panel = NSPanel(
+        // Borderless and transparent: the SwiftUI content draws its own glass card, like a
+        // system notification. Buttons inside are the only way to dismiss it.
+        var styleMask: NSWindow.StyleMask = [.borderless]
+        if style == .banner { styleMask.insert(.nonactivatingPanel) }
+        let panel = KeyablePanel(
             contentRect: NSRect(x: 0, y: 0, width: 360, height: 200),
             styleMask: styleMask,
             backing: .buffered,
             defer: false
         )
         panel.title = title
-        panel.titleVisibility = style == .banner ? .hidden : .visible
-        panel.titlebarAppearsTransparent = true
-        if style == .banner {
-            panel.standardWindowButton(.closeButton)?.isHidden = true
-            panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-            panel.standardWindowButton(.zoomButton)?.isHidden = true
-            panel.isMovableByWindowBackground = true
-        }
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.level = .floating
         // NSPanel hides itself whenever its app is inactive, which a menu bar app usually is.

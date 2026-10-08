@@ -11,6 +11,16 @@
         }
       }
     },
+    "%@ of %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ из %2$@"
+          }
+        }
+      }
+    },
     "%@ received": {
       "localizations": {
         "ru": {
@@ -27,16 +37,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ пытался отправить %2$@, но на диске недостаточно места"
-          }
-        }
-      }
-    },
-    "%@ wants to send": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ хочет отправить"
           }
         }
       }
@@ -185,7 +185,18 @@
         }
       }
     },
+    "%lld%%": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
     "%lld%% · %@ of %@": {
+      "extractionState": "stale",
       "localizations": {
         "ru": {
           "stringUnit": {
@@ -365,6 +376,16 @@
         }
       }
     },
+    "Close": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        }
+      }
+    },
     "Closed by the other device": {
       "localizations": {
         "ru": {
@@ -535,16 +556,6 @@
         }
       }
     },
-    "Done": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Готово"
-          }
-        }
-      }
-    },
     "Everything": {
       "localizations": {
         "ru": {
@@ -641,6 +652,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "От %1$@ · %2$@ · целостность проверена"
+          }
+        }
+      }
+    },
+    "From %@ · integrity verified": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "От %@ · целостность проверена"
           }
         }
       }
@@ -876,6 +897,7 @@
       }
     },
     "OK": {
+      "extractionState": "stale",
       "localizations": {
         "ru": {
           "stringUnit": {
@@ -921,6 +943,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Видят только привязанные"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть"
           }
         }
       }
@@ -1431,58 +1463,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваши устройства находят этот Mac рядом"
-          }
-        }
-      }
-    },
-    "and %lld more": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "and %lld more"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "and %lld more"
-                }
-              }
-            }
-          }
-        },
-        "ru": {
-          "variations": {
-            "plural": {
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "и ещё %lld"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "и ещё %lld"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "и ещё %lld"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "и ещё %lld"
-                }
-              }
-            }
           }
         }
       }

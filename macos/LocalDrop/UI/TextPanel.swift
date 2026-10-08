@@ -37,34 +37,34 @@ private struct TextReceivedView: View {
     let dismiss: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: link == nil ? "doc.on.clipboard.fill" : "link.circle.fill")
-                .font(.system(size: 28))
+        HStack(spacing: 12) {
+            Image(systemName: link == nil ? "doc.on.clipboard" : "link")
+                .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(Color.accentColor)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 6) {
+                .frame(width: 26)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(link == nil ? String(localized: "Text from \(peerName) copied") : String(localized: "Link from \(peerName) copied"))
                     .font(.headline)
+                    .lineLimit(1)
                 Text(preview)
-                    .font(.callout)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .lineLimit(3)
+                    .lineLimit(1)
                     .truncationMode(.tail)
-                HStack {
-                    Spacer()
-                    if let link {
-                        Button("Open Link") {
-                            NSWorkspace.shared.open(link)
-                            dismiss()
-                        }
-                    }
-                    Button("Done", action: dismiss)
-                        .keyboardShortcut(.defaultAction)
-                }
-                .padding(.top, 2)
             }
+            Spacer(minLength: 8)
+            if let link {
+                Button("Open") {
+                    NSWorkspace.shared.open(link)
+                    dismiss()
+                }
+                .glassButton()
+            }
+            CircleButton(symbol: "xmark", help: String(localized: "Close"), action: dismiss)
+                .keyboardShortcut(.cancelAction)
         }
-        .padding(16)
-        .frame(width: 360, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .panelCard(width: 360, cornerRadius: 22)
     }
 }
