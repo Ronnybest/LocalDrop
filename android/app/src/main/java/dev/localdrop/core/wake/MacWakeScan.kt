@@ -50,7 +50,9 @@ object MacWakeScan {
         // starting a delivery only now and then (on a Pixel 8, Android 17). The filter runs in the
         // controller, so nothing is reported while no Mac has files; the receiver drops repeats.
         val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            // Low power: Wi-Fi and Bluetooth share the radio, and a low-latency scan running while
+            // LocalDrop was open cut receiving from 29 to 10 MB/s. A wake-up needs no hurry.
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
         try {
