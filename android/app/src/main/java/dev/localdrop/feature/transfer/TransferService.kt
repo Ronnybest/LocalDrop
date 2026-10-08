@@ -494,6 +494,7 @@ class TransferService : Service() {
     }
 
     private fun onReceiveState(state: TransferState) {
+        if (state !is TransferState.AwaitingLocalDecision) notifications.cancel(INCOMING_SUMMARY_ID)
         when {
             state is TransferState.Idle -> {
                 receiving = null
@@ -703,13 +704,30 @@ class TransferService : Service() {
             // alert once" would keep it quiet: it sounds and pops up for a new request only, not
             // when files are added to the one on screen.
             .setOnlyAlertOnce(incomingAlerted)
+            // In a group of its own (see incomingGroupSummary), alerting itself.
+            .setGroup(INCOMING_GROUP)
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
             .setContentIntent(openAppIntent())
             .addAction(0, getString(R.string.action_decline), serviceIntent(ACTION_DECLINE_INCOMING, REQUEST_DECLINE_INCOMING))
             .addAction(0, getString(R.string.action_accept), serviceIntent(ACTION_ACCEPT_INCOMING, REQUEST_ACCEPT_INCOMING))
             .build()
+        notifyIfAllowed(INCOMING_SUMMARY_ID, incomingGroupSummary())
         notifyIfAllowed(ONGOING_NOTIFICATION_ID, notification)
         incomingAlerted = true
     }
+
+    /**
+     * Android bundles an app's notifications in the same section — here with results still in
+     * the shade — and lets the bundle alert instead; an existing bundle can update silently, and
+     * the request then arrived without waking the screen. A group with its own summary is kept
+     * as it is, so the request stands alone and makes its own sound.
+     */
+    private fun incomingGroupSummary(): Notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
+        .setSmallIcon(R.drawable.ic_stat_localdrop)
+        .setGroup(INCOMING_GROUP)
+        .setGroupSummary(true)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+        .build()
 
     private fun postReceiveResult(state: TransferState) {
         val name = currentDeviceName
@@ -852,6 +870,8 @@ class TransferService : Service() {
         private const val CHANNEL_PAIRING = "pairing"
         const val CHANNEL_INCOMING = "incoming"
         const val INCOMING_NOTIFICATION_ID = 4
+        const val INCOMING_GROUP = "incoming"
+        private const val INCOMING_SUMMARY_ID = 5
         private const val ONGOING_NOTIFICATION_ID = 1
         private const val PAIRING_NOTIFICATION_ID = 2
         private const val PARKED_NOTIFICATION_ID = 3
