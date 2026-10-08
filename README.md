@@ -1,200 +1,123 @@
+<div align="center">
+
+<img src="macos/LocalDrop/Assets.xcassets/AppIcon.appiconset/icon_256.png" alt="LocalDrop icon" width="128">
+
 # LocalDrop
 
-Связь Android ↔ macOS, которая ощущается как возможность ОС, а не как ещё одно приложение
-для передачи файлов. Главный интерфейс — Android Sharesheet, уведомления macOS и menu bar:
+**Send photos, files and text from Android to your Mac — straight from the share sheet, the way AirDrop does it.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.txt) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white)
+
+[Architecture](docs/architecture.md) · [Protocol](protocol/protocol.md) · [Developer notes](docs/development.md) · [Русский](README.ru.md)
+
+</div>
 
 ```
 Gallery → Share → MacBook Pro → Done
 ```
 
-* Постоянная криптографическая привязка устройств (один раз, 6-значный код).
-* Mac — прямая цель в Android Sharesheet (Direct Share).
-* Присутствие по BLE: телефон знает, что *его* Mac рядом; посторонние Mac не видят.
-* Передача — TCP в локальной сети или через точку доступа телефона, AES-256-GCM, SHA-256.
-* Без облака, аккаунтов и интернета.
+## Why
 
-Архитектура и продуктовые принципы: [`docs/architecture.md`](docs/architecture.md).
-Спецификация протокола: [`protocol/protocol.md`](protocol/protocol.md),
-[`protocol/messages.md`](protocol/messages.md), [`protocol/security.md`](protocol/security.md).
+Getting a photo from an Android phone onto a Mac usually means a cable, a cloud drive or a messenger chat with yourself. LocalDrop makes the Mac a target in the Android share sheet. Pick a photo, tap your MacBook, and the file is in Downloads a moment later — without opening an app, an account or the internet.
 
-## Структура репозитория
+## Features
 
-```
-LocalDrop/
-├── protocol/                 спецификация wire protocol v1
-├── macos/
-│   ├── LocalDrop.xcodeproj
-│   ├── LocalDrop/            исходники (синхронизируемая группа Xcode)
-│   │   ├── App/              точка входа, AppModel, MenuBarExtra
-│   │   ├── Device/           локальное устройство (deviceId, имя)
-│   │   ├── Crypto/           identity key (Keychain), fingerprint
-│   │   ├── Protocol/         CBOR, константы протокола, EndpointInfo
-│   │   ├── Discovery/        BLE peripheral (CoreBluetooth)
-│   │   ├── Transport/        TCP listener + Bonjour (Network.framework)
-│   │   └── UI/               SwiftUI-представления меню
-│   └── Support/              Info.plist, entitlements
-└── android/
-    └── app/src/main/java/dev/localdrop/
-        ├── app/              Application, MainActivity, AppContainer
-        ├── core/
-        │   ├── device/       локальное устройство (deviceId, имя)
-        │   ├── crypto/       identity key (Android Keystore), fingerprint
-        │   ├── protocol/     CBOR, константы протокола, EndpointInfo
-        │   ├── discovery/    BLE scanner + GATT-клиент
-        │   ├── transport/    TCP, handshake, шифрованный канал
-        │   ├── transfer/     состояние передачи, отправка файлов, источники данных
-        │   └── storage/      MediaStore / ContentResolver (Milestone 5+)
-        └── feature/
-            ├── devices/      устройства: доверенные Mac, «Добавить Mac», по умолчанию
-            ├── transfer/     передача (с M5 — Share-цель и foreground service)
-            └── settings/     разрешения, настройки, диагностика
-```
+- **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **LocalDrop** target sends to your default Mac in one tap.
+- **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
+- **Knows when your Mac is around.** The Mac advertises a private Bluetooth token that only your phones can recognize. The app shows **Nearby · ready**, **busy**, **on another network** or **not nearby**; strangers don't see the Mac at all.
+- **Send later.** Mac asleep, lid closed or out of range? The transfer waits instead of failing and goes through as soon as the Mac wakes up nearby — without waking it up for nothing in the meantime.
+- **One request for everything.** Shares to the same Mac go as one transfer, and files shared while the Mac is asking are added to the request on screen.
+- **Accept automatically, per device.** On the Mac, choose what each phone may save without asking: photos and videos, files under 100 MB, everything — or nothing at all.
+- **Text and links to the clipboard.** Share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. Links open on the Mac with one click.
+- **Fast.** Up to 105 MB/s over the phone's 5 GHz hotspot. Every file is checked with SHA-256 before it is saved.
+- **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers.
+- **A Mac app that stays out of the way.** A menu bar drop that fills up while files arrive, Liquid Glass on macOS 26, notifications with **Show in Finder**, starts at login.
+- **English and Russian** on both platforms.
 
-**Android — один Gradle-модуль**, границы — пакеты. Многомодульная сборка на MVP добавляет
-конфигурацию, но не добавляет надёжности; пакеты `core/*` не зависят от `feature/*`
-и могут быть вынесены в модули без переписывания. UI работает только с `ViewModel`,
-которые получают `StateFlow` от `core`-слоя; BLE, сокеты и файлы в Compose не попадают.
+## Requirements
 
-**macOS — одно приложение-таргет** (Menu Bar, `LSUIElement`). Share Extension появится
-отдельным таргетом на этапе macOS → Android.
+| | |
+| --- | --- |
+| **Android** | Android 11 or later with Bluetooth LE |
+| **Mac** | macOS 14 or later; Liquid Glass design on macOS 26 and later |
+| **Network** | The phone and the Mac on the same Wi-Fi, or the Mac connected to the phone's hotspot |
 
-## Системные API
+## Quick start
 
-| Задача | Android (Kotlin) | macOS (Swift) |
-|--------|------------------|---------------|
-| BLE | `BluetoothLeScanner`, `ScanFilter`, `BluetoothGatt` | `CBPeripheralManager`, `CBMutableService` |
-| Сеть | `java.nio.channels.SocketChannel` на `Dispatchers.IO`, `ConnectivityManager` | `NWListener`, `NWConnection` |
-| mDNS (fallback) | `NsdManager` | `NWListener.service` (Bonjour) |
-| Identity key | `KeyPairGenerator("EC", "AndroidKeyStore")`, `Signature("SHA256withECDSA")` | `P256.Signing.PrivateKey` + Keychain (`SecItem*`) |
-| ECDH | `KeyAgreement("ECDH")` (JCA, в памяти) | `P256.KeyAgreement` |
-| KDF | HKDF из `Mac("HmacSHA256")` | `HKDF<SHA256>` |
-| AEAD | `Cipher("AES/GCM/NoPadding")` | `AES.GCM` |
-| SHA-256 | `MessageDigest("SHA-256")` | `SHA256` |
-| Файлы | `ContentResolver.openInputStream`, `OpenableColumns`, `MediaStore.Downloads` | `FileHandle`, security-scoped bookmarks |
-| Фон | Foreground service (`dataSync`) | Menu bar app (`LSUIElement`) |
-| UI | Jetpack Compose, `ViewModel`, `StateFlow` | SwiftUI `MenuBarExtra`, AppKit где нужно |
-| Уведомления | `NotificationManager` | `UserNotifications` |
-| Логи | `android.util.Log` (теги `LD/*`) | `os.Logger` (subsystem `dev.localdrop.mac`) |
+1. Build and run the Mac app (see [Building from source](#building-from-source)). A drop appears in the menu bar.
+2. Build and install the Android app, open **LocalDrop** and tap **Add a Mac**.
+3. On the Mac, open the menu and turn on **Visible to new devices**. Tap your Mac on the phone and check that both screens show the same code.
+4. That is it: share any photo or file, pick your Mac in the share sheet, and it lands in Downloads.
 
-## Локализация
+## How it works
 
-Английский (основной) и русский; язык берётся из системы, на Android 13+ и macOS его можно
-выбрать для LocalDrop отдельно (Настройки › Приложения / Язык и регион › Приложения).
+| Step | What happens |
+| --- | --- |
+| **Find** | The Mac advertises over Bluetooth LE. Paired phones recognize its rotating private token; new phones only see it in pairing mode. |
+| **Connect** | The phone connects straight to the Mac's last address over TCP, or finds it over Bluetooth and Bonjour. Bluetooth carries no file data. |
+| **Authenticate** | Both devices sign an ephemeral P-256 key exchange with their identity keys. Keys are derived with HKDF-SHA256. |
+| **Transfer** | Files go in 256 KiB chunks encrypted with AES-256-GCM. The Mac saves a file only after its SHA-256 matches. |
 
-* **macOS:** String Catalog `macos/LocalDrop/Resources/Localizable.xcstrings` (с формами
-  множественного числа) и `InfoPlist.xcstrings` для системных запросов. Строки в коде — через
-  `Text("…")` или `String(localized:)`; сообщения ошибок для пользователя — `SessionError.userMessage`,
-  `description` остаётся английским для логов. Новые строки: `xcodebuild -exportLocalizations`.
-* **Android:** `res/values` и `res/values-ru`, `res/xml/locales_config.xml`.
+The full wire protocol is in [`protocol/`](protocol/protocol.md); design decisions are in [`docs/architecture.md`](docs/architecture.md).
 
-## Ограничения платформ
+## Speed
 
-### Android 11 (API 30)
+| Connection | Measured |
+| --- | --- |
+| Mac connected to the phone's 5 GHz hotspot | 76–105 MB/s |
+| Both on the same 5 GHz Wi-Fi | 16–40 MB/s, depending on the router |
+| 2.4 GHz Wi-Fi or hotspot | 2–5 MB/s |
 
-* **BLE-скан требует `ACCESS_FINE_LOCATION` и включённой геолокации.** На Android 11 без
-  включённого Location скан возвращает пустой результат без ошибки — приложение явно
-  проверяет `LocationManager.isLocationEnabled` и просит включить.
-* На Android 12+ вместо этого используются `BLUETOOTH_SCAN` (`neverForLocation`) и
-  `BLUETOOTH_CONNECT`; location не нужен.
-* Скан ограничен: не более 5 стартов за 30 секунд, иначе система молча блокирует скан.
-  Сканер не перезапускается чаще, чем раз в 6 секунд.
-* GATT на ряде устройств нестабилен: `status 133`. Чтение endpoint повторяется до 3 раз,
-  `BluetoothGatt.close()` вызывается всегда.
-* Foreground service типа `dataSync` (Android 14+) и `POST_NOTIFICATIONS` (Android 13+, один
-  запрос при первой отправке) — учтены с Milestone 5.
-* **Буфер обмена в фоне недоступен** (Android 10+): читать его может только приложение на
-  экране или клавиатура. Автоматической синхронизации «скопировал — появилось на Mac» нет;
-  вместо неё — плитка «Clipboard to Mac» (прозрачная активность читает буфер, получив фокус),
-  «Send to Mac» в меню выделенного текста (`PROCESS_TEXT`) и «Поделиться». Приложения со своим
-  меню выделения (Telegram) не показывают `PROCESS_TEXT` — там «Копировать» → плитка.
-* Будущее ограничение: приложения с `targetSdk 37` должны запрашивать доступ к локальной сети
-  (`ACCESS_LOCAL_NETWORK`). Сейчас `targetSdk = 36`; переход на 37 — отдельной задачей.
+Over a router every packet crosses the air twice; the phone's hotspot is a direct link. The Mac's menu warns when it is on a slow 2.4 GHz network.
 
-### macOS
+## Limitations
 
-* `CBPeripheralManager` рекламирует только local name и service UUID — manufacturer data
-  недоступны, поэтому короткий id кодируется в имени (`LDa1b2c3`).
-* Advertising прекращается при выходе из приложения и сне Mac. Поэтому приложение — menu bar
-  агент, который работает постоянно.
-* Нужен `NSBluetoothAlwaysUsageDescription`; первый запуск покажет системный запрос.
-* App Sandbox: entitlements `com.apple.security.device.bluetooth`,
-  `com.apple.security.network.server`, `com.apple.security.network.client`.
-* Local Network Privacy (macOS 15+): `NSLocalNetworkUsageDescription` и
-  `NSBonjourServices = _localdrop._tcp`.
-* Application Firewall может спросить разрешение на входящие соединения при первом запуске.
-* Папка для сохранения — «Загрузки» или любая выбранная в меню; выбранная хранится как
-  security-scoped bookmark (`files.user-selected.read-write` + `files.bookmarks.app-scope`).
-  Если она недоступна (диск отключён), файлы временно сохраняются в «Загрузки».
-* Диапазон Wi-Fi (CoreWLAN, без запроса геолокации — она нужна только для имени сети):
-  на 2.4 GHz меню подсказывает, что передача будет медленной.
+- **Android → Mac only for now.** Sending from the Mac to the phone is the next milestone.
+- **No automatic clipboard sync.** Android 10+ lets only the app on screen read the clipboard, so copied text goes to the Mac with the Quick Settings tile or **Send to Mac** in the selection menu. Apps with their own selection menu, such as Telegram, don't show **Send to Mac**.
+- **Waiting is limited to an hour in the background.** Android doesn't let a background app restart a foreground service, so after an hour a waiting transfer is kept for 7 days and sent when you tap **Try again** or open LocalDrop.
+- **Some guest and public networks** block connections between devices. Use the phone's hotspot there.
 
-### Сеть и скорость
+## Building from source
 
-Поддерживаются две топологии, выбор автоматический:
-
-| Топология | Как подключается Android | Замер (Pixel 10 Pro → MacBook) |
-|-----------|--------------------------|--------------------------------|
-| Оба устройства в одной Wi-Fi сети | сокет привязан к Wi-Fi `Network` (не уходит в мобильные данные) | 16–19 MB/s (AP 5 ГГц, 40 MHz) |
-| Mac подключён к точке доступа телефона | сокет без привязки, маршрут через интерфейс точки доступа | **105 MB/s** (5 ГГц, 80 MHz) |
-| То же, точка доступа на 2.4 ГГц (Mi A2) | так же | 2.4 MB/s — медленнее, чем через роутер |
-
-Точка доступа ускоряет передачу **только на 5/6 ГГц**. На 2.4 ГГц она медленнее обычной
-сети, поэтому для таких телефонов этот режим не рекомендуется.
-
-Через роутер каждый пакет проходит по воздуху дважды (телефон → AP → Mac), поэтому
-скорость упирается в половину эфира канала. Точка доступа телефона даёт прямой
-радиоканал. Точку доступа включает и подключает к ней Mac пользователь; автоматическое
-управление сетями (и Wi-Fi Direct) в MVP не используется: Mac при этом теряет свою сеть,
-а на Android 11 приложение не может выбрать диапазон точки доступа.
-
-
-* Многие публичные/гостевые сети включают client isolation — устройства видят друг друга по
-  BLE, но TCP-соединение невозможно. Это определяется по connect timeout и показывается как
-  «Устройства в разных сетях или сеть блокирует соединения между устройствами».
-
-## Сборка
-
-### macOS
+**Mac** — Xcode 26 or later:
 
 ```bash
-cd macos && xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Debug build
-```
-
-Или открыть `macos/LocalDrop.xcodeproj` в Xcode 26+, выбрать свою команду в Signing и запустить.
-Без команды сборка подписывается ad-hoc, подпись меняется при каждой сборке, и macOS
-каждый раз спрашивает доступ к ключу в Keychain. Для локальных сборок из терминала:
-
-```bash
+cd macos
 xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Debug -derivedDataPath build \
-  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Development" DEVELOPMENT_TEAM=<TEAM_ID> build
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Development" DEVELOPMENT_TEAM=<your team ID> build
+open build/Build/Products/Debug/LocalDrop.app
 ```
-Минимальная версия — macOS 14.
 
-### Android
+Or open `macos/LocalDrop.xcodeproj` in Xcode, choose your team under **Signing** and run. Sign with a team: ad-hoc signatures change with every build, and macOS then asks for Keychain access each time.
+
+**Android** — JDK 25 (the one bundled with Android Studio works) and the Android SDK:
 
 ```bash
-cd android && ./gradlew assembleDebug
+cd android
+./gradlew installDebug
+./gradlew lintDebug testDebugUnitTest
 ```
 
-Интеграционный тест протокола против запущенного Mac-приложения (через loopback):
+| Folder | Contents |
+| --- | --- |
+| `android/` | The Android app: Kotlin, Jetpack Compose, coroutines; share target, transfer service, presence, queue |
+| `macos/` | The Mac app: Swift 6, SwiftUI and AppKit menu bar agent, Network.framework, CoreBluetooth, CryptoKit |
+| `protocol/` | Wire protocol v1: discovery, handshake, messages, security model |
+| `docs/` | Architecture, product decisions and developer notes |
 
-```bash
-LOCALDROP_MAC_PORT=<порт из меню Mac> LOCALDROP_MAC_ID=<deviceId Mac> ./gradlew testDebugUnitTest
-```
+## Contributing
 
-minSdk 30 (Android 11), targetSdk 36. Установка: `./gradlew installDebug`.
+Issues and pull requests are welcome.
 
-## Статус
+### Translations
 
-| Milestone | Содержание | Статус |
-|-----------|-----------|--------|
-| 1 | Menu bar app, TCP listener, BLE advertising; Android BLE scan | ✅ |
-| 2 | TCP + handshake (ECDH, подписи, AES-GCM) | ✅ |
-| 3 | Pairing (6-значный код), trusted devices, отзыв доверия | ✅ |
-| 4 | Протокол передачи, SHA-256, отмена, точка доступа телефона (105 MB/s) | ✅ |
-| 5 | **Share to Mac:** Direct Share-цель на доверенный Mac, передача в foreground service, `content://` (один и несколько файлов, текст), прямое подключение по последнему endpoint (0,2–0,3 с до запроса), постоянный порт Mac, запрос — плашкой, итог — уведомлением, запуск при входе, App Nap выключен | ✅ |
-| 6 | **Presence:** статусы Mac на телефоне (рядом / готов / занят / без сети / не рядом), приватный BLE-токен (HMAC от `presenceKey`, смена каждые 15 мин) со статус-буквой, зашифрованный Endpoint Info, режим привязки только по запросу (10 мин) или без доверенных устройств, capabilities в hello, Bonjour как третий путь, Mac перестаёт рекламироваться во сне | ✅ |
-| 7 | **Policies:** политика приёма по устройству на Mac (спрашивать / фото и видео / до 100 MB / всё / отклонять), текст → буфер обмена Mac (сообщение `text`, ссылка — кнопка «Open Link»), Mac по умолчанию, плитка «Clipboard to Mac», «Send to Mac» в меню выделения текста | ✅ |
-| 8 | **Queue:** Mac спит / далеко / в другой сети / занят — отправка ждёт, а не падает: копия во внутреннем spool (грант `content://` временный), повтор при появлении Mac по BLE (первые 5 мин — low-latency скан), смене сети и редко по таймеру (5 → 15 мин; без Bluetooth 30 с → 5 мин — каждая сетевая попытка будит спящий Mac); всё отправленное на один Mac — одной передачей, а пока на Mac открыт запрос, новые файлы добавляются в него (`transfer_add`); через час — парковка с «Try again»/«Discard», копия хранится 7 дней; спящий Mac отвечает `asleep` | ✅ |
+- **Android:** strings live in `android/app/src/main/res/values/strings.xml` (English, the reference) and `values-<code>/strings.xml` for other languages. Add the language to `res/xml/locales_config.xml`.
+- **Mac:** strings live in the String Catalog `macos/LocalDrop/Resources/Localizable.xcstrings` (with plural forms) and `InfoPlist.xcstrings`. Add a language in Xcode or with `xcodebuild -exportLocalizations` / `-importLocalizations`.
 
-План и обоснование — [`docs/architecture.md`](docs/architecture.md), раздел 8.
+Keep placeholders such as `%1$s` and `%@` in place.
+
+## License
+
+[MIT](LICENSE.txt).
+
+LocalDrop is an independent project and is not affiliated with or endorsed by Apple or Google. AirDrop is a trademark of Apple Inc.
