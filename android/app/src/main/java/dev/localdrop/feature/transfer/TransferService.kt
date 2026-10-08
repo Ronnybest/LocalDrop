@@ -501,17 +501,19 @@ class TransferService : Service() {
                 releaseLocks()
                 pump()
                 stopIfIdle()
+                // The ongoing notification still shows the request (see showIncoming) if it was
+                // declined: it must not stay on screen while queued sends keep the service up.
+                if (incomingAlerted && inForeground) updateOngoing(TransferState.Preparing(currentDeviceName))
+                incomingAlerted = false
             }
             state.isFinal() -> {
                 notifications.cancel(INCOMING_NOTIFICATION_ID)
                 postReceiveResult(state)
                 manager.dismiss()
             }
-            state is TransferState.AwaitingLocalDecision -> {
-                showIncoming(state)
-                updateOngoing(state)
-            }
+            state is TransferState.AwaitingLocalDecision -> showIncoming(state)
             else -> {
+                incomingAlerted = false
                 notifications.cancel(INCOMING_NOTIFICATION_ID)
                 updateOngoing(state)
             }
@@ -555,7 +557,7 @@ class TransferService : Service() {
     private fun updateOngoing(state: TransferState) {
         // Android drops every update from a package posting more than ~5 per second, so progress
         // (emitted 10× a second for the in-app screen) is shown at most once a second.
-        if (state is TransferState.Transferring) {
+        if (state is TransferState.Transferring || state is TransferState.Receiving) {
             val now = SystemClock.elapsedRealtime()
             if (now - lastProgressNotificationMs < PROGRESS_NOTIFICATION_INTERVAL_MS) return
             lastProgressNotificationMs = now
@@ -585,8 +587,6 @@ class TransferService : Service() {
                     .setProgress(100, percent, false)
             }
             is TransferState.Verifying -> builder.setContentTitle(getString(R.string.transfer_verifying)).setProgress(0, 0, true)
-            is TransferState.AwaitingLocalDecision -> builder.setContentTitle(getString(R.string.incoming_title, name))
-                .setContentText(TransferText.summaryLine(this, state.summary))
             is TransferState.Receiving -> {
                 val progress = state.progress
                 val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
@@ -684,7 +684,13 @@ class TransferService : Service() {
         }
     }
 
-    /** The Mac's offer, with visible Accept and Decline; it is also the transfer screen's prompt. */
+    /**
+     * The Mac's offer, with visible Accept and Decline; it is also the transfer screen's prompt.
+     * It takes the place of the service's ongoing notification, so the request isn't shown twice;
+     * once answered, that notification goes back to showing progress.
+     */
+    private var incomingAlerted = false
+
     private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
         val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
@@ -693,12 +699,16 @@ class TransferService : Service() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setOngoing(true)
-            .setOnlyAlertOnce(true)
+            // It replaces the silent ongoing notification, which is already showing, so "only
+            // alert once" would keep it quiet: it sounds and pops up for a new request only, not
+            // when files are added to the one on screen.
+            .setOnlyAlertOnce(incomingAlerted)
             .setContentIntent(openAppIntent())
             .addAction(0, getString(R.string.action_decline), serviceIntent(ACTION_DECLINE_INCOMING, REQUEST_DECLINE_INCOMING))
             .addAction(0, getString(R.string.action_accept), serviceIntent(ACTION_ACCEPT_INCOMING, REQUEST_ACCEPT_INCOMING))
             .build()
-        notifyIfAllowed(INCOMING_NOTIFICATION_ID, notification)
+        notifyIfAllowed(ONGOING_NOTIFICATION_ID, notification)
+        incomingAlerted = true
     }
 
     private fun postReceiveResult(state: TransferState) {

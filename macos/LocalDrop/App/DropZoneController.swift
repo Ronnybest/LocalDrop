@@ -147,6 +147,8 @@ private struct DropZoneView: View {
             Text("Send with LocalDrop")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
             ForEach(model.deviceList.filter(\.canReceive)) { phone in
                 PhoneDropTile(phone: phone, sent: state.sentTo == phone.id) { urls in
                     model.send(urls, to: phone.id)
@@ -156,7 +158,7 @@ private struct DropZoneView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .panelCard(width: 150, cornerRadius: 24)
+        .panelCard(width: 170, cornerRadius: 24)
     }
 }
 
@@ -179,11 +181,12 @@ private struct PhoneDropTile: View {
                 .font(.callout.weight(.medium))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
-            // Always one line, so the panel keeps its size when it says "Sending".
+            // Always two lines' height, so the panel keeps its size when it says "Sending".
             Text(sent ? String(localized: "Drop zone sending") : phone.status.text)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
+                .multilineTextAlignment(.center)
+                .lineLimit(2, reservesSpace: true)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 4)
