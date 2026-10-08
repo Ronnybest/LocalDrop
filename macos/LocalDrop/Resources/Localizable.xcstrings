@@ -1633,16 +1633,6 @@
         }
       }
     },
-    "Send files from Finder, Photos and other apps with Share › LocalDrop. Turn on LocalDrop in the list that opens.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › LocalDrop. В открывшемся списке включите LocalDrop."
-          }
-        }
-      }
-    },
     "Share menu on": {
       "localizations": {
         "ru": {
@@ -1755,6 +1745,52 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Send files from Finder, Photos and other apps with Share › LocalDrop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › LocalDrop. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
+          }
+        }
+      }
+    },
+    "Drop zone while dragging files": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефоны у края экрана при перетаскивании"
+          }
+        }
+      }
+    },
+    "Send with LocalDrop": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить через LocalDrop"
+          }
+        }
+      }
+    },
+    "Drop zone sending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправляется"
           }
         }
       }

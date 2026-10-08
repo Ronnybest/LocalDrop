@@ -38,6 +38,7 @@ private extension View {
 
 private struct GeneralSettings: View {
     let model: AppModel
+    @AppStorage(DropZoneController.enabledKey) private var showsDropZone = true
 
     var body: some View {
         Form {
@@ -91,10 +92,11 @@ private struct GeneralSettings: View {
                         }
                     }
                 }
+                Toggle("Drop zone while dragging files", isOn: $showsDropZone)
             } header: {
                 Text("Sending")
             } footer: {
-                Text("Send files from Finder, Photos and other apps with Share › LocalDrop. Turn on LocalDrop in the list that opens.")
+                Text("Send files from Finder, Photos and other apps with Share › LocalDrop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one.")
                     .foregroundStyle(.secondary)
             }
 
