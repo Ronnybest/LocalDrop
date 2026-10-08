@@ -1,17 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A drop, outlined and half full with a wave: the Mac app icon. Within the 66 dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group
-        android:translateX="30"
-        android:translateY="30">
-        <!-- Downward arrow into a tray: "receive nearby". -->
+    <group android:name="water">
+        <clip-path android:pathData="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z" />
         <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M10.5,2h3v12.2l4.4,-4.4 2.1,2.1L12,19.9 4,11.9l2.1,-2.1 4.4,4.4z" />
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M2,18h3v3h14v-3h3v6H2z" />
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M30,57C38,62.5 46,62.5 54,57.5C61,53.5 67,53 78,57.5L78,86L30,86Z" />
     </group>
+    <path
+        android:pathData="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round" />
 </vector>
