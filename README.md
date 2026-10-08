@@ -29,7 +29,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 - **One request for everything.** Shares to the same Mac go as one transfer, and files shared while the Mac is asking are added to the request on screen.
 - **Accept automatically, per device.** On the Mac, choose what each phone may save without asking: photos and videos, files under 100 MB, everything — or nothing at all.
 - **Text and links to the clipboard.** Share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. Links open on the Mac with one click.
-- **Fast.** Up to 105 MB/s over the phone's 5 GHz hotspot. Every file is checked with SHA-256 before it is saved.
+- **As fast as your network.** Speed depends on how the devices are connected and on the network itself: a few MB/s on 2.4 GHz Wi-Fi, 100 MB/s and more over a fast 5 GHz link such as the phone's hotspot. Every file is checked with SHA-256 before it is saved.
 - **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers.
 - **A Mac app that stays out of the way.** A menu bar drop that fills up while files arrive, Liquid Glass on macOS 26, notifications with **Show in Finder**, starts at login.
 - **English and Russian** on both platforms.
@@ -61,6 +61,8 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 The full wire protocol is in [`protocol/`](protocol/protocol.md); design decisions are in [`docs/architecture.md`](docs/architecture.md).
 
 ## Speed
+
+LocalDrop adds no limit of its own: the connection and the network decide. Examples measured during development:
 
 | Connection | Measured |
 | --- | --- |
