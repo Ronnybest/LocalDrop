@@ -1694,6 +1694,16 @@
           }
         }
       }
+    },
+    "Opens System Settings: turn on LocalDrop in the list": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Откроются Системные настройки: включите LocalDrop в списке"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

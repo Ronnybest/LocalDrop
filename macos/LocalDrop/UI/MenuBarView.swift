@@ -36,7 +36,6 @@ struct MenuBarView: View {
 
                 if model.startupState == .running, !model.shareMenu.isEnabled, model.deviceList.contains(where: \.canReceive) {
                     shareMenuOffRow
-                        .padding(12)
                         .glassCard(tint: .accentColor)
                 }
 
@@ -176,20 +175,29 @@ struct MenuBarView: View {
     }
 
     /// Until the user turns it on: macOS doesn't let an app add itself to Share menus.
+    /// The whole card opens the switch in System Settings, so the text keeps the full width.
     private var shareMenuOffRow: some View {
-        HStack(alignment: .top, spacing: 10) {
-            IconBadge(symbol: "square.and.arrow.up", tint: .accentColor, size: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Add LocalDrop to Share")
-                Text("Send to your phone from Finder, Photos and other apps.")
-                    .font(.callout)
+        Button { NSWorkspace.shared.open(ShareMenu.settingsURL) } label: {
+            HStack(spacing: 10) {
+                IconBadge(symbol: "square.and.arrow.up", tint: .accentColor, size: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Add LocalDrop to Share")
+                    Text("Send to your phone from Finder, Photos and other apps.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
-            Button("Turn On") { NSWorkspace.shared.open(ShareMenu.settingsURL) }
-                .glassButton()
+            // Inside the button, so the card's edges are clickable too.
+            .padding(12)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .help(String(localized: "Opens System Settings: turn on LocalDrop in the list"))
     }
 
     private func showSettings(_ tab: SettingsTab) {
