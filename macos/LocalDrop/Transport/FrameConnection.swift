@@ -1,14 +1,17 @@
 import CryptoKit
+import Darwin
 import Foundation
-import Network
 
-/// Length-prefixed frames (`u32 BE length ‖ payload`, protocol/protocol.md §3.1) over one NWConnection.
+/// Length-prefixed frames (`u32 BE length ‖ payload`, protocol/protocol.md §3.1) over one
+/// accepted TCP socket.
 ///
-/// All mutable state is confined to `queue`, the queue the connection delivers callbacks on.
-/// Any timeout or task cancellation cancels the whole connection: in this protocol every
-/// timeout is fatal to the session.
+/// Uses the kernel TCP stack through DispatchIO rather than NWConnection: on the same Wi-Fi,
+/// NWConnection's stack sent to a phone at 10–19 MB/s where a plain socket reached 22–35.
+///
+/// All mutable state is confined to `queue`. Any timeout or task cancellation closes the whole
+/// connection: in this protocol every timeout is fatal to the session.
 nonisolated final class FrameConnection: @unchecked Sendable {
-    private let connection: NWConnection
+    private let channel: DispatchIO
     private let queue: DispatchQueue
     private var timedOutStage: String?
     // Pipelined sends (file data): confined to `queue`.
@@ -17,47 +20,19 @@ nonisolated final class FrameConnection: @unchecked Sendable {
     private var pipelineError: Error?
     private static let pipelineWindow = 4 * 1024 * 1024
 
-    var remoteDescription: String { String(describing: connection.endpoint) }
+    let remoteDescription: String
 
-    init(connection: NWConnection) {
-        self.connection = connection
-        self.queue = DispatchQueue(label: "dev.localdrop.connection")
-    }
-
-    func start(timeout: TimeInterval) async throws {
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                // Callbacks below all run on `queue`, so this one-shot guard needs no lock.
-                let once = ResumeOnce(continuation)
-                let finish = once.resume
-                let timer = Deadline(queue: queue, after: timeout) { [connection] in
-                    finish(.failure(SessionError.timeout(stage: "connection setup")))
-                    connection.cancel()
-                }
-                connection.stateUpdateHandler = { state in
-                    switch state {
-                    case .ready:
-                        timer.cancel()
-                        finish(.success(()))
-                    case .failed(let error):
-                        timer.cancel()
-                        finish(.failure(SessionError.transport(error.localizedDescription)))
-                    case .cancelled:
-                        timer.cancel()
-                        finish(.failure(SessionError.cancelled))
-                    case .waiting(let error):
-                        Log.connection.warning("Connection waiting: \(error.localizedDescription, privacy: .public)")
-                    case .setup, .preparing:
-                        break
-                    @unknown default:
-                        break
-                    }
-                }
-                connection.start(queue: queue)
-            }
-        } onCancel: { [connection] in
-            connection.cancel()
+    /// Takes ownership of the socket: it is closed when the connection is cancelled.
+    init(socket: TCPSocket) {
+        let queue = DispatchQueue(label: "dev.localdrop.connection")
+        let fd = socket.fd
+        self.queue = queue
+        self.remoteDescription = socket.remoteAddress
+        channel = DispatchIO(type: .stream, fileDescriptor: fd, queue: queue) { _ in
+            Darwin.close(fd)
         }
+        // Handlers run once per operation, when it is complete or has failed.
+        channel.setLimit(lowWater: Int.max)
     }
 
     /// Returns the payload and the complete frame as received (needed for the transcript hash).
@@ -82,44 +57,31 @@ nonisolated final class FrameConnection: @unchecked Sendable {
     /// Sends one frame and returns it exactly as written (needed for the transcript hash).
     @discardableResult
     func sendFrame(_ payload: Data) async throws -> Data {
-        guard payload.count <= ProtocolConstants.maxFrameSize else {
-            throw SessionError.protocolViolation("outgoing frame too large")
-        }
-        var built = Data(capacity: payload.count + 4)
-        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { built.append(contentsOf: $0) }
-        built.append(payload)
-        let frame = built
-
+        let frame = try Self.frame(payload)
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 // On `queue`, like pipelined sends, so frames go out in the order they were sent.
-                queue.async { [connection] in
-                    connection.send(content: frame, completion: .contentProcessed { error in
+                queue.async { [self] in
+                    write(frame) { error in
                         if let error {
-                            continuation.resume(throwing: SessionError.transport(error.localizedDescription))
+                            continuation.resume(throwing: error)
                         } else {
                             continuation.resume()
                         }
-                    })
+                    }
                 }
             }
-        } onCancel: { [connection] in
-            connection.cancel()
+        } onCancel: { [self] in
+            cancel()
         }
         return frame
     }
 
     /// Queues a frame without waiting for the network to take it, as long as less than
     /// `pipelineWindow` bytes are still on their way. Waiting for each frame instead allows one
-    /// chunk per Wi-Fi round trip: about 10 MB/s. Order is kept: NWConnection sends in call order.
+    /// chunk per Wi-Fi round trip: about 10 MB/s. Order is kept: a stream channel writes in call order.
     func sendFramePipelined(_ payload: Data) async throws {
-        guard payload.count <= ProtocolConstants.maxFrameSize else {
-            throw SessionError.protocolViolation("outgoing frame too large")
-        }
-        var built = Data(capacity: payload.count + 4)
-        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { built.append(contentsOf: $0) }
-        built.append(payload)
-        let frame = built
+        let frame = try Self.frame(payload)
         let size = frame.count
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -129,13 +91,13 @@ nonisolated final class FrameConnection: @unchecked Sendable {
                         return
                     }
                     bytesInFlight += size
-                    connection.send(content: frame, completion: .contentProcessed { [self] error in
+                    write(frame) { [self] error in
                         bytesInFlight -= size
                         if let error, pipelineError == nil {
-                            pipelineError = SessionError.transport(error.localizedDescription)
+                            pipelineError = error
                         }
                         releaseSendWaiters()
-                    })
+                    }
                     if bytesInFlight <= Self.pipelineWindow {
                         continuation.resume()
                     } else {
@@ -143,8 +105,8 @@ nonisolated final class FrameConnection: @unchecked Sendable {
                     }
                 }
             }
-        } onCancel: { [connection] in
-            connection.cancel()
+        } onCancel: { [self] in
+            cancel()
         }
     }
 
@@ -161,8 +123,28 @@ nonisolated final class FrameConnection: @unchecked Sendable {
         }
     }
 
+    /// Closes the socket at once; pending sends and receives fail.
     func cancel() {
-        connection.cancel()
+        channel.close(flags: .stop)
+    }
+
+    private static func frame(_ payload: Data) throws -> Data {
+        guard payload.count <= ProtocolConstants.maxFrameSize else {
+            throw SessionError.protocolViolation("outgoing frame too large")
+        }
+        var built = Data(capacity: payload.count + 4)
+        withUnsafeBytes(of: UInt32(payload.count).bigEndian) { built.append(contentsOf: $0) }
+        built.append(payload)
+        return built
+    }
+
+    /// On `queue`: writes the whole frame; `completion` runs on `queue` once the kernel has it.
+    private func write(_ frame: Data, completion: @escaping (SessionError?) -> Void) {
+        let data = frame.withUnsafeBytes { DispatchData(bytes: $0) }
+        channel.write(offset: 0, data: data, queue: queue) { [self] done, _, error in
+            guard done else { return }
+            completion(error == 0 ? nil : failure(error))
+        }
     }
 
     private func receiveExactly(_ count: Int, timeout: TimeInterval, stage: String) async throws -> Data {
@@ -171,31 +153,33 @@ nonisolated final class FrameConnection: @unchecked Sendable {
                 queue.async { [self] in
                     let timer = Deadline(queue: queue, after: timeout) { [self] in
                         timedOutStage = stage
-                        connection.cancel()
+                        cancel()
                     }
-                    connection.receive(minimumIncompleteLength: count, maximumLength: count) { [self] data, _, isComplete, error in
+                    channel.read(offset: 0, length: count, queue: queue) { [self] done, data, error in
+                        guard done else { return }
                         timer.cancel()
-                        if let stage = timedOutStage {
-                            continuation.resume(throwing: SessionError.timeout(stage: stage))
+                        if error != 0 {
+                            continuation.resume(throwing: failure(error))
                         } else if let data, data.count == count {
-                            continuation.resume(returning: data)
-                        } else if let error {
-                            if case .posix(let code) = error, code == .ECANCELED {
-                                continuation.resume(throwing: SessionError.cancelled)
-                            } else {
-                                continuation.resume(throwing: SessionError.transport(error.localizedDescription))
-                            }
-                        } else if isComplete {
-                            continuation.resume(throwing: SessionError.connectionClosed)
+                            var bytes = Data(count: count)
+                            bytes.withUnsafeMutableBytes { _ = data.copyBytes(to: $0) }
+                            continuation.resume(returning: bytes)
                         } else {
-                            continuation.resume(throwing: SessionError.transport("short read"))
+                            continuation.resume(throwing: SessionError.connectionClosed)
                         }
                     }
                 }
             }
-        } onCancel: { [connection] in
-            connection.cancel()
+        } onCancel: { [self] in
+            cancel()
         }
+    }
+
+    /// On `queue`: maps an errno from the channel to the session error it stands for.
+    private func failure(_ error: Int32) -> SessionError {
+        if let timedOutStage { return .timeout(stage: timedOutStage) }
+        if error == ECANCELED { return .cancelled }
+        return .transport(String(cString: strerror(error)))
     }
 }
 
@@ -211,20 +195,6 @@ private nonisolated final class Deadline: @unchecked Sendable {
 
     func cancel() {
         item.cancel()
-    }
-}
-
-/// Resumes a continuation at most once. Used only from the connection's serial queue.
-private nonisolated final class ResumeOnce: @unchecked Sendable {
-    private var continuation: CheckedContinuation<Void, Error>?
-
-    init(_ continuation: CheckedContinuation<Void, Error>) {
-        self.continuation = continuation
-    }
-
-    func resume(_ result: Result<Void, Error>) {
-        continuation?.resume(with: result)
-        continuation = nil
     }
 }
 

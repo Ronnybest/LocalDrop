@@ -1,6 +1,5 @@
 import CryptoKit
 import Foundation
-import Network
 
 /// A remote device that completed the handshake and proved possession of its identity key.
 nonisolated struct PeerInfo: Equatable, Sendable {
@@ -59,7 +58,6 @@ protocol SessionCoordinator: AnyObject, Sendable {
 
 /// Responder side of one TCP session (protocol/protocol.md §5, protocol/security.md §3, §5).
 nonisolated final class ServerSession {
-    static let connectTimeout: TimeInterval = 10
     static let handshakeTimeout: TimeInterval = 15
     static let userDecisionTimeout: TimeInterval = 120
     static let idleTimeout: TimeInterval = 120
@@ -90,13 +88,13 @@ nonisolated final class ServerSession {
 
     init(
         entryId: UUID,
-        connection: NWConnection,
+        socket: TCPSocket,
         identity: Identity,
         localDevice: LocalDevice,
         coordinator: any SessionCoordinator
     ) {
         self.entryId = entryId
-        let frames = FrameConnection(connection: connection)
+        let frames = FrameConnection(socket: socket)
         self.frames = frames
         self.handle = SessionHandle(frames: frames)
         self.identity = identity
@@ -109,7 +107,6 @@ nonisolated final class ServerSession {
         var peer: PeerInfo?
         var channel: SecureChannel?
         do {
-            try await frames.start(timeout: Self.connectTimeout)
             let handshake = try await handshake { established in
                 channel = established
                 handle.attach(established)
@@ -418,10 +415,9 @@ nonisolated final class ServerSession {
     }
 
     /// Rejects a connection before any handshake, e.g. when too many sessions are active.
-    static func reject(_ connection: NWConnection, code: String) async {
-        let frames = FrameConnection(connection: connection)
+    static func reject(_ socket: TCPSocket, code: String) async {
+        let frames = FrameConnection(socket: socket)
         do {
-            try await frames.start(timeout: connectTimeout)
             try await frames.sendFrame(ErrorMessage(code: code).message.encoded())
         } catch {
             Log.connection.info("Could not deliver rejection: \(String(describing: error), privacy: .public)")

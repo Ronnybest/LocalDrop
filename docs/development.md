@@ -33,7 +33,7 @@ LocalDrop/
 │   │   ├── Crypto/           identity key (Keychain), fingerprint
 │   │   ├── Protocol/         CBOR, константы протокола, EndpointInfo
 │   │   ├── Discovery/        BLE peripheral (CoreBluetooth)
-│   │   ├── Transport/        TCP listener + Bonjour (Network.framework)
+│   │   ├── Transport/        TCP listener (BSD-сокеты, DispatchIO) + Bonjour (dns_sd)
 │   │   └── UI/               SwiftUI-представления меню
 │   └── Support/              Info.plist, entitlements
 └── android/
@@ -66,8 +66,8 @@ LocalDrop/
 | Задача | Android (Kotlin) | macOS (Swift) |
 |--------|------------------|---------------|
 | BLE | `BluetoothLeScanner`, `ScanFilter`, `BluetoothGatt` | `CBPeripheralManager`, `CBMutableService` |
-| Сеть | `java.nio.channels.SocketChannel` на `Dispatchers.IO`, `ConnectivityManager` | `NWListener`, `NWConnection` |
-| mDNS (fallback) | `NsdManager` | `NWListener.service` (Bonjour) |
+| Сеть | `java.nio.channels.SocketChannel` на `Dispatchers.IO`, `ConnectivityManager` | BSD-сокеты + `DispatchIO` (стек ядра: `NWConnection` отдавал телефону 10–19 МБ/с против 22–35), `NWPathMonitor` |
+| mDNS (fallback) | `NsdManager` | `DNSServiceRegister` (Bonjour) |
 | Identity key | `KeyPairGenerator("EC", "AndroidKeyStore")`, `Signature("SHA256withECDSA")` | `P256.Signing.PrivateKey` + Keychain (`SecItem*`) |
 | ECDH | `KeyAgreement("ECDH")` (JCA, в памяти) | `P256.KeyAgreement` |
 | KDF | HKDF из `Mac("HmacSHA256")` | `HKDF<SHA256>` |

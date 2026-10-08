@@ -110,7 +110,7 @@ cd android
 | Folder | Contents |
 | --- | --- |
 | `android/` | The Android app: Kotlin, Jetpack Compose, coroutines; share target, transfer service, presence, queue |
-| `macos/` | The Mac app: Swift 6, SwiftUI and AppKit menu bar agent, Network.framework, CoreBluetooth, CryptoKit |
+| `macos/` | The Mac app: Swift 6, SwiftUI and AppKit menu bar agent, BSD sockets with DispatchIO, CoreBluetooth, CryptoKit |
 | `protocol/` | Wire protocol v1: discovery, handshake, messages, security model |
 | `docs/` | Architecture, product decisions and developer notes |
 

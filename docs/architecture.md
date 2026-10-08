@@ -216,7 +216,7 @@ textToClipboard    (Mac) класть полученный текст в буф�
 | Menu bar agent без окна | `LSUIElement`, SwiftUI `MenuBarExtra` | есть |
 | Запуск при входе | `SMAppService.mainApp.register()` + переключатель в меню | новое |
 | BLE-присутствие | `CBPeripheralManager`: приватный токен / режим привязки, зашифрованный Endpoint Info | меняется |
-| Сетевой listener | `NWListener` + Bonjour как fallback | есть |
+| Сетевой listener | BSD-сокет + Bonjour (`dns_sd`) как fallback | есть |
 | Запросы на приём | `UNUserNotificationCenter`, категория с действиями Accept / Decline; окно — fallback | новое |
 | Итог приёма | Уведомление «Получено …» с действием «Показать в Finder» | новое |
 | Политики | Движок `autoAcceptPolicy` по устройству; проверка до показа запроса | новое |

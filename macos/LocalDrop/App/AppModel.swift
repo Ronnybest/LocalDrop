@@ -389,24 +389,24 @@ final class AppModel {
         #endif
     }
 
-    private func accept(_ connection: NWConnection) {
+    private func accept(_ socket: TCPSocket) {
         guard let identity else {
-            connection.cancel()
+            socket.close()
             return
         }
         let active = connections.filter { !$0.state.isEnded }.count
         guard active < Self.maxActiveSessions else {
-            Log.connection.warning("Rejecting \(String(describing: connection.endpoint), privacy: .public): \(active) sessions active")
-            Task.detached { await ServerSession.reject(connection, code: ErrorCode.busy) }
+            Log.connection.warning("Rejecting \(socket.remoteAddress, privacy: .public): \(active) sessions active")
+            Task.detached { await ServerSession.reject(socket, code: ErrorCode.busy) }
             return
         }
 
         refreshComputerName()
-        let entry = ConnectionEntry(remote: Self.describe(connection.endpoint))
+        let entry = ConnectionEntry(remote: socket.remoteHost)
         connections.insert(entry, at: 0)
         let session = ServerSession(
             entryId: entry.id,
-            connection: connection,
+            socket: socket,
             identity: identity,
             localDevice: localDevice,
             coordinator: self
@@ -419,18 +419,6 @@ final class AppModel {
     private func updateEntry(_ entryId: UUID, _ state: ConnectionEntry.State) {
         guard let index = connections.firstIndex(where: { $0.id == entryId }) else { return }
         connections[index].state = state
-    }
-
-    private static func describe(_ endpoint: NWEndpoint) -> String {
-        if case .hostPort(let host, _) = endpoint {
-            switch host {
-            case .ipv4(let address): return "\(address)"
-            case .ipv6(let address): return "\(address)"
-            case .name(let name, _): return name
-            @unknown default: break
-            }
-        }
-        return String(describing: endpoint)
     }
 
     private func refreshAddresses() {

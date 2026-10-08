@@ -110,7 +110,7 @@ cd android
 | Папка | Содержимое |
 | --- | --- |
 | `android/` | Android-приложение: Kotlin, Jetpack Compose, корутины; цель «Поделиться», сервис передачи, присутствие, очередь |
-| `macos/` | Mac-приложение: Swift 6, агент в строке меню на SwiftUI и AppKit, Network.framework, CoreBluetooth, CryptoKit |
+| `macos/` | Mac-приложение: Swift 6, агент в строке меню на SwiftUI и AppKit, BSD-сокеты с DispatchIO, CoreBluetooth, CryptoKit |
 | `protocol/` | Протокол v1: обнаружение, рукопожатие, сообщения, модель безопасности |
 | `docs/` | Архитектура, продуктовые решения и заметки разработчика |
 
