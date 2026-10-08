@@ -11,15 +11,29 @@ final class ShareMenu {
 
     func refresh() {
         // Share menus list only enabled extensions, so LocalDrop is in this list exactly when it's on.
-        // Deprecated, but its replacement only builds a menu: nothing else tells which services exist.
         let probe = FileManager.default.temporaryDirectory.appendingPathComponent("Share menu probe.txt")
         if !FileManager.default.fileExists(atPath: probe.path) {
             try? Data().write(to: probe)
         }
-        let enabled = NSSharingService.sharingServices(forItems: [probe]).contains { $0.title == "LocalDrop" }
+        let lookup: any SharingServiceLookup = SystemSharingServices()
+        let enabled = lookup.services(for: [probe]).contains { $0.title == "LocalDrop" }
         if enabled != isEnabled {
             Log.app.info("Share menu extension \(enabled ? "on" : "off", privacy: .public)")
             isEnabled = enabled
         }
+    }
+}
+
+/// `NSSharingService.sharingServices(forItems:)` is deprecated, but its replacement only builds a
+/// menu: nothing else tells which share services are on. Called through a protocol, so using it
+/// on purpose doesn't warn on every build.
+private protocol SharingServiceLookup {
+    func services(for items: [Any]) -> [NSSharingService]
+}
+
+private struct SystemSharingServices: SharingServiceLookup {
+    @available(macOS, deprecated: 13.0)
+    func services(for items: [Any]) -> [NSSharingService] {
+        NSSharingService.sharingServices(forItems: items)
     }
 }
