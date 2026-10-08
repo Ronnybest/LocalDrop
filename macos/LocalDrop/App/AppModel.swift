@@ -203,6 +203,24 @@ final class AppModel {
         advertiser?.refresh()
     }
 
+    /// Paired phones that receive files, in the order of the device list.
+    var receivingPhones: [TrustedDevice] {
+        (trustStore?.devices ?? []).filter { $0.capabilities?.contains(ProtocolConstants.receiveCapability) == true }
+    }
+
+    /// Files dropped on the menu bar drop while several phones could take them: the menu asks which.
+    var filesToSend: [URL]?
+
+    /// Files dropped on the menu bar drop go straight to the only phone, or wait for a choice.
+    func sendDropped(_ urls: [URL]) {
+        let phones = receivingPhones
+        if phones.count == 1 {
+            send(urls, to: phones[0].deviceId)
+        } else if !phones.isEmpty {
+            filesToSend = urls
+        }
+    }
+
     /// Lets the user pick files for a phone. The menu bar app has no window, so the panel comes forward itself.
     func chooseFiles(for deviceId: String) {
         let panel = NSOpenPanel()

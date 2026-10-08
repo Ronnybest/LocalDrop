@@ -1714,6 +1714,50 @@
           }
         }
       }
+    },
+    "Send “%@” to": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить «%@» на"
+          }
+        }
+      }
+    },
+    "Send %lld files to": {
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Отправить %lld файл на"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Отправить %lld файла на"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Отправить %lld файлов на"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Отправить %lld файла на"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version": "1.0"

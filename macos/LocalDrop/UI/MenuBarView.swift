@@ -15,6 +15,16 @@ struct MenuBarView: View {
                     .padding(.horizontal, 4)
                     .padding(.bottom, 2)
 
+                if let files = model.filesToSend {
+                    DropChoiceCard(files: files, phones: model.deviceList.filter(\.canReceive)) { deviceId in
+                        model.send(files, to: deviceId)
+                        model.filesToSend = nil
+                    } cancel: {
+                        model.filesToSend = nil
+                    }
+                    .glassCard(tint: .accentColor)
+                }
+
                 if model.startupState == .running {
                     VisibilityRow(model: model)
                         // Full width, so the card doesn't resize as its subtitle changes.
@@ -229,5 +239,44 @@ private struct ReceivingRow: View {
             Button("Show", action: show)
                 .glassButton()
         }
+    }
+}
+
+/// Files dropped on the menu bar drop while more than one phone could take them.
+private struct DropChoiceCard: View {
+    let files: [URL]
+    let phones: [DeviceListItem]
+    let send: (String) -> Void
+    let cancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(files.count == 1 ? String(localized: "Send “\(files[0].lastPathComponent)” to") : String(localized: "Send \(files.count) files to"))
+                    .font(.headline)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                Button("Cancel", action: cancel)
+                    .buttonStyle(.link)
+            }
+            .padding(.horizontal, 4)
+            ForEach(phones) { phone in
+                Button { send(phone.id) } label: {
+                    HStack(spacing: 10) {
+                        IconBadge(symbol: phone.symbol, tint: .accentColor, size: 28)
+                        Text(phone.name)
+                        Spacer(minLength: 0)
+                        Image(systemName: "paperplane.fill")
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
     }
 }
