@@ -92,8 +92,11 @@ struct VisibilityRow: View {
                         if let until = model.pairingWindowUntil, until > Date() {
                             TimelineView(.periodic(from: .now, by: 1)) { context in
                                 let remaining = max(0, Int(until.timeIntervalSince(context.date)))
+                                // The menu bar drop's green: the same signal, "visible to new devices".
                                 Text("Open for pairing · \(remaining / 60):\(String(format: "%02d", remaining % 60))")
                                     .monospacedDigit()
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(Color(nsColor: .systemGreen))
                             }
                         } else {
                             Text("Only paired devices see it")

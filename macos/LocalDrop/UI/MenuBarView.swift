@@ -85,10 +85,14 @@ struct MenuBarView: View {
                     .keyboardShortcut(",")
                     Button { NSApplication.shared.terminate(nil) } label: {
                         Label("Quit", systemImage: "power")
-                            .frame(maxWidth: .infinity)
+                            .labelStyle(.iconOnly)
+                            // 17 pt makes the circle exactly as tall as the Settings button.
+                            .frame(width: 17, height: 17)
                     }
                     .glassButton()
+                    .buttonBorderShape(.circle)
                     .keyboardShortcut("q")
+                    .help(String(localized: "Quit LocalDrop"))
                 }
                 .controlSize(.large)
                 .padding(.top, 2)
