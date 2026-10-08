@@ -34,6 +34,12 @@ struct MenuBarView: View {
                         .glassCard(tint: .orange)
                 }
 
+                if model.startupState == .running, !model.shareMenu.isEnabled, model.deviceList.contains(where: \.canReceive) {
+                    shareMenuOffRow
+                        .padding(12)
+                        .glassCard(tint: .accentColor)
+                }
+
                 if let transfer = model.incomingTransfer, transfer.phase == .receiving {
                     ReceivingRow(transfer: transfer) { model.showPrompt(for: transfer.entryId) }
                         .padding(12)
@@ -96,6 +102,7 @@ struct MenuBarView: View {
             await model.notifications.refreshAuthorization()
             model.loginItem.refresh()
             model.saveFolder.refresh()
+            model.shareMenu.refresh()
         }
     }
 
@@ -164,6 +171,23 @@ struct MenuBarView: View {
             }
             Spacer(minLength: 0)
             Button("Turn On") { NSWorkspace.shared.open(NotificationController.settingsURL) }
+                .glassButton()
+        }
+    }
+
+    /// Until the user turns it on: macOS doesn't let an app add itself to Share menus.
+    private var shareMenuOffRow: some View {
+        HStack(alignment: .top, spacing: 10) {
+            IconBadge(symbol: "square.and.arrow.up", tint: .accentColor, size: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Add LocalDrop to Share")
+                Text("Send to your phone from Finder, Photos and other apps.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Button("Turn On") { NSWorkspace.shared.open(ShareMenu.settingsURL) }
                 .glassButton()
         }
     }

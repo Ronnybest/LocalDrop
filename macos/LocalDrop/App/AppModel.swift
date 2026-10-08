@@ -138,6 +138,8 @@ final class AppModel {
             store.onChange = { [weak self] in self?.publishSharePhones() }
             publishSharePhones()
             listenForShares()
+            // The first check is the slow one (~90 ms); not when the menu opens.
+            shareMenu.refresh()
         } catch {
             // Without a store nothing can be trusted or paired; sessions still authenticate.
             Log.app.fault("Trusted devices store unavailable: \(String(describing: error), privacy: .public)")

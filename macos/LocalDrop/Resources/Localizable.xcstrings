@@ -1674,6 +1674,26 @@
           }
         }
       }
+    },
+    "Add LocalDrop to Share": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте LocalDrop в «Поделиться»"
+          }
+        }
+      }
+    },
+    "Send to your phone from Finder, Photos and other apps.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправляйте на телефон из Finder, «Фото» и других приложений."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
