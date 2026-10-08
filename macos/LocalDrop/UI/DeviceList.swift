@@ -170,13 +170,38 @@ private struct DeliveryActions: View {
 }
 
 extension View {
-    /// Files dropped on a phone's row are sent to it.
+    /// Files dropped anywhere on a phone's row are sent to it; the row lights up while files hover over it.
     func sendsDroppedFiles(to item: DeviceListItem, using drop: @escaping ([URL], String) -> Void) -> some View {
-        dropDestination(for: URL.self) { urls, _ in
-            guard item.canReceive, !urls.isEmpty else { return false }
-            drop(urls, item.id)
-            return true
-        } isTargeted: { _ in }
+        modifier(DropToSend(item: item, drop: drop))
+    }
+}
+
+private struct DropToSend: ViewModifier {
+    let item: DeviceListItem
+    let drop: ([URL], String) -> Void
+    @State private var isTargeted = false
+
+    func body(content: Content) -> some View {
+        content
+            // Spacers are transparent to drops without a shape.
+            .contentShape(Rectangle())
+            .background {
+                if isTargeted {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.accentColor.opacity(0.15))
+                        .strokeBorder(Color.accentColor, lineWidth: 2)
+                        .padding(-4)
+                }
+            }
+            .animation(.easeOut(duration: 0.15), value: isTargeted)
+            .dropDestination(for: URL.self) { urls, _ in
+                let files = urls.filter(\.isFileURL)
+                guard item.canReceive, !files.isEmpty else { return false }
+                drop(files, item.id)
+                return true
+            } isTargeted: { targeted in
+                isTargeted = targeted && item.canReceive
+            }
     }
 }
 
