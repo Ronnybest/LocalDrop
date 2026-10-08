@@ -22,7 +22,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 
 ## Features
 
-- **And back.** Send files from the Mac to your phone with ✈ next to it in the menu, or drop them on it. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much.
+- **And back.** Send files from the Mac to your phone with **Share › LocalDrop** in Finder, Photos and other apps, with ✈ next to it in the menu, or drop them on it. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much.
 - **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **LocalDrop** target sends to your default Mac in one tap.
 - **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
 - **Knows when your Mac is around.** The Mac advertises a private Bluetooth token that only your phones can recognize. The app shows **Nearby · ready**, **busy**, **on another network** or **not nearby**; strangers don't see the Mac at all.
@@ -78,6 +78,7 @@ Over a router every packet crosses the air twice; the phone's hotspot is a direc
 - **Mac → phone needs one Android approval.** To receive in the background, Android asks once to let LocalDrop connect to the Mac (Companion Device Manager). With the screen off, the phone notices a Mac with files within about a minute; with the screen on, within seconds.
 - **No automatic clipboard sync.** Android 10+ lets only the app on screen read the clipboard, so copied text goes to the Mac with the Quick Settings tile or **Send to Mac** in the selection menu. Apps with their own selection menu, such as Telegram, don't show **Send to Mac**.
 - **Waiting is limited to an hour in the background.** Android doesn't let a background app restart a foreground service, so after an hour a waiting transfer is kept for 7 days and sent when you tap **Try again** or open LocalDrop.
+- **Share › LocalDrop has to be turned on once.** macOS lets only the user enable a share extension. Until it's on, the Mac's menu offers a shortcut to the switch in System Settings.
 - **Some guest and public networks** block connections between devices. Use the phone's hotspot there.
 
 ## Building from source
