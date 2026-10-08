@@ -771,6 +771,9 @@ extension AppModel: SessionCoordinator {
         let wasReceiving = transfer.phase == .receiving
         // Phase changes below make the Mac available again.
         defer { presenceChanged() }
+        if case .completed(let urls) = outcome, ReceivedClipboard.isEnabled {
+            ReceivedClipboard.copy(urls)
+        }
 
         if notifications.isAuthorized {
             transferPanel.close()
@@ -805,7 +808,7 @@ extension AppModel: SessionCoordinator {
         switch outcome {
         case .completed(let urls):
             transfer.phase = .completed(urls)
-            notifications.postReceived(urls: urls, peerName: transfer.peerName, size: size)
+            notifications.postReceived(urls: urls, peerName: transfer.peerName, size: size, copied: ReceivedClipboard.isEnabled)
         case .declined, .cancelled, .timedOut, .unattended:
             transfer.phase = .cancelled(String(localized: "Cancelled"))
         case .cancelledByPeer:

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,8 +83,14 @@ class ShareTargetActivity : ComponentActivity() {
             return
         }
         Log.i(TAG, "Sending ${shared.uris.size} item(s)${if (shared.text != null) " + text" else ""} to ${device.deviceId}")
-        TransferService.sendShared(this, device.deviceId, shared.uris, shared.text)
-        ShortcutManagerCompat.reportShortcutUsed(this, device.deviceId)
+        try {
+            TransferService.sendShared(this, device.deviceId, shared.uris, shared.text)
+            ShortcutManagerCompat.reportShortcutUsed(this, device.deviceId)
+        } catch (e: SecurityException) {
+            // The sharing app gave this activity no access it may pass on to the transfer service.
+            Log.w(TAG, "Shared items not accessible: ${e.message}")
+            Toast.makeText(this, R.string.share_not_accessible, Toast.LENGTH_LONG).show()
+        }
         finish()
     }
 

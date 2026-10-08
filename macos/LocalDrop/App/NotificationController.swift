@@ -68,10 +68,13 @@ final class NotificationController: NSObject {
         }
     }
 
-    func postReceived(urls: [URL], peerName: String, size: String) {
+    /// - Parameter copied: the files are also on the clipboard (ReceivedClipboard).
+    func postReceived(urls: [URL], peerName: String, size: String, copied: Bool) {
         let content = UNMutableNotificationContent()
         content.title = urls.count == 1 ? String(localized: "\(urls[0].lastPathComponent) received") : String(localized: "\(urls.count) files received")
-        content.body = String(localized: "From \(peerName) · \(size) · integrity verified")
+        content.body = copied
+            ? String(localized: "From \(peerName) · \(size) · copied, paste with ⌘V")
+            : String(localized: "From \(peerName) · \(size) · integrity verified")
         content.categoryIdentifier = Identifier.receivedCategory
         content.userInfo = [Identifier.pathsKey: urls.map(\.path)]
         post(id: UUID().uuidString, content: content)

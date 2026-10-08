@@ -39,6 +39,7 @@ private extension View {
 private struct GeneralSettings: View {
     let model: AppModel
     @AppStorage(DropZoneController.enabledKey) private var showsDropZone = true
+    @AppStorage(ReceivedClipboard.enabledKey) private var copiesReceived = true
 
     var body: some View {
         Form {
@@ -67,6 +68,7 @@ private struct GeneralSettings: View {
 
             Section("Receiving") {
                 SaveFolderRow(folder: model.saveFolder)
+                Toggle("Copy received files to the clipboard", isOn: $copiesReceived)
                 LabeledContent("Notifications") {
                     if model.notifications.isAuthorized {
                         Text("On")

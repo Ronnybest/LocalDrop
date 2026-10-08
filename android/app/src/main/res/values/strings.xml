@@ -71,6 +71,7 @@
     <string name="trusted_forget_body">You\'ll need to pair again before sending files to this device.</string>
 
     <string name="share_pick_title">Send to</string>
+    <string name="share_not_accessible">The app you shared from didn\'t allow access to these files. Share them from Files or Gallery.</string>
     <string name="share_no_devices_title">Add your Mac first</string>
     <string name="share_no_devices_body">Pair your Mac once in LocalDrop. After that it appears right here when you share.</string>
     <string name="action_add_mac">Add a Mac</string>

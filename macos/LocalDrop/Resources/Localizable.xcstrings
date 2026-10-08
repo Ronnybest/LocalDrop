@@ -1794,6 +1794,26 @@
           }
         }
       }
+    },
+    "From %@ · %@ · copied, paste with ⌘V": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "От %1$@ · %2$@ · скопировано, вставьте ⌘V"
+          }
+        }
+      }
+    },
+    "Copy received files to the clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копировать принятые файлы в буфер обмена"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -72,6 +72,7 @@
     <string name="trusted_forget_title">Забыть %1$s?</string>
     <string name="trusted_forget_body">Чтобы снова отправлять файлы на это устройство, его нужно будет привязать заново.</string>
 
+    <string name="share_not_accessible">Приложение, из которого вы делитесь, не дало доступ к этим файлам. Поделитесь ими из «Файлов» или «Галереи».</string>
     <string name="share_pick_title">Отправить на</string>
     <string name="share_no_devices_title">Сначала добавьте Mac</string>
     <string name="share_no_devices_body">Привяжите Mac в LocalDrop один раз. После этого он будет появляться прямо здесь, когда вы делитесь файлами.</string>
