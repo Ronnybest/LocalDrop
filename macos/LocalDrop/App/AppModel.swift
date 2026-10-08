@@ -66,6 +66,7 @@ final class AppModel {
     /// Which Settings tab to show; the menu opens Devices directly.
     var settingsTab: SettingsTab = .general
     let saveFolder = SaveFolder()
+    let shareMenu = ShareMenu()
     let loginItem = LoginItem()
 
     private static let maxActiveSessions = 4

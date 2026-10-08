@@ -79,6 +79,25 @@ private struct GeneralSettings: View {
                 }
             }
 
+            Section {
+                LabeledContent("Share menu") {
+                    if model.shareMenu.isEnabled {
+                        Text("Share menu on")
+                    } else {
+                        HStack {
+                            Text("Share menu off")
+                                .foregroundStyle(.secondary)
+                            Button("Turn On…") { NSWorkspace.shared.open(ShareMenu.settingsURL) }
+                        }
+                    }
+                }
+            } header: {
+                Text("Sending")
+            } footer: {
+                Text("Send files from Finder, Photos and other apps with Share › LocalDrop. Turn on LocalDrop in the list that opens.")
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Startup") {
                 Toggle("Open at Login", isOn: Binding(
                     get: { model.loginItem.isEnabled },
@@ -95,6 +114,11 @@ private struct GeneralSettings: View {
             await model.notifications.refreshAuthorization()
             model.loginItem.refresh()
             model.saveFolder.refresh()
+            model.shareMenu.refresh()
+        }
+        // Back from System Settings with the switch turned on.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.shareMenu.refresh()
         }
     }
 }

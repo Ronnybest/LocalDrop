@@ -1612,6 +1612,68 @@
           }
         }
       }
+    },
+    "Share menu": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Меню «Поделиться»"
+          }
+        }
+      }
+    },
+    "Sending": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправка"
+          }
+        }
+      }
+    },
+    "Send files from Finder, Photos and other apps with Share › LocalDrop. Turn on LocalDrop in the list that opens.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › LocalDrop. В открывшемся списке включите LocalDrop."
+          }
+        }
+      }
+    },
+    "Share menu on": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включено"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
+    "Share menu off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключено"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
