@@ -125,7 +125,8 @@ final class DropZoneController {
             context.duration = 0.15
             panel.animator().alphaValue = 0
         } completionHandler: {
-            panel.orderOut(nil)
+            // AppKit runs animation completions on the main thread.
+            MainActor.assumeIsolated { panel.orderOut(nil) }
         }
     }
 }

@@ -176,6 +176,11 @@ final class TCPListener {
         bonjour = ref
     }
 
+    /// A NUL-terminated C string buffer as a String.
+    private static func string(_ buffer: [CChar]) -> String {
+        String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+    }
+
     /// `a.b.c.d:port` for IPv4 (also when it arrives as an IPv4-mapped IPv6 address).
     private static func describe(_ storage: sockaddr_storage) -> String {
         var storage = storage
@@ -188,9 +193,9 @@ final class TCPListener {
             }
         }
         guard result == 0 else { return "unknown" }
-        var address = String(cString: host)
+        var address = Self.string(host)
         if address.hasPrefix("::ffff:") { address.removeFirst(7) }
-        let port = String(cString: service)
+        let port = Self.string(service)
         return address.contains(":") ? "[\(address)]:\(port)" : "\(address):\(port)"
     }
 
