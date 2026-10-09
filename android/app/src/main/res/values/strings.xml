@@ -219,13 +219,17 @@
     <string name="history_text">Text</string>
     <string name="history_copied">Copied</string>
     <string name="history_file_gone">The file is no longer in Downloads</string>
-    <string name="history_line" translatable="false">%1$s · %2$s</string>
     <string name="tile_hint_title">Clipboard in Quick Settings</string>
     <string name="tile_hint_body">One tap sends what you copied to the Mac.</string>
     <string name="action_add">Add</string>
     <string name="card_sending">Sending</string>
     <string name="card_receiving">Receiving</string>
     <string name="sheet_main_mac">Main Mac</string>
-    <string name="sheet_device_key">Device key</string>
     <string name="time_just_now">just now</string>
+    <string name="sheet_verification_code">Verification code</string>
+    <string name="sheet_verification_hint">The Mac shows the same code: LocalDrop › Settings › Devices, the shield next to this phone. If it differs, forget the Mac and pair again.</string>
+    <string name="history_received">Received</string>
+    <string name="history_sent">Sent</string>
+    <string name="history_empty">Nothing in the last 30 days</string>
+    <string name="action_show_all">Show all</string>
 </resources>

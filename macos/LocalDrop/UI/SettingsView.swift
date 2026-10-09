@@ -52,17 +52,10 @@ private struct GeneralSettings: View {
                 if let slow = model.slowWiFiStatus {
                     StatusRow(status: slow)
                 }
-                if let fingerprint = model.fingerprint {
-                    LabeledContent("Device key") {
-                        Text(fingerprint.fingerprintDisplay)
-                            .font(.callout.monospaced())
-                            .textSelection(.enabled)
-                    }
-                }
             } header: {
                 Text("This Mac")
             } footer: {
-                Text("The name is this Mac's computer name; change it in System Settings › General › Sharing. Phones show the device key when pairing.")
+                Text("The name is this Mac's computer name; change it in System Settings › General › Sharing.")
                     .foregroundStyle(.secondary)
             }
 

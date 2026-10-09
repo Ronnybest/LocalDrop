@@ -229,6 +229,11 @@
     <string name="card_sending">Отправка</string>
     <string name="card_receiving">Приём</string>
     <string name="sheet_main_mac">Основной Mac</string>
-    <string name="sheet_device_key">Ключ устройства</string>
     <string name="time_just_now">только что</string>
+    <string name="sheet_verification_code">Код проверки</string>
+    <string name="sheet_verification_hint">Такой же код показывает Mac: LocalDrop › Настройки › Устройства, щит рядом с этим телефоном. Если код другой — забудьте Mac и привяжите заново.</string>
+    <string name="history_received">Получено</string>
+    <string name="history_sent">Отправлено</string>
+    <string name="history_empty">За 30 дней ничего не было</string>
+    <string name="action_show_all">Показать все</string>
 </resources>

@@ -15,6 +15,8 @@ final class AppModel {
 
     private(set) var localDevice: LocalDevice
     private(set) var fingerprint: Data?
+    /// This Mac's identity key, for the pair verification code shown with each device.
+    private(set) var identityPublicKey: Data?
     private(set) var startupState: StartupState = .loadingIdentity
     private(set) var lanAddresses: [String] = []
     /// Shown as a hint: on 2.4 GHz, transfers crawl at a few MB/s.
@@ -621,6 +623,7 @@ final class AppModel {
             self.identity = identity
             self.presenceKey = presenceKey
             fingerprint = identity.fingerprint
+            identityPublicKey = identity.publicKeyX963
             startupState = .running
             Log.crypto.info("Identity fingerprint \(identity.fingerprint.fingerprintLogPrefix, privacy: .public)…")
         case .failure(let error):

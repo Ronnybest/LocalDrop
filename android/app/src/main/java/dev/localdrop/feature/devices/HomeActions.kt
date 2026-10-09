@@ -27,17 +27,20 @@ internal object SendFromHome {
      * Copied files go as files, otherwise the text: the same as the Quick Settings tile. The app
      * is in front, so it may read the clipboard. Nothing copied is logged.
      */
-    fun clipboard(context: Context, deviceId: String) {
+    enum class Clipboard { EMPTY, TEXT, FILES }
+
+    fun clipboard(context: Context, deviceId: String): Clipboard {
         val clip = context.getSystemService(ClipboardManager::class.java).primaryClip
         val items = clip?.let { List(it.itemCount, it::getItemAt) }.orEmpty()
         val uris = items.mapNotNull { it.uri }
         val text = items.mapNotNull { it.text?.toString() }.joinToString("\n").takeIf { it.isNotBlank() }
         if (uris.isEmpty() && text == null) {
             Toast.makeText(context, R.string.clipboard_empty, Toast.LENGTH_SHORT).show()
-            return
+            return Clipboard.EMPTY
         }
         Log.i(TAG, if (uris.isNotEmpty()) "Sending ${uris.size} copied item(s)" else "Sending copied text")
         TransferService.sendShared(context, deviceId, uris, text.takeIf { uris.isEmpty() })
+        return if (uris.isEmpty()) Clipboard.TEXT else Clipboard.FILES
     }
 
     private const val TAG = "LD/home"

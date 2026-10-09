@@ -67,6 +67,13 @@ struct ProtocolVectorsTests {
         #expect(digest.fingerprintDisplay == (try text("fingerprint.display")))
     }
 
+    @Test func pairVerificationCode() throws {
+        let keyA = try bytes("verify.keyA")
+        let keyB = try bytes("verify.keyB")
+        #expect(PairVerification.code(keyA, keyB) == (try text("verify.code")))
+        #expect(PairVerification.code(keyB, keyA) == (try text("verify.code")))
+    }
+
     @Test func presenceTokenAndName() throws {
         let key = PresenceKey(raw: try bytes("presence.key"))
         let slot = try #require(UInt64(try text("presence.slot")))

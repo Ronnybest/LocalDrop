@@ -90,3 +90,24 @@ fun ByteArray.fingerprintDisplay(): String =
 
 /** Short prefix safe for logs. */
 fun ByteArray.fingerprintLogPrefix(): String = take(4).joinToString("") { "%02x".format(it) }
+
+/**
+ * The code both devices of a pair show, for the user to compare at any time after pairing
+ * (security.md §2): from both identity keys in a fixed order, 12 digits in groups of 4. Unlike
+ * the SAS, it stays the same until either key changes.
+ */
+fun pairVerificationCode(publicKeyA: ByteArray, publicKeyB: ByteArray): String {
+    val (low, high) = if (compareUnsigned(publicKeyA, publicKeyB) <= 0) publicKeyA to publicKeyB else publicKeyB to publicKeyA
+    val hash = sha256("localdrop/v1/verify".toByteArray(Charsets.US_ASCII), low, high)
+    val value = hash.take(8).fold(0L) { acc, byte -> (acc shl 8) or (byte.toLong() and 0xFF) }
+    val code = java.lang.Long.remainderUnsigned(value, 1_000_000_000_000L)
+    return "%012d".format(code).chunked(4).joinToString(" ")
+}
+
+private fun compareUnsigned(a: ByteArray, b: ByteArray): Int {
+    for (i in 0 until minOf(a.size, b.size)) {
+        val diff = (a[i].toInt() and 0xFF) - (b[i].toInt() and 0xFF)
+        if (diff != 0) return diff
+    }
+    return a.size - b.size
+}

@@ -40,6 +40,9 @@ class AppContainer(context: Context) {
     /** Loaded on first use, from a background thread (Keystore I/O). Retried if it failed. */
     private val identityKey: IdentityKey by lazy { KeystoreIdentityKey.loadOrCreate() }
 
+    /** This phone's identity key, for the pair verification code. Keystore I/O: call off the main thread. */
+    fun identityPublicKey(): ByteArray = identityKey.publicKeyX963
+
     /** In noBackupFilesDir: trust relationships must never be restored onto another device. */
     val trustedDeviceStore = TrustedDeviceStore(File(appContext.noBackupFilesDir, "trusted-devices.cbor"))
 

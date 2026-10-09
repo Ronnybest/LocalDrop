@@ -142,6 +142,22 @@ nonisolated struct KeychainBlob: Sendable {
     }
 }
 
+/// The code both devices of a pair show, for the user to compare at any time after pairing
+/// (security.md §2): from both identity keys in a fixed order, 12 digits in groups of 4. Unlike
+/// the SAS, it stays the same until either key changes.
+nonisolated enum PairVerification {
+    static func code(_ publicKeyA: Data, _ publicKeyB: Data) -> String {
+        let (low, high) = publicKeyA.lexicographicallyPrecedes(publicKeyB) ? (publicKeyA, publicKeyB) : (publicKeyB, publicKeyA)
+        let hash = Data(SHA256.hash(data: Data("localdrop/v1/verify".utf8) + low + high))
+        let value = hash.prefix(8).reduce(UInt64(0)) { ($0 << 8) | UInt64($1) }
+        let digits = String(format: "%012llu", value % 1_000_000_000_000)
+        return stride(from: 0, to: 12, by: 4).map { offset in
+            let start = digits.index(digits.startIndex, offsetBy: offset)
+            return String(digits[start..<digits.index(start, offsetBy: 4)])
+        }.joined(separator: " ")
+    }
+}
+
 extension Data {
     /// Human-readable fingerprint: first 16 bytes as uppercase hex in groups of 4.
     nonisolated var fingerprintDisplay: String {

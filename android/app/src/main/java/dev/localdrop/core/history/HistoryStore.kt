@@ -12,12 +12,14 @@ import dev.localdrop.core.protocol.uint
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /** One finished transfer, for the home screen's "Recent" list. */
 class HistoryEntry(
+    val id: String,
     val timeMs: Long,
     /** True for what came from the Mac, false for what this phone sent. */
     val incoming: Boolean,
@@ -34,9 +36,9 @@ class HistoryEntry(
 }
 
 /**
- * The last [MAX_ENTRIES] transfers, newest first, on this phone only: never synced, never backed
- * up (noBackupFilesDir). Received texts keep only their first characters, links in full so they
- * can be opened again.
+ * Transfers of the last [MAX_AGE_MS] (30 days), newest first, on this phone only: never synced,
+ * never backed up (noBackupFilesDir). Received texts keep only their first characters, links in
+ * full so they can be opened again. The user can delete any entry.
  */
 class HistoryStore(private val file: File, private val clock: () -> Long = System::currentTimeMillis) {
 
@@ -49,7 +51,7 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
         if (loaded) return
         loaded = true
         _entries.value = try {
-            decode(AtomicFile(file).readFully())
+            fresh(decode(AtomicFile(file).readFully()))
         } catch (e: FileNotFoundException) {
             emptyList()
         } catch (e: IOException) {
@@ -73,8 +75,23 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
     ) {
         load()
         val stored = if (kind == HistoryEntry.Kind.TEXT) title.trim().take(TEXT_PREVIEW) else title
-        val entry = HistoryEntry(clock(), incoming, peerName, kind, stored, count, uri, mimeType)
-        val entries = (listOf(entry) + _entries.value).take(MAX_ENTRIES)
+        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType)
+        save(fresh(listOf(entry) + _entries.value))
+    }
+
+    @Synchronized
+    fun remove(id: String) {
+        load()
+        save(_entries.value.filterNot { it.id == id })
+    }
+
+    /** Within [MAX_AGE_MS], and at most [MAX_ENTRIES] so the file stays small. */
+    private fun fresh(entries: List<HistoryEntry>): List<HistoryEntry> {
+        val oldest = clock() - MAX_AGE_MS
+        return entries.filter { it.timeMs >= oldest }.take(MAX_ENTRIES)
+    }
+
+    private fun save(entries: List<HistoryEntry>) {
         try {
             val atomic = AtomicFile(file)
             val out = atomic.startWrite()
@@ -93,7 +110,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
 
     internal companion object {
         private const val TAG = "LD/history"
-        const val MAX_ENTRIES = 30
+        const val MAX_AGE_MS = 30L * 24 * 60 * 60 * 1000
+        const val MAX_ENTRIES = 500
         private const val TEXT_PREVIEW = 120
         private const val FORMAT_VERSION = 1L
 
@@ -105,6 +123,7 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                         entries.map { entry ->
                             CborValue.Map(
                                 buildMap {
+                                    put("id", CborValue.Text(entry.id))
                                     put("time", CborValue.UInt(entry.timeMs))
                                     put("incoming", CborValue.Bool(entry.incoming))
                                     put("peer", CborValue.Text(entry.peerName))
@@ -128,6 +147,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                 val entry = value as? CborValue.Map ?: throw CborException("entry is not a map")
                 val kind = HistoryEntry.Kind.entries.firstOrNull { it.name == entry.text("kind") } ?: return@mapNotNull null
                 HistoryEntry(
+                    // Entries saved before ids existed get one now.
+                    id = (entry.entries["id"] as? CborValue.Text)?.value ?: UUID.randomUUID().toString(),
                     timeMs = entry.uint("time"),
                     incoming = entry.bool("incoming"),
                     peerName = entry.text("peer"),

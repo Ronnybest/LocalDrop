@@ -10,6 +10,18 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import dev.localdrop.feature.history.HistoryItem
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,6 +87,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
+import dev.localdrop.core.crypto.pairVerificationCode
 import dev.localdrop.core.device.TrustedDevice
 import dev.localdrop.core.device.TrustedDeviceStore
 import dev.localdrop.core.device.defaultDevice
@@ -90,7 +103,9 @@ import dev.localdrop.core.wake.CompanionLink
 import dev.localdrop.feature.clipboard.ClipboardTileService
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -100,7 +115,8 @@ class HomeViewModel(
     private val store: TrustedDeviceStore,
     presenceMonitor: PresenceMonitor,
     outgoingStore: OutgoingStore,
-    historyStore: HistoryStore,
+    private val historyStore: HistoryStore,
+    identityPublicKey: () -> ByteArray,
 ) : ViewModel() {
     val devices: StateFlow<List<TrustedDevice>> = store.devices
 
@@ -115,12 +131,31 @@ class HomeViewModel(
 
     val history: StateFlow<List<HistoryEntry>> = historyStore.entries
 
+    private val ownKey = MutableStateFlow<ByteArray?>(null)
+
+    /** Per Mac, the code both devices show for checking each other (security.md §2). */
+    val verificationCodes: StateFlow<Map<String, String>> = combine(store.devices, ownKey) { devices, mine ->
+        if (mine == null) emptyMap() else devices.associate { it.deviceId to pairVerificationCode(mine, it.publicKey) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     init {
-        viewModelScope.launch(Dispatchers.IO) { historyStore.load() }
+        viewModelScope.launch(Dispatchers.IO) {
+            historyStore.load()
+            ownKey.value = try {
+                identityPublicKey()
+            } catch (e: Exception) {
+                Log.e("LD/trust", "Identity key unavailable for verification codes", e)
+                null
+            }
+        }
     }
 
     fun setReceiveAutomatically(deviceId: String, enabled: Boolean) = save("receive setting") {
         store.setReceiveAutomatically(deviceId, enabled)
+    }
+
+    fun removeHistory(entry: HistoryEntry) {
+        viewModelScope.launch(Dispatchers.IO) { historyStore.remove(entry.id) }
     }
 
     fun makeDefault(deviceId: String) = save("default Mac") { store.setDefault(deviceId) }
@@ -141,7 +176,13 @@ class HomeViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val container = (this[APPLICATION_KEY] as LocalDropApplication).container
-                HomeViewModel(container.trustedDeviceStore, container.presenceMonitor, container.outgoingStore, container.historyStore)
+                HomeViewModel(
+                    container.trustedDeviceStore,
+                    container.presenceMonitor,
+                    container.outgoingStore,
+                    container.historyStore,
+                    container::identityPublicKey,
+                )
             }
         }
     }
@@ -152,6 +193,60 @@ private const val LINK_PREFS = "companion_link"
 private const val KEY_LATER = "later"
 private const val KEY_TILE_ADDED = "added"
 private const val RECENT_COUNT = 5
+private const val REVEAL_DELAY_MS = 500L
+private const val SPINNER_DELAY_MS = 500L
+private const val CLIPBOARD_DONE_MS = 1_600L
+private const val CLIPBOARD_SETTLE_MS = 400L
+private const val CLIPBOARD_TIMEOUT_MS = 30_000L
+
+private class ClipboardSend(val deviceId: String, val startedMs: Long) {
+    /** The session started; when it ends without a history entry, the send didn't go now. */
+    var sawSession = false
+}
+
+private enum class ClipboardState { IDLE, SENDING, DONE }
+
+/** "Clipboard", a spinner while it goes (after half a second), then a check. */
+@Composable
+private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, modifier: Modifier) {
+    var spinner by remember { mutableStateOf(false) }
+    LaunchedEffect(state) {
+        spinner = false
+        if (state == ClipboardState.SENDING) {
+            delay(SPINNER_DELAY_MS)
+            spinner = true
+        }
+    }
+    val shown = if (state == ClipboardState.SENDING && !spinner) ClipboardState.IDLE else state
+    // Stays enabled-looking while busy: a greyed button would flash too.
+    FilledTonalButton(
+        onClick = { if (state == ClipboardState.IDLE) onClick() },
+        modifier = modifier,
+        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+    ) {
+        AnimatedContent(
+            targetState = shown,
+            transitionSpec = { (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.85f)) togetherWith fadeOut(tween(120)) },
+            label = "clipboard",
+        ) { current ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                when (current) {
+                    ClipboardState.IDLE -> {
+                        Icon(painterResource(R.drawable.ic_tile_clipboard), null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.action_send_clipboard))
+                    }
+                    ClipboardState.SENDING -> CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
+                    ClipboardState.DONE -> {
+                        Icon(Icons.Default.Check, null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.history_sent))
+                    }
+                }
+            }
+        }
+    }
+}
 
 /**
  * Built around the main Mac: its card says how it is and what is going on (a transfer with its
@@ -167,12 +262,14 @@ fun HomeScreen(
     onDeclineIncoming: () -> Unit,
     onAddMac: () -> Unit,
     onOpenDiagnostics: () -> Unit,
+    onOpenHistory: () -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val presence by viewModel.presence.collectAsStateWithLifecycle()
     val waiting by viewModel.waiting.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
+    val verificationCodes by viewModel.verificationCodes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var sheetFor by remember { mutableStateOf<String?>(null) }
     var pendingForget by remember { mutableStateOf<TrustedDevice?>(null) }
@@ -201,12 +298,56 @@ fun HomeScreen(
         filesTarget = deviceId
         pickFiles.launch(arrayOf("*/*"))
     }
-    val onClipboard = { deviceId: String -> SendFromHome.clipboard(context, deviceId) }
+    // Text from the clipboard goes in a moment: the button shows it (a spinner if it takes longer
+    // than half a second, then a check) instead of the card flashing a transfer.
+    var clipboardSend by remember { mutableStateOf<ClipboardSend?>(null) }
+    var clipboardDone by remember { mutableStateOf<String?>(null) }
+    val onClipboard = { deviceId: String ->
+        if (SendFromHome.clipboard(context, deviceId) == SendFromHome.Clipboard.TEXT) {
+            clipboardSend = ClipboardSend(deviceId, System.currentTimeMillis())
+        }
+    }
 
     // A session under way belongs to the Mac it is with; pairing has its own screen.
     val active = transfer.takeIf { it !is TransferState.Idle && !it.isFinal() && it !is TransferState.Pairing }
     val main = devices.defaultDevice() ?: devices.maxByOrNull { it.lastSeenMs }
     val activeDeviceId = active?.let { state -> devices.firstOrNull { it.deviceName == state.peerName() }?.deviceId ?: main?.deviceId }
+
+    clipboardSend?.let { send ->
+        // Done once the send is in the history; over without it (failed, or queued for later),
+        // the button goes back and the card or the notification says why.
+        LaunchedEffect(send, history) {
+            if (history.any { !it.incoming && it.timeMs >= send.startedMs }) {
+                clipboardSend = null
+                clipboardDone = send.deviceId
+            }
+        }
+        LaunchedEffect(send, active == null) {
+            if (active != null) {
+                send.sawSession = true
+            } else if (send.sawSession) {
+                delay(CLIPBOARD_SETTLE_MS)
+                if (clipboardSend === send) clipboardSend = null
+            }
+        }
+        LaunchedEffect(send) {
+            delay(CLIPBOARD_TIMEOUT_MS)
+            if (clipboardSend === send) clipboardSend = null
+        }
+    }
+    LaunchedEffect(clipboardDone) {
+        if (clipboardDone != null) {
+            delay(CLIPBOARD_DONE_MS)
+            clipboardDone = null
+        }
+    }
+    fun clipboardState(deviceId: String) = when {
+        clipboardDone == deviceId -> ClipboardState.DONE
+        clipboardSend?.deviceId == deviceId -> ClipboardState.SENDING
+        else -> ClipboardState.IDLE
+    }
+    // The clipboard's own session shows on its button only.
+    fun transferFor(deviceId: String) = active.takeIf { activeDeviceId == deviceId && clipboardSend?.deviceId != deviceId }
 
     Scaffold(
         topBar = {
@@ -235,7 +376,8 @@ fun HomeScreen(
                     device = main,
                     presence = presence[main.deviceId],
                     waiting = waiting[main.deviceId] ?: 0,
-                    transfer = active.takeIf { activeDeviceId == main.deviceId },
+                    transfer = transferFor(main.deviceId),
+                    clipboard = clipboardState(main.deviceId),
                     onFiles = { onFiles(main.deviceId) },
                     onClipboard = { onClipboard(main.deviceId) },
                     onMore = { sheetFor = main.deviceId },
@@ -250,21 +392,16 @@ fun HomeScreen(
                     onLink = ::requestLink,
                 )
             }
-            if (history.isNotEmpty()) {
-                item(key = "recent") { SectionTitle(stringResource(R.string.home_recent)) }
-                items(history.take(RECENT_COUNT), key = { "h${it.timeMs}${it.title}" }) { entry ->
-                    HistoryRow(entry) { HistoryActions.open(context, entry) }
-                }
-            }
             item(key = "others") { SectionTitle(stringResource(R.string.home_other_macs)) }
             items(others, key = { it.deviceId }) { device ->
-                val ongoing = active.takeIf { activeDeviceId == device.deviceId }
+                val ongoing = transferFor(device.deviceId)
                 if (ongoing != null) {
                     MacCard(
                         device = device,
                         presence = presence[device.deviceId],
                         waiting = waiting[device.deviceId] ?: 0,
                         transfer = ongoing,
+                        clipboard = clipboardState(device.deviceId),
                         onFiles = { onFiles(device.deviceId) },
                         onClipboard = { onClipboard(device.deviceId) },
                         onMore = { sheetFor = device.deviceId },
@@ -284,6 +421,19 @@ fun HomeScreen(
                     modifier = Modifier.clip28().clickable(onClick = onAddMac),
                 )
             }
+            if (history.isNotEmpty()) {
+                item(key = "recent") { SectionTitle(stringResource(R.string.home_recent)) }
+                items(history.take(RECENT_COUNT), key = { it.id }) { entry ->
+                    HistoryItem(entry, onOpen = { HistoryActions.open(context, entry) }, onDelete = { viewModel.removeHistory(entry) })
+                }
+                if (history.size > RECENT_COUNT) {
+                    item(key = "all") {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                            TextButton(onClick = onOpenHistory) { Text(stringResource(R.string.action_show_all)) }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -291,6 +441,7 @@ fun HomeScreen(
         MacSheet(
             device = device,
             canBeMain = devices.size > 1,
+            verificationCode = verificationCodes[device.deviceId],
             linked = linked,
             onDismiss = { sheetFor = null },
             onMakeMain = { viewModel.makeDefault(device.deviceId) },
@@ -354,6 +505,7 @@ private fun MacCard(
     presence: DevicePresence?,
     waiting: Int,
     transfer: TransferState?,
+    clipboard: ClipboardState,
     onFiles: () -> Unit,
     onClipboard: () -> Unit,
     onMore: () -> Unit,
@@ -365,7 +517,18 @@ private fun MacCard(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // What this phone starts shows only past half a second: quick sends don't flash the card.
+        // The Mac's request and its files show at once.
+        var revealed by remember { mutableStateOf(false) }
+        LaunchedEffect(transfer != null) {
+            revealed = false
+            if (transfer != null) {
+                delay(REVEAL_DELAY_MS)
+                revealed = true
+            }
+        }
+        val shown = transfer?.takeIf { revealed || it is TransferState.AwaitingLocalDecision || it is TransferState.Receiving }
+        Column(Modifier.animateContentSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 RoundIcon(size = 52, tint = MaterialTheme.colorScheme.primaryContainer) {
                     Icon(painterResource(R.drawable.ic_laptop), null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -375,14 +538,14 @@ private fun MacCard(
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(device.deviceName, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                when (transfer) {
+                when (shown) {
                     is TransferState.Receiving, is TransferState.AwaitingLocalDecision -> StatusPill(stringResource(R.string.card_receiving), highlighted = true)
                     null -> presence?.let { PresencePill(it) }
                     else -> StatusPill(stringResource(R.string.card_sending), highlighted = true)
                 }
             }
-            if (transfer != null) {
-                TransferInCard(transfer, onCancel, onAccept, onDecline)
+            if (shown != null) {
+                TransferInCard(shown, onCancel, onAccept, onDecline)
             } else {
                 if (waiting > 0) {
                     Text(
@@ -397,11 +560,7 @@ private fun MacCard(
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_send_files))
                     }
-                    FilledTonalButton(onClick = onClipboard, modifier = Modifier.weight(1f), contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
-                        Icon(painterResource(R.drawable.ic_tile_clipboard), null, Modifier.size(ButtonDefaults.IconSize))
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.action_send_clipboard))
-                    }
+                    ClipboardButton(clipboard, onClipboard, Modifier.weight(1f))
                 }
             }
         }
@@ -511,46 +670,6 @@ private fun SectionTitle(text: String) {
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 8.dp, top = 12.dp),
-    )
-}
-
-@Composable
-private fun HistoryRow(entry: HistoryEntry, onClick: () -> Unit) {
-    val title = when {
-        entry.kind == HistoryEntry.Kind.FILES && entry.count > 1 -> pluralStringResource(R.plurals.notification_files, entry.count, entry.count)
-        entry.kind == HistoryEntry.Kind.TEXT && entry.title.isBlank() -> stringResource(R.string.history_text)
-        else -> entry.title
-    }
-    val direction = stringResource(if (entry.incoming) R.string.notification_from else R.string.notification_towards, entry.peerName)
-    val time = relativeTime(entry.timeMs)
-    val image = entry.mimeType?.startsWith("image/") == true || entry.mimeType?.startsWith("video/") == true
-    val canOpen = entry.incoming || entry.kind != HistoryEntry.Kind.FILES
-    ListItem(
-        headlineContent = { Text(title, maxLines = 1, overflow = TextOverflow.MiddleEllipsis) },
-        supportingContent = { Text(stringResource(R.string.history_line, direction, time), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        leadingContent = {
-            RoundIcon(
-                size = 40,
-                shape = RoundedCornerShape(12.dp),
-                tint = if (image) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-            ) {
-                Icon(
-                    painterResource(
-                        when {
-                            entry.kind == HistoryEntry.Kind.LINK -> R.drawable.ic_link
-                            entry.kind == HistoryEntry.Kind.TEXT -> R.drawable.ic_text
-                            image -> R.drawable.ic_image
-                            else -> R.drawable.ic_file
-                        },
-                    ),
-                    null,
-                    Modifier.size(20.dp),
-                    tint = if (image) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.clip28().then(if (canOpen) Modifier.clickable(onClick = onClick) else Modifier),
     )
 }
 

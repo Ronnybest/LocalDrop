@@ -23,6 +23,8 @@ struct DeviceListItem: Identifiable {
     var pendingPromptEntryId: UUID?
     /// Files on their way to this device, if any.
     var delivery: OutgoingDelivery?
+    /// For comparing with the code the device shows (security.md §2); paired devices only.
+    var verificationCode: String?
     /// Folders for this device being packed.
     var packing: FolderPacking?
 
@@ -38,6 +40,9 @@ extension AppModel {
         rawDeviceList.map { item in
             var item = item
             item.delivery = delivery(for: item.id)
+            if let mine = identityPublicKey, let record = item.trustedDevice, item.isTrusted {
+                item.verificationCode = PairVerification.code(mine, record.publicKey)
+            }
             item.packing = packings.first { $0.deviceId == item.id }
             return item
         }
@@ -239,7 +244,7 @@ struct DeviceDetailRow: View {
     let setAcceptPolicy: (AcceptPolicy, String) -> Void
     var send: ((String) -> Void)?
     var cancelDelivery: ((UUID) -> Void)?
-    @State private var showsKey = false
+    @State private var showsCode = false
 
     var body: some View {
         let status = item.status
@@ -278,16 +283,16 @@ struct DeviceDetailRow: View {
                 .fixedSize()
                 .help("Which files from \(record.deviceName) are saved without asking. Text and links always go to the clipboard, unless set to decline.")
             }
-            if let fingerprint = item.fingerprint {
+            if let code = item.verificationCode {
                 Button {
-                    showsKey.toggle()
+                    showsCode.toggle()
                 } label: {
-                    Image(systemName: "info.circle")
+                    Image(systemName: "checkmark.shield")
                 }
                 .buttonStyle(.borderless)
-                .help("Device key")
-                .popover(isPresented: $showsKey, arrowEdge: .bottom) {
-                    KeyPopover(name: item.name, fingerprint: fingerprint)
+                .help("Verification code")
+                .popover(isPresented: $showsCode, arrowEdge: .bottom) {
+                    VerificationPopover(name: item.name, code: code)
                 }
             }
             if let record = item.trustedDevice {
@@ -305,19 +310,19 @@ struct DeviceDetailRow: View {
     }
 }
 
-/// The device key, for comparing with what the device itself shows.
-private struct KeyPopover: View {
+/// The pair's verification code, the same LocalDrop shows on that device.
+private struct VerificationPopover: View {
     let name: String
-    let fingerprint: Data
+    let code: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Device key of \(name)")
+            Text("Verification code")
                 .font(.headline)
-            Text(fingerprint.fingerprintDisplay)
-                .font(.body.monospaced())
+            Text(code)
+                .font(.title2.monospacedDigit())
                 .textSelection(.enabled)
-            Text("It matches the key shown in LocalDrop on that device. If it ever changes, LocalDrop asks to pair again instead of trusting it.")
+            Text("LocalDrop on \(name) shows the same code. If it ever differs, forget the device and pair again.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

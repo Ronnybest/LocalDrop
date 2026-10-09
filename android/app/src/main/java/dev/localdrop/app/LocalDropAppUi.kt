@@ -10,23 +10,26 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.localdrop.core.transfer.TransferState
 import dev.localdrop.feature.devices.AddDeviceScreen
 import dev.localdrop.feature.devices.HomeScreen
+import dev.localdrop.feature.history.HistoryScreen
 import dev.localdrop.feature.settings.DiagnosticsScreen
 import dev.localdrop.feature.transfer.TransferScreen
 import dev.localdrop.feature.transfer.TransferViewModel
 
-private enum class Screen { Home, AddMac, Diagnostics }
+private enum class Screen { Home, AddMac, Diagnostics, History }
 
 /** Home with the Macs; Add Mac and Diagnostics on top of it. */
 @Composable
 fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = TransferViewModel.Factory)) {
     val transfer by transferViewModel.state.collectAsStateWithLifecycle()
     val testDataSize by transferViewModel.testDataSize.collectAsStateWithLifecycle()
+    val pairingSession by transferViewModel.pairingSession.collectAsStateWithLifecycle()
     var screen by rememberSaveable { mutableStateOf(Screen.Home) }
 
-    // Sending and receiving show on the home screen, in the Mac's card. Pairing, and a session
-    // started from Add Mac, take over the screen while they last.
+    // Sending and receiving show on the home screen, in the Mac's card, and go on behind other
+    // screens. Pairing — comparing the code, or a session started from Add Mac — takes over the
+    // screen while it lasts.
     val pairing = transfer is TransferState.Pairing || transfer is TransferState.Paired ||
-        (screen == Screen.AddMac && transfer !is TransferState.Idle)
+        (pairingSession && transfer !is TransferState.Idle)
     if (pairing) {
         TransferScreen(
             state = transfer,
@@ -50,7 +53,9 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
             onDeclineIncoming = transferViewModel::declineIncoming,
             onAddMac = { screen = Screen.AddMac },
             onOpenDiagnostics = { screen = Screen.Diagnostics },
+            onOpenHistory = { screen = Screen.History },
         )
+        Screen.History -> HistoryScreen(onBack = { screen = Screen.Home })
         Screen.AddMac -> AddDeviceScreen(onPair = transferViewModel::pair, onBack = { screen = Screen.Home })
         Screen.Diagnostics -> DiagnosticsScreen(
             testDataSize = testDataSize,

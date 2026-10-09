@@ -2,6 +2,7 @@ package dev.localdrop.feature.transfer
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -13,6 +14,7 @@ import dev.localdrop.core.transfer.TransferState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class TransferViewModel(application: Application, private val transferManager: TransferManager) : AndroidViewModel(application) {
 
@@ -28,8 +30,19 @@ class TransferViewModel(application: Application, private val transferManager: T
     /** Diagnostics transfers go through the same foreground service as shares. */
     fun sendTestData(deviceId: String) = TransferService.sendTestData(getApplication(), deviceId, _testDataSize.value)
 
+    private val _pairingSession = MutableStateFlow(false)
+
+    /** A session started from Add Mac: it has its own screen until it is over. */
+    val pairingSession: StateFlow<Boolean> = _pairingSession.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            transferManager.state.collect { if (it is TransferState.Idle) _pairingSession.value = false }
+        }
+    }
+
     fun pair(endpoint: EndpointInfo) {
-        transferManager.pair(endpoint)
+        if (transferManager.pair(endpoint)) _pairingSession.value = true
     }
 
     fun confirmPairing() = transferManager.confirmPairing()

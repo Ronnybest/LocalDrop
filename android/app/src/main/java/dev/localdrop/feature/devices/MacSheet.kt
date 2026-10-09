@@ -23,11 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import dev.localdrop.R
-import dev.localdrop.core.crypto.fingerprintDisplay
 import dev.localdrop.core.device.TrustedDevice
 
 /**
@@ -40,6 +38,8 @@ fun MacSheet(
     device: TrustedDevice,
     /** With one Mac it is the main one anyway. */
     canBeMain: Boolean,
+    /** Shown by LocalDrop on the Mac too; null until this phone's key is read. */
+    verificationCode: String?,
     linked: Boolean,
     onDismiss: () -> Unit,
     onMakeMain: () -> Unit,
@@ -75,12 +75,17 @@ fun MacSheet(
                 SwitchRow(stringResource(R.string.action_receive_automatically), device.receiveAutomatically, onChange = onReceiveAutomatically)
                 SwitchRow(stringResource(R.string.action_receive_in_background), linked, onChange = onReceiveInBackground)
             }
-            ListItem(
-                overlineContent = { Text(stringResource(R.string.sheet_device_key)) },
-                headlineContent = { Text(device.fingerprint.fingerprintDisplay(), fontFamily = FontFamily.Monospace) },
-                colors = transparent,
-                modifier = Modifier.padding(horizontal = 8.dp),
-            )
+            if (verificationCode != null) {
+                ListItem(
+                    overlineContent = { Text(stringResource(R.string.sheet_verification_code)) },
+                    headlineContent = {
+                        Text(verificationCode, style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"))
+                    },
+                    supportingContent = { Text(stringResource(R.string.sheet_verification_hint)) },
+                    colors = transparent,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                )
+            }
             HorizontalDivider(Modifier.padding(horizontal = 24.dp, vertical = 4.dp))
             ListItem(
                 headlineContent = { Text(stringResource(R.string.action_forget), color = MaterialTheme.colorScheme.error) },

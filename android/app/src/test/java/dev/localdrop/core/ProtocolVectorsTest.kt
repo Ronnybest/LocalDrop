@@ -5,6 +5,7 @@ import dev.localdrop.core.crypto.HandshakeCrypto
 import dev.localdrop.core.crypto.Hkdf
 import dev.localdrop.core.crypto.P256
 import dev.localdrop.core.crypto.fingerprintDisplay
+import dev.localdrop.core.crypto.pairVerificationCode
 import dev.localdrop.core.crypto.sha256
 import dev.localdrop.core.presence.PresenceCrypto
 import dev.localdrop.core.protocol.Cbor
@@ -79,6 +80,14 @@ class ProtocolVectorsTest {
         val digest = sha256(bytes("fingerprint.publicKey"))
         assertEquals(text("fingerprint.sha256"), digest.hex())
         assertEquals(text("fingerprint.display"), digest.fingerprintDisplay())
+    }
+
+    @Test
+    fun pairVerificationCode() {
+        val keyA = bytes("verify.keyA")
+        val keyB = bytes("verify.keyB")
+        assertEquals(text("verify.code"), pairVerificationCode(keyA, keyB))
+        assertEquals(text("verify.code"), pairVerificationCode(keyB, keyA))
     }
 
     @Test
