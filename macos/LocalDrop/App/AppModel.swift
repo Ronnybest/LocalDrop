@@ -66,9 +66,11 @@ final class AppModel {
     @ObservationIgnored private var deliveryStore: DeliveryStore?
     /// Restored files whose security scope stays open while a delivery holds them.
     @ObservationIgnored private var scopedFiles: Set<URL> = []
-    /// Inbox directories of shares from the Share extension that are queued; removed once no
-    /// delivery holds their files any more.
+    /// Directories of copies made for sending — Share extension inbox entries, folder archives,
+    /// photos dropped from Photos — removed once no delivery holds their files any more.
     @ObservationIgnored private var sharedDirectories: Set<URL> = []
+    /// Directories of folders being zipped: kept until their archives are queued.
+    @ObservationIgnored private var zipping: [URL: Int] = [:]
     @ObservationIgnored private var publishedPhones: [ShareInbox.Phone]?
     let notifications = NotificationController()
     /// Which Settings tab to show; the menu opens Devices directly.
@@ -214,6 +216,8 @@ final class AppModel {
     /// Queues files for a paired phone. They go when the phone connects, which it does on its
     /// own when it sees the pending delivery advertised; files added meanwhile join the same request.
     func send(_ urls: [URL], to deviceId: String) {
+        let folders = urls.filter(Self.isFolder)
+        if !folders.isEmpty { sendFolders(folders, to: deviceId) }
         let files = urls.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true }
         guard !files.isEmpty, let record = trustStore?.devices.first(where: { $0.deviceId == deviceId }) else { return }
         if let waiting = deliveries.first(where: { $0.deviceId == deviceId && $0.phase == .waiting && $0.text == nil }) {
@@ -224,6 +228,71 @@ final class AppModel {
         }
         Log.transfer.info("Queued \(files.count) file(s) for \(deviceId, privacy: .public)")
         advertiser?.refresh()
+    }
+
+    /// A folder, or a package such as an .app: both go zipped.
+    private static func isFolder(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+    }
+
+    /// Folders go as zip archives that macOS makes (NSFileCoordinator `.forUploading`, as Mail
+    /// does), kept in a staging folder removed once they are sent.
+    private func sendFolders(_ folders: [URL], to deviceId: String) {
+        Log.transfer.info("Zipping \(folders.count) folder(s) to send")
+        let parents = folders.map { $0.deletingLastPathComponent().standardizedFileURL }
+        parents.forEach { zipping[$0, default: 0] += 1 }
+        Task.detached {
+            var archives: [URL] = []
+            var directory: URL?
+            for folder in folders {
+                do {
+                    let staging = try directory ?? Self.makeStagingDirectory()
+                    directory = staging
+                    archives.append(try Self.zip(folder, into: staging))
+                } catch {
+                    Log.transfer.error("Could not zip \(folder.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                }
+            }
+            await MainActor.run {
+                for parent in parents {
+                    self.zipping[parent, default: 1] -= 1
+                    if self.zipping[parent] == 0 { self.zipping[parent] = nil }
+                }
+                if let directory {
+                    self.sendStaged(archives, in: directory, to: deviceId)
+                } else {
+                    self.releaseSharedFiles()
+                }
+            }
+        }
+    }
+
+    /// Sends files made for sending (folder archives, photos dropped from Photos); their
+    /// directory is removed once no delivery holds them.
+    func sendStaged(_ files: [URL], in directory: URL, to deviceId: String) {
+        sharedDirectories.insert(directory)
+        send(files, to: deviceId)
+        releaseSharedFiles()
+    }
+
+    /// A new folder in Application Support for files made for sending.
+    nonisolated static func makeStagingDirectory() throws -> URL {
+        let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let directory = base.appendingPathComponent("LocalDrop/Outgoing/\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+
+    nonisolated private static func zip(_ folder: URL, into directory: URL) throws -> URL {
+        var coordinatorError: NSError?
+        var result: Result<URL, any Error> = .failure(CocoaError(.fileReadUnknown))
+        NSFileCoordinator().coordinate(readingItemAt: folder, options: .forUploading, error: &coordinatorError) { zipped in
+            // The archive is deleted when this returns: keep it.
+            let archive = directory.appendingPathComponent(folder.lastPathComponent + ".zip")
+            result = Result { try FileManager.default.moveItem(at: zipped, to: archive); return archive }
+        }
+        if let coordinatorError { throw coordinatorError }
+        return try result.get()
     }
 
     /// Text or a link for the phone's clipboard. A phone without `clipboardReceive` gets it as a
@@ -275,7 +344,7 @@ final class AppModel {
     func chooseFiles(for deviceId: String) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
-        panel.canChooseDirectories = false
+        panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
         panel.prompt = String(localized: "Send")
         NSApp.activate()
@@ -305,6 +374,8 @@ final class AppModel {
         let restored = store.load().filter { delivery in trustStore?.devices.contains { $0.deviceId == delivery.deviceId } == true }
         deliveryStore = store
         guard !restored.isEmpty else { return }
+        let staging = (try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false))?
+            .appendingPathComponent("LocalDrop/Outgoing").standardizedFileURL.path
         let inbox = ShareInbox.inbox?.standardizedFileURL.path
         for delivery in restored {
             for file in delivery.files {
@@ -312,6 +383,7 @@ final class AppModel {
                 // Files from the Share extension: their inbox directory is already taken.
                 let directory = file.deletingLastPathComponent().standardizedFileURL
                 if let inbox, directory.path.hasPrefix(inbox) { sharedDirectories.insert(directory) }
+                if let staging, directory.path.hasPrefix(staging) { sharedDirectories.insert(directory) }
             }
         }
         deliveries = restored
@@ -386,6 +458,7 @@ final class AppModel {
     private func releaseSharedFiles() {
         guard !sharedDirectories.isEmpty else { return }
         let inUse = Set(deliveries.flatMap(\.files).map { $0.deletingLastPathComponent().standardizedFileURL })
+            .union(zipping.keys)
         for directory in sharedDirectories where !inUse.contains(directory.standardizedFileURL) {
             try? FileManager.default.removeItem(at: directory)
             sharedDirectories.remove(directory)

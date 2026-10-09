@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// While files are being dragged anywhere on the Mac, a small panel at the screen's right edge
 /// offers the paired phones as drop targets. The menu bar is hard to reach with a drag (the top
@@ -54,9 +55,16 @@ final class DropZoneController {
         guard pasteboard.changeCount != seenDrag else { return }
         seenDrag = pasteboard.changeCount
         guard Self.isEnabled,
-              pasteboard.types?.contains(.fileURL) == true,
+              Self.carriesFiles(pasteboard),
               model.deviceList.contains(where: \.canReceive) else { return }
         show()
+    }
+
+    /// Files or folders, or files an app writes only once dropped (photos from Photos).
+    private static func carriesFiles(_ pasteboard: NSPasteboard) -> Bool {
+        let types = Set(pasteboard.types ?? [])
+        let promised = Set(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType(rawValue: $0) })
+        return types.contains(.fileURL) || !types.isDisjoint(with: promised)
     }
 
     private func dragEnded() {
@@ -151,8 +159,13 @@ private struct DropZoneView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
             ForEach(model.deviceList.filter(\.canReceive)) { phone in
-                PhoneDropTile(phone: phone, sent: state.sentTo == phone.id) { urls in
-                    model.send(urls, to: phone.id)
+                PhoneDropTile(phone: phone, sent: state.sentTo == phone.id) { providers in
+                    let deviceId = phone.id
+                    Task {
+                        let dropped = await DroppedFiles.load(providers)
+                        if !dropped.files.isEmpty { model.send(dropped.files, to: deviceId) }
+                        if let directory = dropped.directory { model.sendStaged(dropped.written, in: directory, to: deviceId) }
+                    }
                     dropped(phone.id)
                 }
             }
@@ -166,7 +179,7 @@ private struct DropZoneView: View {
 private struct PhoneDropTile: View {
     let phone: DeviceListItem
     let sent: Bool
-    let send: ([URL]) -> Void
+    let send: ([NSItemProvider]) -> Void
     @State private var isTargeted = false
 
     var body: some View {
@@ -194,11 +207,62 @@ private struct PhoneDropTile: View {
         .contentShape(Rectangle())
         .animation(.spring(duration: 0.2), value: isTargeted)
         .animation(.easeOut(duration: 0.2), value: sent)
-        .dropDestination(for: URL.self) { urls, _ in
-            let files = urls.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true }
-            guard !files.isEmpty else { return false }
-            send(files)
+        // Item providers rather than URLs: Photos hands over files only as promises.
+        .onDrop(of: [.fileURL, .image, .movie], isTargeted: $isTargeted) { providers in
+            send(providers)
             return true
-        } isTargeted: { isTargeted = $0 }
+        }
+    }
+}
+
+/// What was dropped: files and folders as they are, and files written for the drop (photos and
+/// videos from Photos) into a staging folder.
+nonisolated struct DroppedFiles {
+    var files: [URL] = []
+    var written: [URL] = []
+    var directory: URL?
+
+    static func load(_ providers: [NSItemProvider]) async -> DroppedFiles {
+        var dropped = DroppedFiles()
+        for provider in providers {
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                if let url = await fileURL(from: provider) { dropped.files.append(url) }
+                continue
+            }
+            guard let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .data) == true }) else { continue }
+            do {
+                let directory = try dropped.directory ?? AppModel.makeStagingDirectory()
+                dropped.directory = directory
+                if let file = try await write(provider, type: type, into: directory) { dropped.written.append(file) }
+            } catch {
+                Log.transfer.error("Could not take a dropped item: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        return dropped
+    }
+
+    private static func fileURL(from provider: NSItemProvider) async -> URL? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadObject(ofClass: NSURL.self) { object, _ in
+                continuation.resume(returning: (object as? NSURL) as URL?)
+            }
+        }
+    }
+
+    /// The file the app provides disappears when its callback returns: a copy is kept.
+    private static func write(_ provider: NSItemProvider, type: String, into directory: URL) async throws -> URL? {
+        let suggested = provider.suggestedName
+        return try await withCheckedThrowingContinuation { continuation in
+            _ = provider.loadFileRepresentation(forTypeIdentifier: type) { url, error in
+                guard let url else {
+                    continuation.resume(throwing: error ?? CocoaError(.fileReadUnknown))
+                    return
+                }
+                var name = suggested ?? url.deletingPathExtension().lastPathComponent
+                if !url.pathExtension.isEmpty, (name as NSString).pathExtension.isEmpty { name += "." + url.pathExtension }
+                let copy = directory.appendingPathComponent(name)
+                continuation.resume(with: Result { try FileManager.default.copyItem(at: url, to: copy); return copy })
+            }
+        }
     }
 }
