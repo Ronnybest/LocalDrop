@@ -112,14 +112,19 @@ final class AppModel {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 SystemSleep.isAsleep = false
+                self.refreshAddresses()
                 guard self.listener.port != nil else { return }
                 Log.discovery.info("System woke: resuming BLE advertising")
                 self.advertiser?.start()
             }
         }
         // Belt and braces: the displays waking means someone is at the Mac.
-        workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { _ in
-            SystemSleep.isAsleep = false
+        workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard SystemSleep.isAsleep else { return }
+                SystemSleep.isAsleep = false
+                self?.refreshAddresses()
+            }
         }
 
         notifications.onAction = { [weak self] action in self?.handle(action) }
@@ -517,6 +522,9 @@ final class AppModel {
     }
 
     private func refreshAddresses() {
+        // Dark wakes bring Wi-Fi up for a moment all night; nothing is served then (sessions
+        // get `asleep`), so the next real wake reads the network instead.
+        guard !SystemSleep.isAsleep else { return }
         let band = NetworkInterfaces.wifiBand()
         if band != wifiBand {
             Log.connection.info("Wi-Fi band: \(band.map { String(describing: $0) } ?? "none", privacy: .public)")
