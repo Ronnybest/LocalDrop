@@ -40,6 +40,8 @@ final class IncomingTransfer {
 
     var fraction: Double { totalSize > 0 ? min(1, Double(bytesReceived) / Double(totalSize)) : 1 }
 
+    var timeLeft: String? { TimeLeft.text(remainingBytes: totalSize - bytesReceived, bytesPerSecond: bytesPerSecond) }
+
     var title: String {
         files.count == 1 ? files[0].name : String(localized: "\(files.count) files")
     }
@@ -187,6 +189,7 @@ private struct TransferView: View {
         case .receiving:
             String(localized: "\(bytes(transfer.bytesReceived)) of \(bytes(transfer.totalSize))")
                 + (transfer.bytesPerSecond > 0 ? " · " + String(localized: "\(bytes(Int64(transfer.bytesPerSecond)))/s") : "")
+                + (transfer.timeLeft.map { " · " + $0 } ?? "")
         case .completed:
             String(localized: "From \(transfer.peerName) · integrity verified")
         case .failed, .cancelled:

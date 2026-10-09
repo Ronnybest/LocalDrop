@@ -227,6 +227,11 @@ private struct ReceivingRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 ProgressView(value: transfer.fraction)
+                if let timeLeft = transfer.timeLeft {
+                    Text(timeLeft)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Button("Show", action: show)
                 .glassButton()

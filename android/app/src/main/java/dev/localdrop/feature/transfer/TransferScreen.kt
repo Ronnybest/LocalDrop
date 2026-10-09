@@ -261,6 +261,9 @@ private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCa
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
+        TransferText.timeLeft(context, progress)?.let { left ->
+            Text(left, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
     OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
 }

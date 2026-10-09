@@ -8,6 +8,7 @@ import dev.localdrop.core.protocol.ErrorCode
 import dev.localdrop.core.transfer.TransferProgress
 import dev.localdrop.core.transfer.TransferSummary
 import dev.localdrop.core.transport.ConnectionException
+import kotlin.math.ceil
 
 /** User-facing wording shared by the in-app screen and the notifications. */
 object TransferText {
@@ -90,6 +91,22 @@ object TransferText {
         } else {
             ""
         }
-        return "$name · $bytes$speed"
+        val left = timeLeft(context, progress)?.let { " · $it" }.orEmpty()
+        return "$name · $bytes$speed$left"
+    }
+
+    /**
+     * Roughly how long the transfer still takes, from its recent speed: whole seconds up to 10,
+     * then in steps of 5 seconds, then in minutes, so the number doesn't jitter. Null while unknown.
+     */
+    fun timeLeft(context: Context, progress: TransferProgress): String? {
+        val remaining = progress.totalBytes - progress.bytesSent
+        if (progress.bytesPerSecond <= 0 || remaining <= 0) return null
+        val seconds = remaining.toDouble() / progress.bytesPerSecond
+        return when {
+            seconds < 10 -> context.getString(R.string.transfer_seconds_left, maxOf(1, ceil(seconds).toInt()))
+            seconds < 60 -> context.getString(R.string.transfer_seconds_left, ceil(seconds / 5).toInt() * 5)
+            else -> context.getString(R.string.transfer_minutes_left, ceil(seconds / 60).toInt())
+        }
     }
 }

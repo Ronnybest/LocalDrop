@@ -1820,6 +1820,16 @@
           }
         }
       }
+    },
+    "about %@ left": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "осталось ≈ %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

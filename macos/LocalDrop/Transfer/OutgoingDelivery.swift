@@ -21,7 +21,9 @@ final class OutgoingDelivery: Identifiable {
     let text: String?
     let createdAt: Date
     var phase: Phase = .waiting
-    var bytesSent: Int64 = 0
+    private(set) var bytesSent: Int64 = 0
+    private(set) var bytesPerSecond: Double = 0
+    private var samples: [(time: ContinuousClock.Instant, bytes: Int64)] = []
     /// Lets the menu cancel a running send; checked by the sender between chunks.
     let cancelToken = TransferCancelToken()
 
@@ -41,6 +43,22 @@ final class OutgoingDelivery: Identifiable {
     var fraction: Double {
         let total = totalBytes
         return total > 0 ? min(1, Double(bytesSent) / Double(total)) : 0
+    }
+
+    var timeLeft: String? { TimeLeft.text(remainingBytes: totalBytes - bytesSent, bytesPerSecond: bytesPerSecond) }
+
+    /// Records progress and updates the speed over a sliding two-second window.
+    func record(bytesSent: Int64) {
+        let now = ContinuousClock.now
+        if bytesSent < self.bytesSent { samples = [] }
+        self.bytesSent = bytesSent
+        samples.append((now, bytesSent))
+        samples.removeAll { now - $0.time > .seconds(2) }
+        if let first = samples.first, first.time != now {
+            let elapsed = now - first.time
+            let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+            bytesPerSecond = Double(bytesSent - first.bytes) / seconds
+        }
     }
 
     var title: String {

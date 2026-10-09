@@ -936,7 +936,7 @@ extension AppModel: SessionCoordinator {
         guard trustState(deviceId: peer.deviceId, identityKey: peer.identityKey) == .trusted,
               let delivery = deliveries.first(where: { $0.deviceId == peer.deviceId && $0.phase == .waiting }) else { return nil }
         delivery.phase = .awaitingAcceptance
-        delivery.bytesSent = 0
+        delivery.record(bytesSent: 0)
         advertiser?.refresh()
         return PendingDelivery(id: delivery.id, files: delivery.files, text: delivery.text, token: delivery.cancelToken)
     }
@@ -946,7 +946,7 @@ extension AppModel: SessionCoordinator {
     }
 
     func deliveryProgress(_ id: UUID, bytesSent: Int64) {
-        deliveries.first { $0.id == id }?.bytesSent = bytesSent
+        deliveries.first { $0.id == id }?.record(bytesSent: bytesSent)
     }
 
     func deliveryFinished(_ id: UUID, outcome: DeliveryOutcome) {
@@ -957,7 +957,7 @@ extension AppModel: SessionCoordinator {
             // Kept: the Mac advertises it again and the phone retries when it can.
             Log.transfer.warning("Delivery interrupted (\(reason, privacy: .public)); waiting for the phone again")
             delivery.phase = .waiting
-            delivery.bytesSent = 0
+            delivery.record(bytesSent: 0)
             return
         case .completed where delivery.text != nil:
             notifications.postMessage(title: String(localized: "Copied to \(delivery.deviceName)'s clipboard"), body: delivery.title)

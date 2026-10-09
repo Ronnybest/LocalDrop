@@ -18,6 +18,7 @@ struct DeviceListItem: Identifiable {
     let activity: Activity
     /// Set while this device's incoming transfer is running.
     var receivingFraction: Double?
+    var receivingTimeLeft: String?
     /// Connection entry with a pairing or transfer prompt waiting for the user.
     var pendingPromptEntryId: UUID?
     /// Files on their way to this device, if any.
@@ -65,6 +66,7 @@ extension AppModel {
                 trustedDevice: record,
                 activity: .connection(entry.state),
                 receivingFraction: transfer?.fraction,
+                receivingTimeLeft: transfer?.timeLeft,
                 pendingPromptEntryId: hasPendingPrompt(for: entry.id) ? entry.id : nil
             ))
         }
@@ -91,11 +93,13 @@ extension DeviceListItem {
             case .awaitingAcceptance:
                 return (.accentColor, String(localized: "Waiting for acceptance on the phone"))
             case .sending:
-                return (.accentColor, String(localized: "Sending · \(Int(delivery.fraction * 100))%"))
+                let sending = String(localized: "Sending · \(Int(delivery.fraction * 100))%")
+                return (.accentColor, delivery.timeLeft.map { sending + " · " + $0 } ?? sending)
             }
         }
         if let fraction = receivingFraction {
-            return (.accentColor, String(localized: "Receiving · \(Int(fraction * 100))%"))
+            let receiving = String(localized: "Receiving · \(Int(fraction * 100))%")
+            return (.accentColor, receivingTimeLeft.map { receiving + " · " + $0 } ?? receiving)
         }
         switch activity {
         case .none:
