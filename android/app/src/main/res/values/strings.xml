@@ -251,4 +251,6 @@
     <string name="trusted_forget_button">Forget this Mac</string>
     <string name="settings_general">General</string>
     <string name="history_no_access">LocalDrop can no longer open this file</string>
+    <string name="settings_hide_thumbnails">Hide thumbnails</string>
+    <string name="settings_hide_thumbnails_body">Recent shows photos and videos as icons</string>
 </resources>

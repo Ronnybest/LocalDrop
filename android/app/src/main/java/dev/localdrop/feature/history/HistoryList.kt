@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import dev.localdrop.R
 import dev.localdrop.core.history.HistoryEntry
 import dev.localdrop.feature.devices.RoundIcon
+import dev.localdrop.feature.settings.ThumbnailSetting
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.localdrop.feature.settings.Haptic
 import dev.localdrop.feature.settings.rememberHaptics
 
@@ -111,7 +113,8 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
     // a link in the browser, a text copied again. Photos and videos show themselves; the rest an
     // icon of their kind on a neutral tile.
     val kind = FileKind.of(entry)
-    val thumbnail by rememberThumbnail(entry.uri.takeIf { kind.isVisual })
+    val hidden by ThumbnailSetting.hidden(LocalContext.current).collectAsStateWithLifecycle()
+    val thumbnail by rememberThumbnail(entry.uri.takeIf { kind.isVisual && hidden != true })
     val leading: @Composable () -> Unit = {
         Crossfade(targetState = thumbnail, label = "thumbnail") { preview ->
             if (preview != null) {

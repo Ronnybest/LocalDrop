@@ -59,6 +59,7 @@ fun DiagnosticsScreen(
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val hapticsOn by Haptics.enabled(context).collectAsStateWithLifecycle()
+    val thumbnailsHidden by ThumbnailSetting.hidden(context).collectAsStateWithLifecycle()
     val haptic = rememberHaptics()
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -89,11 +90,25 @@ fun DiagnosticsScreen(
                         // Felt only when turning it on: off means off.
                         if (!on) haptic(Haptic.TOGGLE_ON)
                     },
-                    shapes = segmentShapes(segmentShape(0, 1)),
+                    shapes = segmentShapes(segmentShape(0, 2)),
                     colors = segmentColors(),
                     supportingContent = { Text(stringResource(R.string.settings_haptics_body)) },
                     trailingContent = { Switch(checked = on, onCheckedChange = null) },
                     content = { Text(stringResource(R.string.settings_haptics)) },
+                )
+            }
+            item(key = "thumbnails") {
+                val hide = thumbnailsHidden == true
+                SegmentedListItem(
+                    onClick = {
+                        haptic(if (hide) Haptic.TOGGLE_OFF else Haptic.TOGGLE_ON)
+                        ThumbnailSetting.setHidden(context, !hide)
+                    },
+                    shapes = segmentShapes(segmentShape(1, 2)),
+                    colors = segmentColors(),
+                    supportingContent = { Text(stringResource(R.string.settings_hide_thumbnails_body)) },
+                    trailingContent = { Switch(checked = hide, onCheckedChange = null) },
+                    content = { Text(stringResource(R.string.settings_hide_thumbnails)) },
                 )
             }
 

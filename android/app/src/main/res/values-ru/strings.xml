@@ -254,4 +254,6 @@
     <string name="trusted_forget_button">Забыть этот Mac</string>
     <string name="settings_general">Общие</string>
     <string name="history_no_access">LocalDrop больше не может открыть этот файл</string>
+    <string name="settings_hide_thumbnails">Скрывать миниатюры</string>
+    <string name="settings_hide_thumbnails_body">В «Недавних» фото и видео — значками, без превью</string>
 </resources>
