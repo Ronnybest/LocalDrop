@@ -15,12 +15,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import dev.localdrop.app.ui.SwipeChain
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,14 +53,14 @@ import dev.localdrop.feature.settings.Haptic
 import dev.localdrop.feature.settings.rememberHaptics
 
 /**
- * Recent transfers as one segmented group. Rows react to each other: the one being swiped comes
- * loose and its neighbours round the corners that faced it; when it is deleted the rest close up
- * and the group's ends round again. [swiping] is the id of the row under the finger.
+ * Recent transfers as one segmented group whose rows move as a linked whole (see SwipeChain):
+ * the swiped row follows the finger, its neighbours are pulled along and round the corners that
+ * faced it, everything springs back or closes up after it. [group] tells groups on one screen apart.
  */
 fun LazyListScope.historyGroup(
     entries: List<HistoryEntry>,
-    swiping: String?,
-    onSwiping: (id: String, swiping: Boolean) -> Unit,
+    group: String,
+    chain: SwipeChain,
     onOpen: (HistoryEntry) -> Unit,
     onDelete: (HistoryEntry) -> Unit,
 ) {
@@ -58,10 +69,8 @@ fun LazyListScope.historyGroup(
             entry = entry,
             index = index,
             count = entries.size,
-            detached = swiping == entry.id,
-            roundTop = swiping != null && entries.getOrNull(index - 1)?.id == swiping,
-            roundBottom = swiping != null && entries.getOrNull(index + 1)?.id == swiping,
-            onSwiping = { onSwiping(entry.id, it) },
+            group = group,
+            chain = chain,
             onOpen = { onOpen(entry) },
             onDelete = { onDelete(entry) },
             modifier = Modifier.animateItem(),
@@ -78,41 +87,58 @@ private fun HistoryItem(
     entry: HistoryEntry,
     index: Int,
     count: Int,
-    detached: Boolean,
-    roundTop: Boolean,
-    roundBottom: Boolean,
-    onSwiping: (Boolean) -> Unit,
+    group: String,
+    chain: SwipeChain,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier,
 ) {
     val haptic = rememberHaptics()
-    val state = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value != SwipeToDismissBoxValue.Settled) onDelete()
-            value != SwipeToDismissBoxValue.Settled
-        },
+    val scope = rememberCoroutineScope()
+    var width by remember { mutableIntStateOf(0) }
+    val dragged = chain.draggedId == entry.id
+    val sameGroup = chain.draggedId != null && chain.group == group
+    val progress = chain.progress
+
+    // Neighbours follow the pull on a soft spring: they lag a little and settle with a wobble.
+    val follow by animateFloatAsState(
+        chain.pullFor(group, index),
+        spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
+        label = "follow",
     )
-    LaunchedEffect(state.dismissDirection) { onSwiping(state.dismissDirection != SwipeToDismissBoxValue.Settled) }
-    // A tick the moment the swipe goes far enough to delete on release.
-    LaunchedEffect(state.targetValue) {
-        if (state.targetValue != SwipeToDismissBoxValue.Settled) haptic(Haptic.THRESHOLD)
-    }
-    val shape = segmentShape(index, count, detached, roundTop, roundBottom)
-    SwipeToDismissBox(
-        state = state,
-        modifier = modifier,
-        backgroundContent = {
-            val start = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
+    val shape = segmentShape(
+        index = index,
+        count = count,
+        loosen = if (dragged) progress else 0f,
+        roundTop = if (sameGroup && chain.index == index - 1) progress * 0.8f else 0f,
+        roundBottom = if (sameGroup && chain.index == index + 1) progress * 0.8f else 0f,
+    )
+    val dragState = rememberDraggableState { delta -> chain.drag(entry.id, delta) { haptic(Haptic.THRESHOLD) } }
+    Box(
+        modifier
+            .onSizeChanged { width = it.width }
+            .graphicsLayer { alpha = if (chain.removedId == entry.id) 0f else 1f }
+            .draggable(
+                state = dragState,
+                orientation = Orientation.Horizontal,
+                onDragStarted = { chain.start(entry.id, group, index, width) },
+                onDragStopped = { velocity -> scope.launch { chain.release(entry.id, velocity, onDelete) } },
+            ),
+    ) {
+        if (dragged) {
+            // What letting go does, revealed under the row as it moves.
+            val start = chain.offset > 0
             Box(
-                Modifier.fillMaxSize().clip(shape).background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
+                Modifier.matchParentSize().graphicsLayer { alpha = progress.coerceAtLeast(0.15f) }.clip(shape)
+                    .background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
                 contentAlignment = if (start) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
             }
-        },
-    ) {
-        HistoryRow(entry, segmentShapes(shape), onOpen)
+        }
+        Box(Modifier.graphicsLayer { translationX = if (dragged) chain.offset else follow }) {
+            HistoryRow(entry, segmentShapes(shape), onOpen)
+        }
     }
 }
 

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.LaunchedEffect
 import dev.localdrop.feature.history.historyGroup
 import dev.localdrop.app.ui.Segments
+import dev.localdrop.app.ui.SwipeChain
 import dev.localdrop.app.ui.segmentColors
 import dev.localdrop.app.ui.segmentShape
 import dev.localdrop.app.ui.segmentShapes
@@ -334,7 +335,7 @@ fun HomeScreen(
     val haptic = rememberHaptics()
     var sheetFor by remember { mutableStateOf<String?>(null) }
     var pendingForget by remember { mutableStateOf<TrustedDevice?>(null) }
-    var swiping by remember { mutableStateOf<String?>(null) }
+    val chain = remember { SwipeChain() }
 
     // Receiving from a Mac in the background needs one companion-device approval (Android rule).
     var linked by remember { mutableStateOf(CompanionLink.isLinked(context)) }
@@ -526,8 +527,8 @@ fun HomeScreen(
                 item(key = "recent") { SectionTitle(stringResource(R.string.home_recent), Modifier.animateItem()) }
                 historyGroup(
                     entries = history.take(RECENT_COUNT),
-                    swiping = swiping,
-                    onSwiping = { id, on -> swiping = if (on) id else swiping.takeIf { it != id } },
+                    group = "recent",
+                    chain = chain,
                     onOpen = { HistoryActions.open(context, it) },
                     onDelete = { viewModel.removeHistory(it) },
                 )

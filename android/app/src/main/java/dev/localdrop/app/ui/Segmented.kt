@@ -9,7 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
+import kotlin.math.max
 
 /**
  * Rows of a Material 3 Expressive segmented group: together they read as one rounded block,
@@ -22,16 +25,17 @@ object Segments {
 }
 
 /**
- * The shape of row [index] of [count]. A row comes loose — all corners large — while it is
- * swiped ([detached]); its neighbours round the corners that faced it ([roundTop], [roundBottom]).
- * Corners move with the theme's spring, so rows react to each other: a row leaving, a row
- * deleted, the group closing up.
+ * The shape of row [index] of [count]. Its own corners round as it comes loose ([loosen], 0..1,
+ * while it is swiped); its neighbours round the corners that faced it ([roundTop], [roundBottom]).
+ * Changes of position (a row deleted, the group closing up) move with the theme's spring.
  */
 @Composable
-fun segmentShape(index: Int, count: Int, detached: Boolean = false, roundTop: Boolean = false, roundBottom: Boolean = false): Shape {
-    val spec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.Dp>()
-    val top by animateDpAsState(if (index == 0 || detached || roundTop) Segments.Outer else Segments.Inner, spec, label = "top")
-    val bottom by animateDpAsState(if (index == count - 1 || detached || roundBottom) Segments.Outer else Segments.Inner, spec, label = "bottom")
+fun segmentShape(index: Int, count: Int, loosen: Float = 0f, roundTop: Float = 0f, roundBottom: Float = 0f): Shape {
+    val spec = MaterialTheme.motionScheme.fastSpatialSpec<Dp>()
+    val baseTop by animateDpAsState(if (index == 0) Segments.Outer else Segments.Inner, spec, label = "top")
+    val baseBottom by animateDpAsState(if (index == count - 1) Segments.Outer else Segments.Inner, spec, label = "bottom")
+    val top = lerp(baseTop, Segments.Outer, max(loosen, roundTop).coerceIn(0f, 1f))
+    val bottom = lerp(baseBottom, Segments.Outer, max(loosen, roundBottom).coerceIn(0f, 1f))
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
