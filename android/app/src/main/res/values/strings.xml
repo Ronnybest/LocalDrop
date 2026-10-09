@@ -2,8 +2,7 @@
 <resources>
     <string name="app_name" translatable="false">LocalDrop</string>
 
-    <string name="devices_searching">Looking for nearby devices…</string>
-    <string name="devices_searching_hint">Open LocalDrop on your Mac and keep Bluetooth on. Both devices need to be on the same Wi-Fi network to send files.</string>
+    <string name="devices_searching">Looking for Macs nearby…</string>
 
     <string name="device_status_connecting">Connecting…</string>
     <string name="device_status_unreachable">Not reachable — move closer</string>
@@ -86,14 +85,12 @@
     <string name="home_empty_title">Send files to your Mac from any app</string>
     <string name="home_empty_body">Pair your Mac once. After that, share a photo or file from any app and pick your Mac — LocalDrop doesn\'t need to be open.</string>
     <string name="add_mac_title">Add a Mac</string>
-    <string name="add_mac_body">On your Mac, open LocalDrop in the menu bar and turn on “Visible to new devices”. Keep it close to this phone and tap it below. You\'ll compare a code once.</string>
     <string name="presence_nearby_ready">Nearby · ready</string>
     <string name="presence_nearby_other_network">Nearby · not on the same network</string>
     <string name="presence_nearby">Nearby</string>
     <string name="presence_nearby_busy">Nearby · busy</string>
     <string name="presence_not_nearby">Not nearby or asleep</string>
     <string name="presence_unknown">Bluetooth is off</string>
-    <string name="device_status_tap_to_pair">Tap to pair</string>
     <string name="device_status_already_paired">Already paired</string>
     <string name="paired_title">Paired with %1$s</string>
     <string name="already_paired_title">%1$s is already paired</string>
@@ -235,4 +232,12 @@
     <string name="card_left">left</string>
     <string name="card_finished" translatable="false">%1$s · %2$s</string>
     <string name="card_finished_in">%1$s · %2$s in %3$s</string>
+    <string name="add_mac_step_menu">On the Mac, click the LocalDrop drop in the menu bar</string>
+    <string name="add_mac_step_visible">Turn on “Visible to new devices”</string>
+    <string name="add_mac_step_nearby">Keep the Mac close to this phone</string>
+    <string name="add_mac_still_searching">Still looking</string>
+    <string name="add_mac_ready">Ready to pair</string>
+    <string name="pairing_same_code">%1$s shows the same code right now</string>
+    <string name="pairing_codes_match">Codes match</string>
+    <string name="pairing_codes_differ">They differ</string>
 </resources>

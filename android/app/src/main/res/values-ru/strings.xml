@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="devices_searching">Поиск устройств рядом…</string>
-    <string name="devices_searching_hint">Откройте LocalDrop на Mac и не выключайте Bluetooth. Чтобы отправлять файлы, оба устройства должны быть в одной сети Wi-Fi.</string>
+    <string name="devices_searching">Ищем Mac рядом…</string>
 
     <string name="device_status_connecting">Подключение…</string>
     <string name="device_status_unreachable">Не отвечает — поднесите ближе</string>
@@ -86,14 +85,12 @@
     <string name="home_empty_title">Отправляйте файлы на Mac из любого приложения</string>
     <string name="home_empty_body">Привяжите Mac один раз. Дальше делитесь фото или файлом из любого приложения и выбирайте свой Mac — открывать LocalDrop не нужно.</string>
     <string name="add_mac_title">Добавить Mac</string>
-    <string name="add_mac_body">На Mac откройте LocalDrop в строке меню и включите видимость для новых устройств. Держите Mac рядом с телефоном и выберите его ниже. Код нужно будет сравнить один раз.</string>
     <string name="presence_nearby_ready">Рядом · готов</string>
     <string name="presence_nearby_other_network">Рядом · в другой сети</string>
     <string name="presence_nearby">Рядом</string>
     <string name="presence_nearby_busy">Рядом · занят</string>
     <string name="presence_not_nearby">Не рядом или спит</string>
     <string name="presence_unknown">Bluetooth выключен</string>
-    <string name="device_status_tap_to_pair">Нажмите, чтобы привязать</string>
     <string name="device_status_already_paired">Уже привязан</string>
     <string name="paired_title">%1$s привязан</string>
     <string name="already_paired_title">%1$s уже привязан</string>
@@ -238,4 +235,12 @@
     <string name="action_show_all">Показать все</string>
     <string name="card_left">осталось</string>
     <string name="card_finished_in">%1$s · %2$s за %3$s</string>
+    <string name="add_mac_step_menu">На Mac нажмите на каплю LocalDrop в строке меню</string>
+    <string name="add_mac_step_visible">Включите «Виден новым устройствам»</string>
+    <string name="add_mac_step_nearby">Держите Mac рядом с телефоном</string>
+    <string name="add_mac_still_searching">Продолжаем искать</string>
+    <string name="add_mac_ready">Готов к привязке</string>
+    <string name="pairing_same_code">Такой же код сейчас на экране %1$s</string>
+    <string name="pairing_codes_match">Коды совпадают</string>
+    <string name="pairing_codes_differ">Не совпадают</string>
 </resources>

@@ -11,6 +11,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import dev.localdrop.feature.devices.AvatarState
+import dev.localdrop.feature.devices.MacAvatar
+import kotlinx.coroutines.delay
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -159,20 +172,7 @@ fun TransferScreen(
                     )
                     Button(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
                 }
-                is TransferState.Paired -> {
-                    Text(
-                        stringResource(if (state.newlyPaired) R.string.paired_title else R.string.already_paired_title, state.peerName),
-                        style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        stringResource(R.string.paired_body, state.peerName),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                    Button(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
-                }
+                is TransferState.Paired -> PairedContent(state, onDismiss)
                 is TransferState.Failed -> {
                     Text(stringResource(R.string.transfer_failed_title), style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -201,8 +201,8 @@ fun TransferScreen(
 
 @Composable
 private fun Waiting(title: String, onCancel: () -> Unit, detail: String? = null) {
-    CircularProgressIndicator()
-    Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+    LoadingIndicator(Modifier.size(80.dp))
+    Text(title, style = MaterialTheme.typography.titleLargeEmphasized, textAlign = TextAlign.Center)
     if (detail != null) {
         Text(
             detail,
@@ -268,10 +268,15 @@ private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCa
     OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
 }
 
+/**
+ * Comparing the code: the Mac's badge, the code big enough to read at arm's length, and two
+ * plain answers. After confirming, the badge turns while the Mac's answer is awaited.
+ */
 @Composable
 private fun PairingContent(state: TransferState.Pairing, onConfirm: () -> Unit, onDecline: () -> Unit) {
     val name = state.peer.name
-    Text(stringResource(R.string.pairing_title, name), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+    MacAvatar(if (state.confirmedLocally) AvatarState.BUSY else AvatarState.IDLE, size = 72.dp)
+    Text(stringResource(R.string.pairing_title, name), style = MaterialTheme.typography.headlineSmallEmphasized, textAlign = TextAlign.Center)
     if (state.keyChanged) {
         Text(
             stringResource(R.string.pairing_key_changed, name),
@@ -281,28 +286,57 @@ private fun PairingContent(state: TransferState.Pairing, onConfirm: () -> Unit, 
         )
     }
     Text(
-        stringResource(R.string.pairing_compare, name),
-        style = MaterialTheme.typography.bodyMedium,
+        stringResource(R.string.pairing_same_code, name),
+        style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
     )
-    Text(state.code, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, fontSize = 40.sp)
-    if (state.confirmedLocally) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            Text(
-                stringResource(R.string.pairing_waiting, name),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        OutlinedButton(onClick = onDecline) { Text(stringResource(R.string.action_cancel)) }
-    } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onDecline) { Text(stringResource(R.string.action_decline)) }
-            Button(onClick = onConfirm) { Text(stringResource(R.string.action_pair)) }
+    Text(
+        state.code,
+        style = MaterialTheme.typography.displayLargeEmphasized,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(vertical = 12.dp),
+    )
+    AnimatedContent(targetState = state.confirmedLocally, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "answer") { confirmed ->
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (confirmed) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LoadingIndicator(Modifier.size(40.dp))
+                    Text(
+                        stringResource(R.string.pairing_waiting, name),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
+            } else {
+                Button(onClick = onConfirm, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pairing_codes_match)) }
+                OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pairing_codes_differ)) }
+            }
         }
     }
-    Spacer(Modifier.height(8.dp))
 }
 
+/** Paired: the badge turns into a check with a little pop. */
+@Composable
+private fun PairedContent(state: TransferState.Paired, onDismiss: () -> Unit) {
+    var done by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(150)
+        done = true
+    }
+    MacAvatar(if (done) AvatarState.DONE else AvatarState.IDLE, size = 96.dp)
+    Text(
+        stringResource(if (state.newlyPaired) R.string.paired_title else R.string.already_paired_title, state.peerName),
+        style = MaterialTheme.typography.headlineMediumEmphasized,
+        textAlign = TextAlign.Center,
+    )
+    Text(
+        stringResource(R.string.paired_body, state.peerName),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(8.dp))
+    Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_done)) }
+}
