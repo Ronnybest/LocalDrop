@@ -1,4 +1,5 @@
 import AppKit
+import os
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -61,12 +62,19 @@ final class ShareModel {
     let kind: Kind
     private let items: [NSExtensionItem]
 
+    private static let log = Logger(subsystem: "dev.localdrop.mac", category: "share")
+
     init(items: [NSExtensionItem]) {
         self.items = items
         let providers = items.flatMap { $0.attachments ?? [] }
+        for item in items {
+            Self.log.info("Item: userInfo keys \((item.userInfo?.keys.map { "\($0)" } ?? []).description, privacy: .public), title \(item.attributedTitle != nil, privacy: .public), text \(item.attributedContentText?.length ?? 0, privacy: .public) chars")
+        }
+        Self.log.info("Shared: \(items.count) item(s), types \(providers.map(\.registeredTypeIdentifiers).description, privacy: .public), text \(items.contains { $0.attributedContentText != nil }, privacy: .public), link in text \(items.contains { Self.link(in: $0) != nil }, privacy: .public)")
         if !providers.isEmpty, providers.allSatisfy(Self.isFile) {
             kind = .files
-        } else if providers.contains(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }) {
+        } else if providers.contains(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) })
+                    || items.contains(where: { Self.link(in: $0) != nil }) {
             kind = .link
         } else {
             kind = .text
@@ -113,9 +121,32 @@ final class ShareModel {
         }
     }
 
+    /// A link given as the item's text rather than as an attachment: Safari shares a page with no
+    /// attachments, only the text — the address itself, or the title carrying it as a link.
+    private static func link(in item: NSExtensionItem) -> URL? {
+        guard let text = item.attributedContentText, text.length > 0 else { return nil }
+        var link: URL?
+        text.enumerateAttribute(.link, in: NSRange(location: 0, length: text.length)) { value, _, stop in
+            link = (value as? URL) ?? (value as? String).flatMap(URL.init(string:))
+            if link != nil { stop.pointee = true }
+        }
+        if let link { return link }
+        let string = text.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !string.contains(where: \.isWhitespace), let url = URL(string: string),
+              let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) else { return nil }
+        return url
+    }
+
     /// The shared link (a web page from Safari) or text, one per line when there are several.
     private func sharedText() async throws -> String {
         var parts: [String] = []
+        for item in items where (item.attachments ?? []).isEmpty {
+            if let link = Self.link(in: item) {
+                parts.append(link.absoluteString)
+            } else if let text = item.attributedContentText?.string, !text.isEmpty {
+                parts.append(text)
+            }
+        }
         for provider in items.flatMap({ $0.attachments ?? [] }) {
             if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier),
                let item = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) {

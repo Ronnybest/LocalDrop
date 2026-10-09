@@ -1844,6 +1844,26 @@
           }
         }
       }
+    },
+    "Nothing to send": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нечего отправлять"
+          }
+        }
+      }
+    },
+    "Copy text, a link or files first.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала скопируйте текст, ссылку или файлы."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -257,10 +257,17 @@ final class AppModel {
     /// Sends what is on the clipboard: text or a link, or copied files.
     func sendClipboard(to deviceId: String) {
         let pasteboard = NSPasteboard.general
+        let types = pasteboard.types?.map(\.rawValue) ?? []
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             send(urls, to: deviceId)
-        } else if let text = pasteboard.string(forType: .string) {
+        } else if let text = pasteboard.string(forType: .string), !text.isEmpty {
             sendText(text, to: deviceId)
+        } else {
+            Log.transfer.warning("Nothing to send on the clipboard; types \(types.description, privacy: .public)")
+            notifications.postMessage(
+                title: String(localized: "Nothing to send"),
+                body: String(localized: "Copy text, a link or files first.")
+            )
         }
     }
 

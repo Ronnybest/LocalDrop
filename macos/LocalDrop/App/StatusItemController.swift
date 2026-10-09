@@ -58,14 +58,21 @@ final class StatusItemController: NSObject, NSWindowDelegate {
     /// - Parameter takingFocus: false while a drag from another app is going on.
     private func openPanel(takingFocus: Bool) {
         guard panel == nil, let button = statusItem.button else { return }
+        // The panel follows the content's height itself, a moment later and without animation.
+        // NSHostingView sizing the window resized it from inside layout, and rendering the glass
+        // there laid it out again, recursing until the stack overflowed (macOS 26).
         let content = MenuBarView(model: model)
-            .background(PanelGlassBackground(cornerRadius: Self.cornerRadius))
-            .clipShape(.rect(cornerRadius: Self.cornerRadius))
-        let hosting = NSHostingController(rootView: content)
-        hosting.sizingOptions = [.preferredContentSize]
+            .menuPanelBackground(cornerRadius: Self.cornerRadius)
+            .fixedSize(horizontal: false, vertical: true)
+            .onGeometryChange(for: CGSize.self, of: { $0.size }) { [weak self] size in
+                DispatchQueue.main.async { self?.fit(size) }
+            }
+        let hosting = NSHostingView(rootView: content)
+        hosting.sizingOptions = []
 
-        let panel = MenuPanel(contentViewController: hosting)
-        panel.styleMask = [.borderless, .nonactivatingPanel]
+        let panel = MenuPanel(contentRect: NSRect(origin: .zero, size: hosting.fittingSize),
+                              styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+        panel.contentView = hosting
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
@@ -111,9 +118,11 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         panel.setFrameTopLeftPoint(NSPoint(x: x, y: top))
     }
 
-    func windowDidResize(_ notification: Notification) {
-        // Content grows downwards: keep the top under the menu bar.
-        guard let panel, let button = statusItem.button else { return }
+    /// Content grows downwards: the top stays under the menu bar.
+    private func fit(_ size: CGSize) {
+        guard let panel, let button = statusItem.button, size.height > 0,
+              abs(panel.frame.height - size.height) > 0.5 || abs(panel.frame.width - size.width) > 0.5 else { return }
+        panel.setContentSize(size)
         position(panel, below: button)
     }
 
