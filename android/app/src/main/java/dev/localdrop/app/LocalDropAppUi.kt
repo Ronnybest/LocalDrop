@@ -1,5 +1,19 @@
 package dev.localdrop.app
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -64,33 +78,62 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
         )
         return
     }
-    NavDisplay(
-        backStack = backStack,
-        onBack = ::back,
-        entryProvider = { screen ->
-            when (screen) {
-                Screen.Home -> NavEntry(screen) {
-                    HomeScreen(
-                        transfer = transfer,
-                        onCancelTransfer = transferViewModel::cancel,
-                        onAcceptIncoming = transferViewModel::acceptIncoming,
-                        onDeclineIncoming = transferViewModel::declineIncoming,
-                        onAddMac = { open(Screen.AddMac) },
-                        onOpenDiagnostics = { open(Screen.Diagnostics) },
-                        onOpenHistory = { open(Screen.History) },
-                    )
+    // The screens fade over the theme's own background, never the window's.
+    Surface(color = MaterialTheme.colorScheme.background) {
+        NavDisplay(
+            backStack = backStack,
+            onBack = ::back,
+            transitionSpec = { sharedAxisX(forward = true) },
+            popTransitionSpec = { sharedAxisX(forward = false) },
+            // Under the back gesture the screen shrinks toward the swipe, Home standing still behind it.
+            predictivePopTransitionSpec = {
+                EnterTransition.None togetherWith scaleOut(targetScale = PREDICTIVE_SCALE)
+            },
+            entryProvider = { screen ->
+                when (screen) {
+                    Screen.Home -> NavEntry(screen) {
+                        HomeScreen(
+                            transfer = transfer,
+                            onCancelTransfer = transferViewModel::cancel,
+                            onAcceptIncoming = transferViewModel::acceptIncoming,
+                            onDeclineIncoming = transferViewModel::declineIncoming,
+                            onAddMac = { open(Screen.AddMac) },
+                            onOpenDiagnostics = { open(Screen.Diagnostics) },
+                            onOpenHistory = { open(Screen.History) },
+                        )
+                    }
+                    Screen.History -> NavEntry(screen) { HistoryScreen(onBack = ::back) }
+                    Screen.AddMac -> NavEntry(screen) { AddDeviceScreen(onPair = transferViewModel::pair, onBack = ::back) }
+                    Screen.Diagnostics -> NavEntry(screen) {
+                        DiagnosticsScreen(
+                            testDataSize = testDataSize,
+                            onTestDataSizeSelected = transferViewModel::selectTestDataSize,
+                            onSendTestData = transferViewModel::sendTestData,
+                            onBack = ::back,
+                        )
+                    }
                 }
-                Screen.History -> NavEntry(screen) { HistoryScreen(onBack = ::back) }
-                Screen.AddMac -> NavEntry(screen) { AddDeviceScreen(onPair = transferViewModel::pair, onBack = ::back) }
-                Screen.Diagnostics -> NavEntry(screen) {
-                    DiagnosticsScreen(
-                        testDataSize = testDataSize,
-                        onTestDataSizeSelected = transferViewModel::selectTestDataSize,
-                        onSendTestData = transferViewModel::sendTestData,
-                        onBack = ::back,
-                    )
-                }
-            }
-        },
-    )
+            },
+        )
+    }
 }
+
+/**
+ * Material's shared axis X between screens: the old one fades out quickly while moving a little,
+ * the new one slides in the same way and fades in after it — never both half-visible at once.
+ */
+private fun sharedAxisX(forward: Boolean): ContentTransform {
+    val sign = if (forward) 1 else -1
+    val enter = slideInHorizontally(tween(AXIS_MS, easing = FastOutSlowInEasing)) { sign * it / AXIS_SHIFT } +
+        fadeIn(tween(AXIS_MS - AXIS_FADE_OUT_MS, delayMillis = AXIS_FADE_OUT_MS, easing = LinearOutSlowInEasing))
+    val exit = slideOutHorizontally(tween(AXIS_MS, easing = FastOutSlowInEasing)) { -sign * it / AXIS_SHIFT } +
+        fadeOut(tween(AXIS_FADE_OUT_MS, easing = FastOutLinearInEasing))
+    return enter togetherWith exit
+}
+
+private const val AXIS_MS = 300
+private const val AXIS_FADE_OUT_MS = 90
+
+/** The screens move a tenth of the width: enough to show direction, not a slide across. */
+private const val AXIS_SHIFT = 10
+private const val PREDICTIVE_SCALE = 0.9f
