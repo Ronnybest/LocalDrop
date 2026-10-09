@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -379,6 +380,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Every row comes, goes and moves animated (fade and slide), deleted entries included.
             item(key = "main") {
                 MacCard(
                     device = main,
@@ -392,15 +394,17 @@ fun HomeScreen(
                     onCancel = onCancelTransfer,
                     onAccept = onAcceptIncoming,
                     onDecline = onDeclineIncoming,
+                    modifier = Modifier.animateItem(),
                 )
             }
             item(key = "hint") {
                 Hint(
                     linkFor = devices.filter { it.canSend }.maxByOrNull { it.lastSeenMs }?.takeIf { !linked },
                     onLink = ::requestLink,
+                    modifier = Modifier.animateItem(),
                 )
             }
-            item(key = "others") { SectionTitle(stringResource(R.string.home_other_macs)) }
+            item(key = "others") { SectionTitle(stringResource(R.string.home_other_macs), Modifier.animateItem()) }
             items(others, key = { it.deviceId }) { device ->
                 val ongoing = transferFor(device.deviceId)
                 if (ongoing != null) {
@@ -416,9 +420,10 @@ fun HomeScreen(
                         onCancel = onCancelTransfer,
                         onAccept = onAcceptIncoming,
                         onDecline = onDeclineIncoming,
+                        modifier = Modifier.animateItem(),
                     )
                 } else {
-                    OtherMacRow(device, presence[device.deviceId], waiting[device.deviceId] ?: 0) { sheetFor = device.deviceId }
+                    OtherMacRow(device, presence[device.deviceId], waiting[device.deviceId] ?: 0, Modifier.animateItem()) { sheetFor = device.deviceId }
                 }
             }
             item(key = "add") {
@@ -426,17 +431,22 @@ fun HomeScreen(
                     headlineContent = { Text(stringResource(R.string.action_add_mac)) },
                     leadingContent = { RoundIcon(tint = MaterialTheme.colorScheme.surfaceContainerHighest) { Icon(Icons.Default.Add, null) } },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clip28().clickable(onClick = onAddMac),
+                    modifier = Modifier.animateItem().clip28().clickable(onClick = onAddMac),
                 )
             }
             if (history.isNotEmpty()) {
-                item(key = "recent") { SectionTitle(stringResource(R.string.home_recent)) }
+                item(key = "recent") { SectionTitle(stringResource(R.string.home_recent), Modifier.animateItem()) }
                 items(history.take(RECENT_COUNT), key = { it.id }) { entry ->
-                    HistoryItem(entry, onOpen = { HistoryActions.open(context, entry) }, onDelete = { viewModel.removeHistory(entry) })
+                    HistoryItem(
+                        entry,
+                        onOpen = { HistoryActions.open(context, entry) },
+                        onDelete = { viewModel.removeHistory(entry) },
+                        modifier = Modifier.animateItem(),
+                    )
                 }
                 if (history.size > RECENT_COUNT) {
                     item(key = "all") {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                        Box(Modifier.animateItem().fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                             TextButton(onClick = onOpenHistory) { Text(stringResource(R.string.action_show_all)) }
                         }
                     }
@@ -520,8 +530,10 @@ private fun MacCard(
     onCancel: () -> Unit,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
@@ -600,54 +612,75 @@ private fun StatusPill(text: String, highlighted: Boolean) {
     }
 }
 
-/** One suggestion at a time: background receiving first, then the clipboard tile. */
+private enum class HintKind { LINK, TILE, NONE }
+
+/**
+ * One suggestion at a time: background receiving first, then the clipboard tile. Answering one
+ * fades it out and the next one, if any, in; the space closes smoothly.
+ */
 @Composable
-private fun Hint(linkFor: TrustedDevice?, onLink: (TrustedDevice) -> Unit) {
+private fun Hint(linkFor: TrustedDevice?, onLink: (TrustedDevice) -> Unit, modifier: Modifier) {
     val context = LocalContext.current
     val linkPrefs = remember { context.getSharedPreferences(LINK_PREFS, Context.MODE_PRIVATE) }
     val tilePrefs = remember { context.getSharedPreferences(TILE_PREFS, Context.MODE_PRIVATE) }
     var linkLater by remember { mutableStateOf(linkPrefs.getBoolean(KEY_LATER, false)) }
     var tileDone by remember { mutableStateOf(tilePrefs.getBoolean(KEY_TILE_ADDED, false) || tilePrefs.getBoolean(KEY_LATER, false)) }
-
-    if (linkFor != null && !linkLater) {
-        HintCard(
-            title = stringResource(R.string.receiving_needs_link_title, linkFor.deviceName),
-            body = stringResource(R.string.receiving_needs_link_body),
-            detail = stringResource(R.string.receiving_link_scope),
-            action = stringResource(R.string.action_allow),
-            onAction = { onLink(linkFor) },
-            onLater = {
-                linkLater = true
-                linkPrefs.edit { putBoolean(KEY_LATER, true) }
-            },
-        )
-    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !tileDone) {
-        val label = stringResource(R.string.tile_clipboard_label)
-        HintCard(
-            title = stringResource(R.string.tile_hint_title),
-            body = stringResource(R.string.tile_hint_body),
-            action = stringResource(R.string.action_add),
-            onAction = {
-                context.getSystemService(StatusBarManager::class.java).requestAddTileService(
-                    ComponentName(context, ClipboardTileService::class.java),
-                    label,
-                    Icon.createWithResource(context, R.drawable.ic_tile_clipboard),
-                    context.mainExecutor,
-                ) { result ->
-                    Log.i("LD/clipboard", "Add tile result: $result")
-                    if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED ||
-                        result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED
-                    ) {
-                        tilePrefs.edit { putBoolean(KEY_TILE_ADDED, true) }
+    val kind = when {
+        linkFor != null && !linkLater -> HintKind.LINK
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !tileDone -> HintKind.TILE
+        else -> HintKind.NONE
+    }
+    AnimatedContent(
+        targetState = kind,
+        modifier = modifier,
+        transitionSpec = {
+            (fadeIn(tween(220, delayMillis = 90)) togetherWith fadeOut(tween(150))) using SizeTransform(clip = false)
+        },
+        label = "hint",
+    ) { current ->
+        when (current) {
+            HintKind.LINK -> if (linkFor != null) HintCard(
+                title = stringResource(R.string.receiving_needs_link_title, linkFor.deviceName),
+                body = stringResource(R.string.receiving_needs_link_body),
+                detail = stringResource(R.string.receiving_link_scope),
+                action = stringResource(R.string.action_allow),
+                onAction = { onLink(linkFor) },
+                onLater = {
+                    linkLater = true
+                    linkPrefs.edit { putBoolean(KEY_LATER, true) }
+                },
+            )
+            HintKind.TILE -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val label = stringResource(R.string.tile_clipboard_label)
+                HintCard(
+                    title = stringResource(R.string.tile_hint_title),
+                    body = stringResource(R.string.tile_hint_body),
+                    action = stringResource(R.string.action_add),
+                    onAction = {
+                        context.getSystemService(StatusBarManager::class.java).requestAddTileService(
+                            ComponentName(context, ClipboardTileService::class.java),
+                            label,
+                            Icon.createWithResource(context, R.drawable.ic_tile_clipboard),
+                            context.mainExecutor,
+                        ) { result ->
+                            Log.i("LD/clipboard", "Add tile result: $result")
+                            if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED ||
+                                result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED
+                            ) {
+                                tilePrefs.edit { putBoolean(KEY_TILE_ADDED, true) }
+                                tileDone = true
+                            }
+                        }
+                    },
+                    onLater = {
                         tileDone = true
-                    }
-                }
-            },
-            onLater = {
-                tileDone = true
-                tilePrefs.edit { putBoolean(KEY_LATER, true) }
-            },
-        )
+                        tilePrefs.edit { putBoolean(KEY_LATER, true) }
+                    },
+                )
+            }
+            // An empty line in the list closes to nothing.
+            HintKind.NONE -> Spacer(Modifier.fillMaxWidth())
+        }
     }
 }
 
@@ -672,17 +705,17 @@ private fun HintCard(title: String, body: String, action: String, onAction: () -
 }
 
 @Composable
-private fun SectionTitle(text: String) {
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 8.dp, top = 12.dp),
+        modifier = modifier.padding(start = 8.dp, top = 12.dp),
     )
 }
 
 @Composable
-private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waiting: Int, onClick: () -> Unit) {
+private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waiting: Int, modifier: Modifier, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(device.deviceName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
@@ -699,7 +732,7 @@ private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waitin
             }
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.clip28().clickable(onClick = onClick),
+        modifier = modifier.clip28().clickable(onClick = onClick),
     )
 }
 

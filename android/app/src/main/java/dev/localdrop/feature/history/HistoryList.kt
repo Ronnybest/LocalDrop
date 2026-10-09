@@ -39,7 +39,7 @@ import dev.localdrop.feature.devices.RoundIcon
  * swiping it away to either side deletes it from the history, not the file.
  */
 @Composable
-fun HistoryItem(entry: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit) {
+fun HistoryItem(entry: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     val state = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value != SwipeToDismissBoxValue.Settled) onDelete()
@@ -48,7 +48,7 @@ fun HistoryItem(entry: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit) {
     )
     SwipeToDismissBox(
         state = state,
-        modifier = Modifier.clip(RoundedCornerShape(24.dp)),
+        modifier = modifier.clip(RoundedCornerShape(24.dp)),
         backgroundContent = {
             val start = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             Box(

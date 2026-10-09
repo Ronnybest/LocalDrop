@@ -93,7 +93,12 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             items(entries, key = { it.id }) { entry ->
-                HistoryItem(entry, onOpen = { HistoryActions.open(context, entry) }, onDelete = { viewModel.remove(entry) })
+                HistoryItem(
+                    entry,
+                    onOpen = { HistoryActions.open(context, entry) },
+                    onDelete = { viewModel.remove(entry) },
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
     }
