@@ -4,10 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,6 +39,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import dev.localdrop.R
+import kotlin.math.ceil
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -81,14 +78,20 @@ fun MacAvatar(state: AvatarState, size: Dp = 56.dp) {
     }
     val morph = remember(from, to) { Morph(from, to) }
 
-    val spin = rememberInfiniteTransition(label = "spin")
-    val turning by spin.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(SPIN_PERIOD_MS, easing = LinearEasing), RepeatMode.Restart),
-        label = "turn",
-    )
-    val rotation = if (state == AvatarState.BUSY) turning else 0f
+    // Turning only during a transfer, and read at draw time: no recomposition per frame.
+    val turning = remember { Animatable(0f) }
+    LaunchedEffect(state == AvatarState.BUSY) {
+        if (state == AvatarState.BUSY) {
+            turning.animateTo(
+                turning.value + 360f * SPIN_TURNS,
+                tween(SPIN_PERIOD_MS * SPIN_TURNS, easing = LinearEasing),
+            )
+        } else {
+            // Finish the turn it is in, then rest upright.
+            turning.animateTo(ceil(turning.value / 360f) * 360f, spatial)
+            turning.snapTo(0f)
+        }
+    }
 
     val resting = state == AvatarState.IDLE
     val container by animateColorAsState(
@@ -105,7 +108,7 @@ fun MacAvatar(state: AvatarState, size: Dp = 56.dp) {
         Modifier
             .size(size)
             .graphicsLayer {
-                rotationZ = rotation
+                rotationZ = turning.value
                 scaleX = scale.value
                 scaleY = scale.value
             }
@@ -115,7 +118,7 @@ fun MacAvatar(state: AvatarState, size: Dp = 56.dp) {
     ) {
         AnimatedContent(
             targetState = state == AvatarState.DONE,
-            modifier = Modifier.graphicsLayer { rotationZ = -rotation },
+            modifier = Modifier.graphicsLayer { rotationZ = -turning.value },
             transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith fadeOut() },
             label = "badge",
         ) { done ->
@@ -138,3 +141,6 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
 }
 
 private const val SPIN_PERIOD_MS = 6_000
+
+/** Turns queued per start: longer than any transfer that keeps the card busy. */
+private const val SPIN_TURNS = 600
