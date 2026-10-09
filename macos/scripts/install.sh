@@ -5,6 +5,8 @@
 #
 # Sign with your team every time: the Keychain lets the same signature reuse LocalDrop's device
 # key, while an ad-hoc signature changes with every build and macOS asks for access again.
+# With a Developer ID certificate (paid membership) the build is signed like the released DMG,
+# so macOS keeps Bluetooth and Downloads permissions when switching between the two.
 set -euo pipefail
 
 team="${DEVELOPMENT_TEAM:-${1:-}}"
@@ -13,9 +15,14 @@ if [[ -z "$team" ]]; then
     exit 1
 fi
 
+identity="Apple Development"
+if security find-identity -v -p codesigning | grep -q "Developer ID Application: .*($team)"; then
+    identity="Developer ID Application"
+fi
+
 cd "$(dirname "$0")/.."
 xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Release -derivedDataPath build \
-    CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Development" DEVELOPMENT_TEAM="$team" \
+    CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$identity" DEVELOPMENT_TEAM="$team" \
     -destination "generic/platform=macOS" -quiet build
 
 # Quit any running copy first (including one started from Xcode), so the new one takes over
