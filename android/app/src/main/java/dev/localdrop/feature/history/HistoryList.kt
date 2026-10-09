@@ -22,10 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import android.graphics.Bitmap
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.SwipeToDismissBox
@@ -179,21 +177,27 @@ private fun Preview(thumbnail: Bitmap?, kind: FileKind) {
     }
 }
 
-/** Received (arrow down, primary) or sent (arrow up, tertiary), cut out of the row's background. */
+/**
+ * Received (arrow down, primary) or sent (arrow up, tertiary), cut out of the row's background:
+ * a disc of the row's color with the colored one inside — not a border, whose edge would let a
+ * light fringe of the badge show through.
+ */
 @Composable
 private fun DirectionBadge(incoming: Boolean, modifier: Modifier) {
     val scheme = MaterialTheme.colorScheme
-    Surface(
-        shape = CircleShape,
-        color = if (incoming) scheme.primary else scheme.tertiary,
-        contentColor = if (incoming) scheme.onPrimary else scheme.onTertiary,
-        border = BorderStroke(2.dp, scheme.surfaceContainerHigh),
-        modifier = modifier.size(18.dp),
+    Box(
+        modifier
+            .size(18.dp)
+            .background(scheme.surfaceContainerHigh, CircleShape)
+            .padding(2.dp)
+            .background(if (incoming) scheme.primary else scheme.tertiary, CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             painterResource(if (incoming) R.drawable.ic_arrow_down else R.drawable.ic_arrow_up),
             contentDescription = stringResource(if (incoming) R.string.history_received else R.string.history_sent),
-            modifier = Modifier.padding(3.dp),
+            tint = if (incoming) scheme.onPrimary else scheme.onTertiary,
+            modifier = Modifier.size(10.dp),
         )
     }
 }
