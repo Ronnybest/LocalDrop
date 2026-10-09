@@ -1,5 +1,14 @@
 package dev.localdrop.feature.history
 
+import android.text.format.DateUtils
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import dev.localdrop.app.ui.Segments
+import java.util.Calendar
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,7 +16,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,7 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,22 +65,26 @@ class HistoryViewModel(private val store: HistoryStore) : ViewModel() {
     }
 }
 
-/** Everything of the last 30 days, newest first. */
+/** Everything of the last 30 days, newest first, one segmented group per day. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)) {
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var swiping by remember { mutableStateOf<String?>(null) }
     BackHandler(onBack = onBack)
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.home_recent)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
+                scrollBehavior = scroll,
             )
         },
     ) { padding ->
@@ -87,19 +98,45 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
             }
             return@Scaffold
         }
+        val days = entries.groupBy { dayOf(it.timeMs) }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(Segments.Gap),
         ) {
-            items(entries, key = { it.id }) { entry ->
-                HistoryItem(
-                    entry,
-                    onOpen = { HistoryActions.open(context, entry) },
-                    onDelete = { viewModel.remove(entry) },
-                    modifier = Modifier.animateItem(),
+            days.forEach { (day, dayEntries) ->
+                item(key = "day$day") {
+                    Text(
+                        dayTitle(dayEntries.first().timeMs),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.animateItem().padding(start = 12.dp, top = 18.dp, bottom = 10.dp),
+                    )
+                }
+                historyGroup(
+                    entries = dayEntries,
+                    swiping = swiping,
+                    onSwiping = { id, on -> swiping = if (on) id else swiping.takeIf { it != id } },
+                    onOpen = { HistoryActions.open(context, it) },
+                    onDelete = { viewModel.remove(it) },
                 )
             }
         }
+    }
+}
+
+private fun dayOf(timeMs: Long): Long {
+    val calendar = Calendar.getInstance().apply { timeInMillis = timeMs }
+    return calendar.get(Calendar.YEAR) * 1000L + calendar.get(Calendar.DAY_OF_YEAR)
+}
+
+/** "Today", "Yesterday", then "9 October". */
+@Composable
+private fun dayTitle(timeMs: Long): String {
+    val context = LocalContext.current
+    return when {
+        DateUtils.isToday(timeMs) -> stringResource(R.string.history_today)
+        DateUtils.isToday(timeMs + DateUtils.DAY_IN_MILLIS) -> stringResource(R.string.history_yesterday)
+        else -> DateUtils.formatDateTime(context, timeMs, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR)
     }
 }

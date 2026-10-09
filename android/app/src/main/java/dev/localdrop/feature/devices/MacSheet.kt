@@ -2,35 +2,43 @@ package dev.localdrop.feature.devices
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.clickable
 import dev.localdrop.R
+import dev.localdrop.app.ui.Segments
+import dev.localdrop.app.ui.segmentColors
+import dev.localdrop.app.ui.segmentShape
+import dev.localdrop.app.ui.segmentShapes
 import dev.localdrop.core.device.TrustedDevice
 
+private class Toggle(val label: Int, val detail: Int, val checked: Boolean, val enabled: Boolean, val onChange: (Boolean) -> Unit)
+
 /**
- * A Mac's settings, rarely changed: which Mac is the main one, how files from it are received,
- * its key to compare with the Mac, and forgetting it.
+ * A Mac's settings, rarely changed: which Mac is the main one and how files from it are received
+ * (one segmented group), the pair's verification code, and forgetting it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,61 +56,76 @@ fun MacSheet(
     onForget: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.navigationBarsPadding().padding(bottom = 8.dp)) {
-            Row(
-                Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                RoundIcon(size = 48, tint = MaterialTheme.colorScheme.primaryContainer) {
-                    Icon(painterResource(R.drawable.ic_laptop), null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        Column(
+            Modifier.navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            MacAvatar(AvatarState.IDLE, size = 72.dp)
+            Spacer(Modifier.height(12.dp))
+            Text(device.deviceName, style = MaterialTheme.typography.headlineSmallEmphasized, textAlign = TextAlign.Center)
+            Text(
+                stringResource(R.string.trusted_last_seen, relativeTime(device.lastSeenMs)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(20.dp))
+
+            val toggles = buildList {
+                // The main Mac is changed by choosing another one, not by switching this one off.
+                if (canBeMain) add(Toggle(R.string.sheet_main_mac, R.string.sheet_main_mac_body, device.isDefault, !device.isDefault) { onMakeMain() })
+                if (device.canSend) {
+                    add(Toggle(R.string.action_receive_automatically, R.string.sheet_auto_body, device.receiveAutomatically, true, onReceiveAutomatically))
+                    add(Toggle(R.string.action_receive_in_background, R.string.sheet_background_body, linked, true, onReceiveInBackground))
                 }
-                Column {
-                    Text(device.deviceName, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        stringResource(R.string.trusted_last_seen, relativeTime(device.lastSeenMs)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(Segments.Gap)) {
+                toggles.forEachIndexed { index, toggle ->
+                    // A plain row that flips its switch: only the switch changes, not the row's color.
+                    SegmentedListItem(
+                        onClick = { toggle.onChange(!toggle.checked) },
+                        shapes = segmentShapes(segmentShape(index, toggles.size)),
+                        colors = segmentColors(),
+                        enabled = toggle.enabled,
+                        supportingContent = { Text(stringResource(toggle.detail)) },
+                        trailingContent = { Switch(checked = toggle.checked, onCheckedChange = null, enabled = toggle.enabled) },
+                        content = { Text(stringResource(toggle.label)) },
                     )
                 }
             }
-            val transparent = ListItemDefaults.colors(containerColor = Color.Transparent)
-            if (canBeMain) {
-                // The main Mac is changed by choosing another one, not by switching this one off.
-                SwitchRow(stringResource(R.string.sheet_main_mac), device.isDefault, enabled = !device.isDefault) { onMakeMain() }
-            }
-            if (device.canSend) {
-                SwitchRow(stringResource(R.string.action_receive_automatically), device.receiveAutomatically, onChange = onReceiveAutomatically)
-                SwitchRow(stringResource(R.string.action_receive_in_background), linked, onChange = onReceiveInBackground)
-            }
+
             if (verificationCode != null) {
-                ListItem(
-                    overlineContent = { Text(stringResource(R.string.sheet_verification_code)) },
-                    headlineContent = {
-                        Text(verificationCode, style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"))
-                    },
-                    supportingContent = { Text(stringResource(R.string.sheet_verification_hint)) },
-                    colors = transparent,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                )
+                Spacer(Modifier.height(12.dp))
+                Surface(
+                    shape = RoundedCornerShape(Segments.Outer),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.sheet_verification_code), style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            verificationCode,
+                            style = MaterialTheme.typography.headlineMediumEmphasized.copy(fontFeatureSettings = "tnum"),
+                        )
+                        Text(stringResource(R.string.sheet_verification_hint), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
-            HorizontalDivider(Modifier.padding(horizontal = 24.dp, vertical = 4.dp))
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.action_forget), color = MaterialTheme.colorScheme.error) },
-                leadingContent = { Icon(Icons.Default.Delete, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.error) },
-                colors = transparent,
-                modifier = Modifier.padding(horizontal = 8.dp).clickable(onClick = onForget),
-            )
+
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = onForget,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
+                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.trusted_forget_button))
+            }
         }
     }
-}
-
-@Composable
-private fun SwitchRow(label: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
-    ListItem(
-        headlineContent = { Text(label) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = null, enabled = enabled) },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.padding(horizontal = 8.dp).clickable(enabled = enabled) { onChange(!checked) },
-    )
 }

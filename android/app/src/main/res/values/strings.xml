@@ -243,4 +243,11 @@
     <string name="settings_title">Settings</string>
     <string name="settings_haptics">Haptics</string>
     <string name="settings_haptics_body">A light touch on taps and when a transfer finishes</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="sheet_main_mac_body">First in Share and on the home screen</string>
+    <string name="sheet_auto_body">Files from this Mac are saved right away</string>
+    <string name="sheet_background_body">Even when LocalDrop is closed</string>
+    <string name="trusted_forget_button">Forget this Mac</string>
+    <string name="settings_general">General</string>
 </resources>

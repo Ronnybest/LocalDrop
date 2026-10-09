@@ -21,7 +21,12 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.LaunchedEffect
-import dev.localdrop.feature.history.HistoryItem
+import dev.localdrop.feature.history.historyGroup
+import dev.localdrop.app.ui.Segments
+import dev.localdrop.app.ui.segmentColors
+import dev.localdrop.app.ui.segmentShape
+import dev.localdrop.app.ui.segmentShapes
+import androidx.compose.material3.SegmentedListItem
 import dev.localdrop.feature.settings.Haptic
 import dev.localdrop.feature.settings.rememberHaptics
 import kotlinx.coroutines.delay
@@ -329,6 +334,7 @@ fun HomeScreen(
     val haptic = rememberHaptics()
     var sheetFor by remember { mutableStateOf<String?>(null) }
     var pendingForget by remember { mutableStateOf<TrustedDevice?>(null) }
+    var swiping by remember { mutableStateOf<String?>(null) }
 
     // Receiving from a Mac in the background needs one companion-device approval (Android rule).
     var linked by remember { mutableStateOf(CompanionLink.isLinked(context)) }
@@ -448,7 +454,8 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            // Rows of a group sit a hairline apart; cards and sections add their own space.
+            verticalArrangement = Arrangement.spacedBy(Segments.Gap),
         ) {
             // Every row comes, goes and moves animated (fade and slide), deleted entries included.
             item(key = "main") {
@@ -465,7 +472,7 @@ fun HomeScreen(
                     onCancel = { haptic(Haptic.REJECT); onCancelTransfer() },
                     onAccept = { haptic(Haptic.CONFIRM); onAcceptIncoming() },
                     onDecline = { haptic(Haptic.REJECT); onDeclineIncoming() },
-                    modifier = Modifier.animateItem(),
+                    modifier = Modifier.animateItem().padding(bottom = 10.dp),
                 )
             }
             item(key = "hint") {
@@ -476,14 +483,15 @@ fun HomeScreen(
                 )
             }
             item(key = "others") { SectionTitle(stringResource(R.string.home_other_macs), Modifier.animateItem()) }
-            items(others, key = { it.deviceId }) { device ->
-                val ongoing = transferFor(device.deviceId)
-                if (ongoing != null || finishedFor(device) != null) {
+            // Other Macs and "Add Mac" are one group; a Mac in a session leaves it as a card.
+            val group = others.filter { transferFor(it.deviceId) == null && finishedFor(it) == null }
+            others.filter { it !in group }.forEach { device ->
+                item(key = device.deviceId) {
                     MacCard(
                         device = device,
                         presence = presence[device.deviceId],
                         waiting = waiting[device.deviceId] ?: 0,
-                        transfer = ongoing,
+                        transfer = transferFor(device.deviceId),
                         finished = finishedFor(device),
                         clipboard = clipboardState(device.deviceId),
                         onFiles = { onFiles(device.deviceId) },
@@ -492,34 +500,41 @@ fun HomeScreen(
                         onCancel = { haptic(Haptic.REJECT); onCancelTransfer() },
                         onAccept = { haptic(Haptic.CONFIRM); onAcceptIncoming() },
                         onDecline = { haptic(Haptic.REJECT); onDeclineIncoming() },
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier.animateItem().padding(bottom = 10.dp),
                     )
-                } else {
-                    OtherMacRow(device, presence[device.deviceId], waiting[device.deviceId] ?: 0, Modifier.animateItem()) { sheetFor = device.deviceId }
+                }
+            }
+            val rows = group.size + 1
+            group.forEachIndexed { index, device ->
+                item(key = device.deviceId) {
+                    OtherMacRow(device, presence[device.deviceId], waiting[device.deviceId] ?: 0, segmentShape(index, rows), Modifier.animateItem()) {
+                        sheetFor = device.deviceId
+                    }
                 }
             }
             item(key = "add") {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.action_add_mac)) },
-                    leadingContent = { RoundIcon(tint = MaterialTheme.colorScheme.surfaceContainerHighest) { Icon(Icons.Default.Add, null) } },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.animateItem().clip28().clickable(onClick = onAddMac),
+                SegmentedListItem(
+                    onClick = { haptic(Haptic.TICK); onAddMac() },
+                    shapes = segmentShapes(segmentShape(rows - 1, rows)),
+                    colors = segmentColors(),
+                    leadingContent = { RoundIcon(tint = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onPrimaryContainer) } },
+                    modifier = Modifier.animateItem(),
+                    content = { Text(stringResource(R.string.action_add_mac)) },
                 )
             }
             if (history.isNotEmpty()) {
                 item(key = "recent") { SectionTitle(stringResource(R.string.home_recent), Modifier.animateItem()) }
-                items(history.take(RECENT_COUNT), key = { it.id }) { entry ->
-                    HistoryItem(
-                        entry,
-                        onOpen = { HistoryActions.open(context, entry) },
-                        onDelete = { viewModel.removeHistory(entry) },
-                        modifier = Modifier.animateItem(),
-                    )
-                }
+                historyGroup(
+                    entries = history.take(RECENT_COUNT),
+                    swiping = swiping,
+                    onSwiping = { id, on -> swiping = if (on) id else swiping.takeIf { it != id } },
+                    onOpen = { HistoryActions.open(context, it) },
+                    onDelete = { viewModel.removeHistory(it) },
+                )
                 if (history.size > RECENT_COUNT) {
                     item(key = "all") {
-                        Box(Modifier.animateItem().fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                            TextButton(onClick = onOpenHistory) { Text(stringResource(R.string.action_show_all)) }
+                        Box(Modifier.animateItem().fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.CenterEnd) {
+                            FilledTonalButton(onClick = { haptic(Haptic.TICK); onOpenHistory() }) { Text(stringResource(R.string.action_show_all)) }
                         }
                     }
                 }
@@ -818,14 +833,17 @@ private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(start = 8.dp, top = 12.dp),
+        modifier = modifier.padding(start = 12.dp, top = 22.dp, bottom = 10.dp),
     )
 }
 
 @Composable
-private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waiting: Int, modifier: Modifier, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(device.deviceName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waiting: Int, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = segmentShapes(shape),
+        colors = segmentColors(),
+        modifier = modifier,
         supportingContent = {
             val status = when {
                 waiting > 0 -> pluralStringResource(R.plurals.home_waiting, waiting, waiting)
@@ -834,13 +852,8 @@ private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waitin
             }
             Text(status, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
-        leadingContent = {
-            RoundIcon(tint = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                Icon(painterResource(R.drawable.ic_laptop), null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = modifier.clip28().clickable(onClick = onClick),
+        leadingContent = { MacAvatar(AvatarState.IDLE, size = 40.dp) },
+        content = { Text(device.deviceName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
     )
 }
 

@@ -246,4 +246,11 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_haptics">Вибрация</string>
     <string name="settings_haptics_body">Лёгкий отклик при нажатиях и по окончании передачи</string>
+    <string name="history_today">Сегодня</string>
+    <string name="history_yesterday">Вчера</string>
+    <string name="sheet_main_mac_body">Первый в «Поделиться» и на главном экране</string>
+    <string name="sheet_auto_body">Файлы с этого Mac сохраняются сразу</string>
+    <string name="sheet_background_body">Даже когда LocalDrop закрыт</string>
+    <string name="trusted_forget_button">Забыть этот Mac</string>
+    <string name="settings_general">Общие</string>
 </resources>
