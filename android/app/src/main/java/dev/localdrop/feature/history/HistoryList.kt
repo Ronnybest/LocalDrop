@@ -16,6 +16,11 @@ import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.SwipeToDismissBox
@@ -103,18 +108,24 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
         else -> entry.title
     }
     // Every entry opens: a file in the gallery or in Files (after checking it is still there),
-    // a link in the browser, a text copied again.
+    // a link in the browser, a text copied again. Photos and videos show themselves; the rest an
+    // icon of their kind on a neutral tile.
     val kind = FileKind.of(entry)
-    val scheme = MaterialTheme.colorScheme
-    val (container, content) = when (kind) {
-        FileKind.IMAGE, FileKind.VIDEO -> scheme.primaryContainer to scheme.onPrimaryContainer
-        FileKind.AUDIO, FileKind.APP -> scheme.secondaryContainer to scheme.onSecondaryContainer
-        FileKind.PDF, FileKind.DOCUMENT -> scheme.tertiaryContainer to scheme.onTertiaryContainer
-        else -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
-    }
+    val thumbnail by rememberThumbnail(entry.uri.takeIf { kind.isVisual })
     val leading: @Composable () -> Unit = {
-        RoundIcon(size = 40, shape = RoundedCornerShape(12.dp), tint = container) {
-            Icon(painterResource(kind.icon), contentDescription = null, modifier = Modifier.size(20.dp), tint = content)
+        Crossfade(targetState = thumbnail, label = "thumbnail") { preview ->
+            if (preview != null) {
+                Image(
+                    bitmap = preview.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)),
+                )
+            } else {
+                RoundIcon(size = 40, shape = RoundedCornerShape(12.dp), tint = MaterialTheme.colorScheme.surfaceContainerHighest) {
+                    Icon(painterResource(kind.icon), contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
     }
     val supporting: @Composable () -> Unit = {
