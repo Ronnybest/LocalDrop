@@ -236,4 +236,6 @@
     <string name="history_sent">Отправлено</string>
     <string name="history_empty">За 30 дней ничего не было</string>
     <string name="action_show_all">Показать все</string>
+    <string name="card_left">осталось</string>
+    <string name="card_finished_in">%1$s · %2$s за %3$s</string>
 </resources>

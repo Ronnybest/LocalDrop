@@ -37,6 +37,14 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        // Material 3 Expressive (shapes, loading indicator, button groups, motion) is marked
+        // experimental in material3 1.5; the whole UI is built on it.
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
+    }
+}
+
 tasks.withType<Test>().configureEach {
     // Shared with the Mac's tests (ProtocolVectorsTest): a change there reruns the tests.
     inputs.file(rootProject.file("../protocol/test-vectors.properties")).withPathSensitivity(PathSensitivity.NONE)

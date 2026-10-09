@@ -1,15 +1,20 @@
 package dev.localdrop.app.ui
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import android.os.Build
 
+/**
+ * Material 3 Expressive: the wallpaper's dynamic colors (Android 12+) and expressive motion —
+ * springs that overshoot a little — for every component and transition that reads the theme.
+ */
 @Composable
 fun LocalDropTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
@@ -21,5 +26,5 @@ fun LocalDropTheme(content: @Composable () -> Unit) {
         dark -> darkColorScheme()
         else -> lightColorScheme()
     }
-    MaterialTheme(colorScheme = colors, content = content)
+    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive(), content = content)
 }

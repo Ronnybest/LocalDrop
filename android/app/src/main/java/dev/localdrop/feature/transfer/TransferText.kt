@@ -120,6 +120,17 @@ object TransferText {
         }
     }
 
+    /** The time left alone, for a big number: "25 s", "1 min 15 s", "2 h 5 min". Null while unknown. */
+    fun timeLeftShort(context: Context, progress: TransferProgress): String? {
+        val rounded = secondsLeft(progress) ?: return null
+        return when {
+            rounded < 60 -> context.getString(R.string.duration_seconds, rounded)
+            rounded < 3600 && rounded % 60 != 0 -> context.getString(R.string.duration_minutes_seconds, rounded / 60, rounded % 60)
+            rounded < 3600 -> context.getString(R.string.chip_minutes, rounded / 60)
+            else -> context.getString(R.string.duration_hours_minutes, rounded / 3600, rounded % 3600 / 60)
+        }
+    }
+
     /**
      * Roughly how long the transfer still takes, from its recent speed, rounded up so the number
      * doesn't jitter: whole seconds up to 10, steps of 5 seconds up to a minute, then minutes and

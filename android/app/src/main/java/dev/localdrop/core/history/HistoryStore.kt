@@ -31,6 +31,10 @@ class HistoryEntry(
     /** A single received file, opened from the list; null when there is nothing to open. */
     val uri: String? = null,
     val mimeType: String? = null,
+    /** Files' total size; known for files. */
+    val bytes: Long? = null,
+    /** How long a send took; known for files this phone sent. */
+    val durationMs: Long? = null,
 ) {
     enum class Kind { FILES, TEXT, LINK }
 }
@@ -72,10 +76,12 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
         count: Int = 1,
         uri: String? = null,
         mimeType: String? = null,
+        bytes: Long? = null,
+        durationMs: Long? = null,
     ) {
         load()
         val stored = if (kind == HistoryEntry.Kind.TEXT) title.trim().take(TEXT_PREVIEW) else title
-        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType)
+        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType, bytes, durationMs)
         save(fresh(listOf(entry) + _entries.value))
     }
 
@@ -132,6 +138,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                                     put("count", CborValue.UInt(entry.count.toLong()))
                                     entry.uri?.let { put("uri", CborValue.Text(it)) }
                                     entry.mimeType?.let { put("mime", CborValue.Text(it)) }
+                                    entry.bytes?.let { put("bytes", CborValue.UInt(it)) }
+                                    entry.durationMs?.let { put("duration", CborValue.UInt(it)) }
                                 },
                             )
                         },
@@ -157,6 +165,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                     count = entry.uint("count").toInt(),
                     uri = (entry.entries["uri"] as? CborValue.Text)?.value,
                     mimeType = (entry.entries["mime"] as? CborValue.Text)?.value,
+                    bytes = (entry.entries["bytes"] as? CborValue.UInt)?.value,
+                    durationMs = (entry.entries["duration"] as? CborValue.UInt)?.value,
                 )
             }
         }

@@ -20,10 +20,14 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import dev.localdrop.feature.history.HistoryItem
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ButtonShapes
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,7 +64,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -196,6 +202,7 @@ private const val KEY_LATER = "later"
 private const val KEY_TILE_ADDED = "added"
 private const val RECENT_COUNT = 5
 private const val REVEAL_DELAY_MS = 500L
+private const val FINISHED_MS = 3_000L
 private const val SPINNER_DELAY_MS = 500L
 private const val CLIPBOARD_DONE_MS = 1_600L
 private const val CLIPBOARD_SETTLE_MS = 400L
@@ -208,9 +215,44 @@ private class ClipboardSend(val deviceId: String, val startedMs: Long) {
 
 private enum class ClipboardState { IDLE, SENDING, DONE }
 
-/** "Clipboard", a spinner while it goes (after half a second), then a check. */
+/** Files and the clipboard as one connected group: the pressed button widens, the other yields. */
 @Composable
-private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, modifier: Modifier) {
+private fun SendButtons(clipboard: ClipboardState, onFiles: () -> Unit, onClipboard: () -> Unit) {
+    val filesPress = remember { MutableInteractionSource() }
+    val clipboardPress = remember { MutableInteractionSource() }
+    ButtonGroup(
+        overflowIndicator = {},
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
+        customItem(
+            buttonGroupContent = {
+                Button(
+                    onClick = onFiles,
+                    shapes = ButtonShapes(ButtonGroupDefaults.connectedLeadingButtonShape, ButtonGroupDefaults.connectedLeadingButtonPressShape),
+                    interactionSource = filesPress,
+                    modifier = Modifier.weight(1f).animateWidth(filesPress),
+                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                ) {
+                    Icon(painterResource(R.drawable.ic_upload), null, Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.action_send_files), maxLines = 1, softWrap = false)
+                }
+            },
+            menuContent = {},
+        )
+        customItem(
+            buttonGroupContent = {
+                ClipboardButton(clipboard, onClipboard, clipboardPress, Modifier.weight(1f).animateWidth(clipboardPress))
+            },
+            menuContent = {},
+        )
+    }
+}
+
+/** "Clipboard", the expressive loading indicator while it goes (past half a second), then a check. */
+@Composable
+private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, interactionSource: MutableInteractionSource, modifier: Modifier) {
     var spinner by remember { mutableStateOf(false) }
     LaunchedEffect(state) {
         spinner = false
@@ -223,6 +265,8 @@ private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, modifier
     // Stays enabled-looking while busy: a greyed button would flash too.
     FilledTonalButton(
         onClick = { if (state == ClipboardState.IDLE) onClick() },
+        shapes = ButtonShapes(ButtonGroupDefaults.connectedTrailingButtonShape, ButtonGroupDefaults.connectedTrailingButtonPressShape),
+        interactionSource = interactionSource,
         modifier = modifier,
         contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
     ) {
@@ -245,7 +289,7 @@ private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, modifier
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_send_clipboard), maxLines = 1, softWrap = false)
                     }
-                    ClipboardState.SENDING -> CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
+                    ClipboardState.SENDING -> LoadingIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondaryContainer)
                     ClipboardState.DONE -> {
                         Icon(Icons.Default.Check, null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -355,18 +399,37 @@ fun HomeScreen(
         clipboardSend?.deviceId == deviceId -> ClipboardState.SENDING
         else -> ClipboardState.IDLE
     }
+    // A transfer of files that just finished is celebrated in its Mac's card for a moment: the
+    // badge turns into a check, "Sent" or "Received" with what and how long. Only what finishes
+    // while the screen is open.
+    val openedAt = remember { System.currentTimeMillis() }
+    var finished by remember { mutableStateOf<HistoryEntry?>(null) }
+    val latest = history.firstOrNull()
+    LaunchedEffect(latest?.id) {
+        val entry = latest ?: return@LaunchedEffect
+        if (entry.kind != HistoryEntry.Kind.FILES || entry.timeMs < openedAt) return@LaunchedEffect
+        finished = entry
+        delay(FINISHED_MS)
+        if (finished?.id == entry.id) finished = null
+    }
+    fun finishedFor(device: TrustedDevice) = finished?.takeIf { it.peerName == device.deviceName }
+
     // The clipboard's own session shows on its button only.
     fun transferFor(deviceId: String) = active.takeIf { activeDeviceId == deviceId && clipboardSend?.deviceId != deviceId }
 
+    // A large title that folds into a regular bar as the list scrolls.
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onOpenDiagnostics) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.diagnostics_title))
                     }
                 },
+                scrollBehavior = scroll,
             )
         },
     ) { padding ->
@@ -387,6 +450,7 @@ fun HomeScreen(
                     presence = presence[main.deviceId],
                     waiting = waiting[main.deviceId] ?: 0,
                     transfer = transferFor(main.deviceId),
+                    finished = finishedFor(main),
                     clipboard = clipboardState(main.deviceId),
                     onFiles = { onFiles(main.deviceId) },
                     onClipboard = { onClipboard(main.deviceId) },
@@ -407,12 +471,13 @@ fun HomeScreen(
             item(key = "others") { SectionTitle(stringResource(R.string.home_other_macs), Modifier.animateItem()) }
             items(others, key = { it.deviceId }) { device ->
                 val ongoing = transferFor(device.deviceId)
-                if (ongoing != null) {
+                if (ongoing != null || finishedFor(device) != null) {
                     MacCard(
                         device = device,
                         presence = presence[device.deviceId],
                         waiting = waiting[device.deviceId] ?: 0,
                         transfer = ongoing,
+                        finished = finishedFor(device),
                         clipboard = clipboardState(device.deviceId),
                         onFiles = { onFiles(device.deviceId) },
                         onClipboard = { onClipboard(device.deviceId) },
@@ -516,13 +581,25 @@ private fun EmptyHome(onAddMac: () -> Unit, modifier: Modifier) {
     }
 }
 
-/** A Mac with what it is doing; the main Mac always, any other one while a session runs with it. */
+/** What a Mac's card shows below its name. */
+private sealed interface CardMode {
+    data object Idle : CardMode
+    data class Busy(val transfer: TransferState) : CardMode
+    data class Finished(val entry: HistoryEntry) : CardMode
+}
+
+/**
+ * A Mac with what it is doing; the main Mac always, any other one while a session runs with it.
+ * Its badge morphs with the state; the content below changes with a fade, the card's height
+ * following with the theme's spring.
+ */
 @Composable
 private fun MacCard(
     device: TrustedDevice,
     presence: DevicePresence?,
     waiting: Int,
     transfer: TransferState?,
+    finished: HistoryEntry?,
     clipboard: ClipboardState,
     onFiles: () -> Unit,
     onClipboard: () -> Unit,
@@ -532,55 +609,71 @@ private fun MacCard(
     onDecline: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // What this phone starts shows only past half a second: quick sends don't flash the card.
+    // The Mac's request and its files show at once.
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(transfer != null) {
+        revealed = false
+        if (transfer != null) {
+            delay(REVEAL_DELAY_MS)
+            revealed = true
+        }
+    }
+    val shown = transfer?.takeIf { revealed || it is TransferState.AwaitingLocalDecision || it is TransferState.Receiving }
+    val mode = when {
+        shown != null -> CardMode.Busy(shown)
+        finished != null -> CardMode.Finished(finished)
+        else -> CardMode.Idle
+    }
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
-        // What this phone starts shows only past half a second: quick sends don't flash the card.
-        // The Mac's request and its files show at once.
-        var revealed by remember { mutableStateOf(false) }
-        LaunchedEffect(transfer != null) {
-            revealed = false
-            if (transfer != null) {
-                delay(REVEAL_DELAY_MS)
-                revealed = true
-            }
-        }
-        val shown = transfer?.takeIf { revealed || it is TransferState.AwaitingLocalDecision || it is TransferState.Receiving }
-        Column(Modifier.animateContentSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Row(verticalAlignment = Alignment.Top) {
-                RoundIcon(size = 52, tint = MaterialTheme.colorScheme.primaryContainer) {
-                    Icon(painterResource(R.drawable.ic_laptop), null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                }
+                MacAvatar(
+                    when (mode) {
+                        CardMode.Idle -> AvatarState.IDLE
+                        is CardMode.Busy -> AvatarState.BUSY
+                        is CardMode.Finished -> AvatarState.DONE
+                    },
+                )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onMore) { Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.action_more)) }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(device.deviceName, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(device.deviceName, style = MaterialTheme.typography.titleLargeEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 when (shown) {
                     is TransferState.Receiving, is TransferState.AwaitingLocalDecision -> StatusPill(stringResource(R.string.card_receiving), highlighted = true)
                     null -> presence?.let { PresencePill(it) }
                     else -> StatusPill(stringResource(R.string.card_sending), highlighted = true)
                 }
             }
-            if (shown != null) {
-                TransferInCard(shown, onCancel, onAccept, onDecline)
-            } else {
-                if (waiting > 0) {
-                    Text(
-                        pluralStringResource(R.plurals.home_waiting, waiting, waiting),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onFiles, modifier = Modifier.weight(1f), contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
-                        Icon(painterResource(R.drawable.ic_upload), null, Modifier.size(ButtonDefaults.IconSize))
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.action_send_files))
+            AnimatedContent(
+                targetState = mode,
+                contentKey = { it::class },
+                transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) using SizeTransform(clip = false) },
+                label = "card",
+            ) { current ->
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    when (current) {
+                        is CardMode.Busy -> TransferInCard(current.transfer, onCancel, onAccept, onDecline)
+                        is CardMode.Finished -> FinishedInCard(current.entry)
+                        CardMode.Idle -> {
+                            if (waiting > 0) {
+                                Text(
+                                    pluralStringResource(R.plurals.home_waiting, waiting, waiting),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            SendButtons(clipboard, onFiles, onClipboard)
+                        }
                     }
-                    ClipboardButton(clipboard, onClipboard, Modifier.weight(1f))
                 }
             }
         }

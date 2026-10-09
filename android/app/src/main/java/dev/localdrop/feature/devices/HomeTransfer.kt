@@ -5,18 +5,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.localdrop.R
+import dev.localdrop.core.history.HistoryEntry
 import dev.localdrop.app.ui.WavyProgress
 import dev.localdrop.core.transfer.TransferProgress
 import dev.localdrop.core.transfer.TransferState
@@ -59,35 +63,58 @@ internal fun TransferInCard(state: TransferState, onCancel: () -> Unit, onAccept
     }
 }
 
+/** The time left as the card's big number, and what goes under it. */
 @Composable
 private fun Progress(progress: TransferProgress, onCancel: () -> Unit) {
     val context = LocalContext.current
     val fraction = if (progress.totalBytes > 0) progress.bytesSent.toFloat() / progress.totalBytes else 0f
-    Lines(
-        TransferText.what(context, progress.fileCount, progress.currentFileName),
-        if (progress.fileCount > 1) stringResource(R.string.notification_file_index, progress.fileIndex + 1, progress.fileCount) else null,
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        WavyProgress(fraction)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            val bytes = stringResource(
-                R.string.transfer_bytes,
-                Formatter.formatShortFileSize(context, progress.bytesSent),
-                Formatter.formatShortFileSize(context, progress.totalBytes),
-            )
-            val left = TransferText.timeLeft(context, progress)?.replaceFirstChar { it.titlecase() } ?: bytes
-            Text(left, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("${(fraction * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+    val left = TransferText.timeLeftShort(context, progress)
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            left ?: "${(fraction * 100).toInt()}%",
+            style = MaterialTheme.typography.displaySmallEmphasized,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        val what = TransferText.what(context, progress.fileCount, progress.currentFileName)
+        val detail = listOfNotNull(
+            stringResource(R.string.card_left).takeIf { left != null },
+            if (progress.fileCount > 1) stringResource(R.string.notification_file_index, progress.fileIndex + 1, progress.fileCount) else what,
+        ).joinToString(" · ")
+        Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
+    }
+    WavyProgress(fraction)
+    FilledTonalButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
+}
+
+/** Connecting, waiting for the Mac, checking: the expressive loading indicator beside the words. */
+@Composable
+private fun Waiting(title: String, detail: String?, onCancel: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        LoadingIndicator(Modifier.size(48.dp))
+        Lines(title, detail)
     }
     FilledTonalButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
 }
 
+/** A transfer of files that just finished: "Sent" or "Received", big, with what and how long. */
 @Composable
-private fun Waiting(title: String, detail: String?, onCancel: () -> Unit) {
-    Lines(title, detail)
-    WavyProgress(null)
-    FilledTonalButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
+internal fun FinishedInCard(entry: HistoryEntry) {
+    val context = LocalContext.current
+    val what = TransferText.what(context, entry.count, entry.title)
+    val size = entry.bytes?.let { Formatter.formatShortFileSize(context, it) }
+    val detail = when {
+        size != null && entry.durationMs != null -> stringResource(R.string.card_finished_in, what, size, TransferText.duration(context, entry.durationMs))
+        size != null -> stringResource(R.string.card_finished, what, size)
+        else -> what
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            stringResource(if (entry.incoming) R.string.history_received else R.string.history_sent),
+            style = MaterialTheme.typography.headlineMediumEmphasized,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.MiddleEllipsis)
+    }
 }
 
 @Composable

@@ -672,7 +672,15 @@ class TransferService : Service() {
         when (state) {
             is TransferState.Completed -> {
                 val summary = state.summary
-                history.add(incoming = false, peerName = name, kind = HistoryEntry.Kind.FILES, title = summary.firstFileName, count = summary.fileCount)
+                history.add(
+                    incoming = false,
+                    peerName = name,
+                    kind = HistoryEntry.Kind.FILES,
+                    title = summary.firstFileName,
+                    count = summary.fileCount,
+                    bytes = summary.totalBytes,
+                    durationMs = state.durationMs,
+                )
                 postResult(
                     towards(name),
                     TransferText.what(this, summary.fileCount, summary.firstFileName),
@@ -757,6 +765,7 @@ class TransferService : Service() {
                     count = files.size,
                     uri = first.uri.toString().takeIf { files.size == 1 },
                     mimeType = first.mimeType.takeIf { files.size == 1 },
+                    bytes = files.sumOf { it.size },
                 )
                 // An app installs only from an app allowed to install, which LocalDrop doesn't ask to
                 // be: Files is, and opens the installer when the APK is tapped in Downloads.
