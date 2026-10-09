@@ -52,6 +52,8 @@ import dev.localdrop.core.discovery.NearbyDevice
 import dev.localdrop.core.protocol.EndpointInfo
 import dev.localdrop.feature.settings.DiscoveryBlockerCard
 import dev.localdrop.feature.settings.MessageCard
+import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.rememberHaptics
 
 /**
  * Pairing a new Mac: the one place a list of nearby devices makes sense. Sending never starts
@@ -213,7 +215,8 @@ private fun NearbyMacCard(device: NearbyDevice, pairedFingerprints: Set<String>,
                 }
             }
             if (info != null && !paired) {
-                Button(onClick = { onPair(info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_pair)) }
+                val haptic = rememberHaptics()
+                Button(onClick = { haptic(Haptic.TICK); onPair(info) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_pair)) }
             }
         }
     }

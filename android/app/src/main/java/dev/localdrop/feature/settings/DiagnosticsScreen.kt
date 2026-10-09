@@ -17,6 +17,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,10 +44,13 @@ fun DiagnosticsScreen(
 ) {
     BackHandler(onBack = onBack)
     val devices by viewModel.devices.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val hapticsOn by Haptics.enabled(context).collectAsStateWithLifecycle()
+    val haptic = rememberHaptics()
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.diagnostics_title)) },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
@@ -55,6 +60,23 @@ fun DiagnosticsScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(vertical = 8.dp)) {
+            val on = hapticsOn != false
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_haptics)) },
+                supportingContent = { Text(stringResource(R.string.settings_haptics_body)) },
+                trailingContent = { Switch(checked = on, onCheckedChange = null) },
+                modifier = Modifier.clickable {
+                    Haptics.setEnabled(context, !on)
+                    // Felt only when turning it on: off means off.
+                    haptic(Haptic.TOGGLE_ON)
+                },
+            )
+            Text(
+                stringResource(R.string.diagnostics_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
+            )
             Text(
                 stringResource(R.string.test_data_body),
                 style = MaterialTheme.typography.bodyMedium,

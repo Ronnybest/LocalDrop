@@ -243,4 +243,7 @@
     <string name="pairing_same_code">Такой же код сейчас на экране %1$s</string>
     <string name="pairing_codes_match">Коды совпадают</string>
     <string name="pairing_codes_differ">Не совпадают</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_haptics">Вибрация</string>
+    <string name="settings_haptics_body">Лёгкий отклик при нажатиях и по окончании передачи</string>
 </resources>

@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.localdrop.feature.devices.AvatarState
 import dev.localdrop.feature.devices.MacAvatar
+import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.rememberHaptics
 import kotlinx.coroutines.delay
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -275,6 +277,7 @@ private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCa
 @Composable
 private fun PairingContent(state: TransferState.Pairing, onConfirm: () -> Unit, onDecline: () -> Unit) {
     val name = state.peer.name
+    val haptic = rememberHaptics()
     MacAvatar(if (state.confirmedLocally) AvatarState.BUSY else AvatarState.IDLE, size = 72.dp)
     Text(stringResource(R.string.pairing_title, name), style = MaterialTheme.typography.headlineSmallEmphasized, textAlign = TextAlign.Center)
     if (state.keyChanged) {
@@ -308,10 +311,16 @@ private fun PairingContent(state: TransferState.Pairing, onConfirm: () -> Unit, 
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
+                OutlinedButton(onClick = { haptic(Haptic.REJECT); onDecline() }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.action_cancel))
+                }
             } else {
-                Button(onClick = onConfirm, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pairing_codes_match)) }
-                OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pairing_codes_differ)) }
+                Button(onClick = { haptic(Haptic.TICK); onConfirm() }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.pairing_codes_match))
+                }
+                OutlinedButton(onClick = { haptic(Haptic.REJECT); onDecline() }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.pairing_codes_differ))
+                }
             }
         }
     }
@@ -320,10 +329,12 @@ private fun PairingContent(state: TransferState.Pairing, onConfirm: () -> Unit, 
 /** Paired: the badge turns into a check with a little pop. */
 @Composable
 private fun PairedContent(state: TransferState.Paired, onDismiss: () -> Unit) {
+    val haptic = rememberHaptics()
     var done by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(150)
         done = true
+        haptic(Haptic.CONFIRM)
     }
     MacAvatar(if (done) AvatarState.DONE else AvatarState.IDLE, size = 96.dp)
     Text(

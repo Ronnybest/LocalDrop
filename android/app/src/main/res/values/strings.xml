@@ -240,4 +240,7 @@
     <string name="pairing_same_code">%1$s shows the same code right now</string>
     <string name="pairing_codes_match">Codes match</string>
     <string name="pairing_codes_differ">They differ</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_haptics">Haptics</string>
+    <string name="settings_haptics_body">A light touch on taps and when a transfer finishes</string>
 </resources>

@@ -22,6 +22,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.LaunchedEffect
 import dev.localdrop.feature.history.HistoryItem
+import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.rememberHaptics
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ButtonGroup
@@ -324,6 +326,7 @@ fun HomeScreen(
     val history by viewModel.history.collectAsStateWithLifecycle()
     val verificationCodes by viewModel.verificationCodes.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val haptic = rememberHaptics()
     var sheetFor by remember { mutableStateOf<String?>(null) }
     var pendingForget by remember { mutableStateOf<TrustedDevice?>(null) }
 
@@ -348,6 +351,7 @@ fun HomeScreen(
         if (target != null && uris.isNotEmpty()) SendFromHome.files(context, target, uris)
     }
     val onFiles = { deviceId: String ->
+        haptic(Haptic.TICK)
         filesTarget = deviceId
         pickFiles.launch(arrayOf("*/*"))
     }
@@ -356,6 +360,7 @@ fun HomeScreen(
     var clipboardSend by remember { mutableStateOf<ClipboardSend?>(null) }
     var clipboardDone by remember { mutableStateOf<String?>(null) }
     val onClipboard = { deviceId: String ->
+        haptic(Haptic.TICK)
         if (SendFromHome.clipboard(context, deviceId) == SendFromHome.Clipboard.TEXT) {
             clipboardSend = ClipboardSend(deviceId, System.currentTimeMillis())
         }
@@ -390,6 +395,7 @@ fun HomeScreen(
     }
     LaunchedEffect(clipboardDone) {
         if (clipboardDone != null) {
+            haptic(Haptic.CONFIRM)
             delay(CLIPBOARD_DONE_MS)
             clipboardDone = null
         }
@@ -409,6 +415,7 @@ fun HomeScreen(
         val entry = latest ?: return@LaunchedEffect
         if (entry.kind != HistoryEntry.Kind.FILES || entry.timeMs < openedAt) return@LaunchedEffect
         finished = entry
+        haptic(Haptic.CONFIRM)
         delay(FINISHED_MS)
         if (finished?.id == entry.id) finished = null
     }
@@ -426,7 +433,7 @@ fun HomeScreen(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onOpenDiagnostics) {
-                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.diagnostics_title))
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title))
                     }
                 },
                 scrollBehavior = scroll,
@@ -455,9 +462,9 @@ fun HomeScreen(
                     onFiles = { onFiles(main.deviceId) },
                     onClipboard = { onClipboard(main.deviceId) },
                     onMore = { sheetFor = main.deviceId },
-                    onCancel = onCancelTransfer,
-                    onAccept = onAcceptIncoming,
-                    onDecline = onDeclineIncoming,
+                    onCancel = { haptic(Haptic.REJECT); onCancelTransfer() },
+                    onAccept = { haptic(Haptic.CONFIRM); onAcceptIncoming() },
+                    onDecline = { haptic(Haptic.REJECT); onDeclineIncoming() },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -482,9 +489,9 @@ fun HomeScreen(
                         onFiles = { onFiles(device.deviceId) },
                         onClipboard = { onClipboard(device.deviceId) },
                         onMore = { sheetFor = device.deviceId },
-                        onCancel = onCancelTransfer,
-                        onAccept = onAcceptIncoming,
-                        onDecline = onDeclineIncoming,
+                        onCancel = { haptic(Haptic.REJECT); onCancelTransfer() },
+                        onAccept = { haptic(Haptic.CONFIRM); onAcceptIncoming() },
+                        onDecline = { haptic(Haptic.REJECT); onDeclineIncoming() },
                         modifier = Modifier.animateItem(),
                     )
                 } else {
@@ -527,9 +534,16 @@ fun HomeScreen(
             verificationCode = verificationCodes[device.deviceId],
             linked = linked,
             onDismiss = { sheetFor = null },
-            onMakeMain = { viewModel.makeDefault(device.deviceId) },
-            onReceiveAutomatically = { viewModel.setReceiveAutomatically(device.deviceId, it) },
+            onMakeMain = {
+                haptic(Haptic.TOGGLE_ON)
+                viewModel.makeDefault(device.deviceId)
+            },
+            onReceiveAutomatically = {
+                haptic(if (it) Haptic.TOGGLE_ON else Haptic.TOGGLE_OFF)
+                viewModel.setReceiveAutomatically(device.deviceId, it)
+            },
             onReceiveInBackground = { on ->
+                haptic(if (on) Haptic.TOGGLE_ON else Haptic.TOGGLE_OFF)
                 if (on) {
                     requestLink(device)
                 } else {
@@ -551,6 +565,7 @@ fun HomeScreen(
             text = { Text(stringResource(R.string.trusted_forget_body)) },
             confirmButton = {
                 TextButton(onClick = {
+                    haptic(Haptic.REJECT)
                     viewModel.forget(device.deviceId)
                     pendingForget = null
                 }) { Text(stringResource(R.string.action_forget)) }

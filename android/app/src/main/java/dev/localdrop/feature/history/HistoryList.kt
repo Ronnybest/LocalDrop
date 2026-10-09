@@ -21,6 +21,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import dev.localdrop.R
 import dev.localdrop.core.history.HistoryEntry
 import dev.localdrop.feature.devices.RoundIcon
+import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.rememberHaptics
 
 /**
  * A recent transfer: what, from or to which Mac, when. Tapping opens it (see HistoryActions);
@@ -40,12 +43,17 @@ import dev.localdrop.feature.devices.RoundIcon
  */
 @Composable
 fun HistoryItem(entry: HistoryEntry, onOpen: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+    val haptic = rememberHaptics()
     val state = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value != SwipeToDismissBoxValue.Settled) onDelete()
             value != SwipeToDismissBoxValue.Settled
         },
     )
+    // A tick the moment the swipe goes far enough to delete on release.
+    LaunchedEffect(state.targetValue) {
+        if (state.targetValue != SwipeToDismissBoxValue.Settled) haptic(Haptic.THRESHOLD)
+    }
     SwipeToDismissBox(
         state = state,
         modifier = modifier.clip(RoundedCornerShape(24.dp)),
