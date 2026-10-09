@@ -1,5 +1,6 @@
 package dev.localdrop.core.transfer
 
+import android.net.Uri
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -23,6 +24,9 @@ interface TransferSource {
 
     /** Text alone, small enough for the receiver's clipboard; such a source needs no files. */
     val clipboardText: String? get() = null
+
+    /** Where the files come from on this phone, when they are `content://` items; for the history. */
+    val sourceUris: List<Uri> get() = emptyList()
 
     /** The individual shares this source sends; more than one for a [BatchSource]. */
     val parts: List<TransferSource> get() = listOf(this)

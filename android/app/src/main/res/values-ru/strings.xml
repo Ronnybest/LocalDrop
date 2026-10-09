@@ -219,7 +219,7 @@
     <string name="home_other_macs">Другие Mac</string>
     <string name="history_text">Текст</string>
     <string name="history_copied">Скопировано</string>
-    <string name="history_file_gone">Файла больше нет в «Загрузках»</string>
+    <string name="history_file_gone">Файла больше нет на телефоне</string>
     <string name="tile_hint_title">Буфер обмена в быстрых настройках</string>
     <string name="tile_hint_body">Одно нажатие — и скопированное уйдёт на Mac.</string>
     <string name="action_add">Добавить</string>
@@ -253,4 +253,5 @@
     <string name="sheet_background_body">Даже когда LocalDrop закрыт</string>
     <string name="trusted_forget_button">Забыть этот Mac</string>
     <string name="settings_general">Общие</string>
+    <string name="history_no_access">LocalDrop больше не может открыть этот файл</string>
 </resources>

@@ -102,28 +102,19 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
         entry.kind == HistoryEntry.Kind.LINK -> entry.title.removePrefix("https://").removePrefix("http://")
         else -> entry.title
     }
-    val visual = entry.mimeType?.startsWith("image/") == true || entry.mimeType?.startsWith("video/") == true
-    // Sent files can't be opened again: their source was only lent to LocalDrop for the send.
-    val canOpen = entry.incoming || entry.kind != HistoryEntry.Kind.FILES
+    // Every entry opens: a file in the gallery or in Files (after checking it is still there),
+    // a link in the browser, a text copied again.
+    val kind = FileKind.of(entry)
+    val scheme = MaterialTheme.colorScheme
+    val (container, content) = when (kind) {
+        FileKind.IMAGE, FileKind.VIDEO -> scheme.primaryContainer to scheme.onPrimaryContainer
+        FileKind.AUDIO, FileKind.APP -> scheme.secondaryContainer to scheme.onSecondaryContainer
+        FileKind.PDF, FileKind.DOCUMENT -> scheme.tertiaryContainer to scheme.onTertiaryContainer
+        else -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
+    }
     val leading: @Composable () -> Unit = {
-        RoundIcon(
-            size = 40,
-            shape = RoundedCornerShape(12.dp),
-            tint = if (visual) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-        ) {
-            Icon(
-                painterResource(
-                    when {
-                        entry.kind == HistoryEntry.Kind.LINK -> R.drawable.ic_link
-                        entry.kind == HistoryEntry.Kind.TEXT -> R.drawable.ic_text
-                        visual -> R.drawable.ic_image
-                        else -> R.drawable.ic_file
-                    },
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (visual) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        RoundIcon(size = 40, shape = RoundedCornerShape(12.dp), tint = container) {
+            Icon(painterResource(kind.icon), contentDescription = null, modifier = Modifier.size(20.dp), tint = content)
         }
     }
     val supporting: @Composable () -> Unit = {
@@ -139,26 +130,15 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
     }
     val trailing: @Composable () -> Unit = { Text(shortTime(entry.timeMs), style = MaterialTheme.typography.labelMedium) }
     val headline: @Composable () -> Unit = { Text(title, maxLines = 2, overflow = TextOverflow.MiddleEllipsis) }
-    if (canOpen) {
-        SegmentedListItem(
-            onClick = onClick,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = leading,
-            supportingContent = supporting,
-            trailingContent = trailing,
-            content = headline,
-        )
-    } else {
-        SegmentedListItem(
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = leading,
-            supportingContent = supporting,
-            trailingContent = trailing,
-            content = headline,
-        )
-    }
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = shapes,
+        colors = segmentColors(),
+        leadingContent = leading,
+        supportingContent = supporting,
+        trailingContent = trailing,
+        content = headline,
+    )
 }
 
 /** "16:27" today, "Yesterday", then "9 Oct". */

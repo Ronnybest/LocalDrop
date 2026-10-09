@@ -215,7 +215,7 @@
     <string name="home_other_macs">Other Macs</string>
     <string name="history_text">Text</string>
     <string name="history_copied">Copied</string>
-    <string name="history_file_gone">The file is no longer in Downloads</string>
+    <string name="history_file_gone">The file is no longer on this phone</string>
     <string name="tile_hint_title">Clipboard in Quick Settings</string>
     <string name="tile_hint_body">One tap sends what you copied to the Mac.</string>
     <string name="action_add">Add</string>
@@ -250,4 +250,5 @@
     <string name="sheet_background_body">Even when LocalDrop is closed</string>
     <string name="trusted_forget_button">Forget this Mac</string>
     <string name="settings_general">General</string>
+    <string name="history_no_access">LocalDrop can no longer open this file</string>
 </resources>

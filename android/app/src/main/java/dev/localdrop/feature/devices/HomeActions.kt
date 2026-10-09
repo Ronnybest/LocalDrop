@@ -8,11 +8,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
+import android.os.Environment
+import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.util.Log
 import android.widget.Toast
 import dev.localdrop.R
 import dev.localdrop.core.history.HistoryEntry
+import dev.localdrop.feature.history.FileKind
 import dev.localdrop.feature.transfer.TransferService
 import dev.localdrop.feature.transfer.webLink
 
@@ -20,6 +23,14 @@ import dev.localdrop.feature.transfer.webLink
 internal object SendFromHome {
     fun files(context: Context, deviceId: String, uris: List<Uri>) {
         Log.i(TAG, "Sending ${uris.size} picked file(s)")
+        // Kept so Recent can still check and open them; released when they leave the history.
+        uris.forEach { uri ->
+            try {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Picked file without persistable access")
+            }
+        }
         TransferService.sendShared(context, deviceId, uris, null)
     }
 
@@ -63,28 +74,68 @@ internal object HistoryActions {
         }
     }
 
+    /**
+     * A file is opened only if it is still there. Photos and videos open in the gallery; anything
+     * else, or a file LocalDrop can no longer read (a share's access ends with the send), opens
+     * its folder in Files — Downloads for received files, where it came from for sent ones.
+     */
     private fun openFile(context: Context, entry: HistoryEntry) {
+        val kind = FileKind.of(entry)
         val uri = entry.uri?.let(Uri::parse)
-        val isApp = entry.mimeType == APK_MIME_TYPE || entry.title.endsWith(".apk", ignoreCase = true)
-        // Several files, or an app to install (Files installs it from Downloads): the Downloads list.
-        if (uri == null || isApp) {
-            start(context, Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
-            return
-        }
-        if (!exists(context, uri)) {
+        val folder = entry.folder ?: Environment.DIRECTORY_DOWNLOADS.takeIf { entry.incoming }
+        val presence = uri?.let { presence(context, it) } ?: Presence.UNKNOWN
+        if (presence == Presence.GONE) {
             Toast.makeText(context, R.string.history_file_gone, Toast.LENGTH_SHORT).show()
             return
         }
-        start(context, Intent(Intent.ACTION_VIEW).setDataAndType(uri, entry.mimeType).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+        if (kind.isVisual && presence == Presence.PRESENT && uri != null) {
+            view(context, uri, entry.mimeType)
+            return
+        }
+        if (folder != null && openFolder(context, folder)) return
+        if (presence == Presence.PRESENT && uri != null) {
+            view(context, uri, entry.mimeType)
+            return
+        }
+        Toast.makeText(context, R.string.history_no_access, Toast.LENGTH_SHORT).show()
     }
 
-    /** Deleted in Files since: MediaStore no longer has it. */
-    private fun exists(context: Context, uri: Uri): Boolean = try {
-        context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), null, null, null)?.use { it.moveToFirst() } == true
+    private enum class Presence { PRESENT, GONE, UNKNOWN }
+
+    /** Still there, deleted, or not ours to read any more (then only its folder can be shown). */
+    private fun presence(context: Context, uri: Uri): Presence = try {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { if (it.moveToFirst()) Presence.PRESENT else Presence.GONE }
+            ?: Presence.GONE
     } catch (e: SecurityException) {
-        false
+        Presence.UNKNOWN
     } catch (e: IllegalArgumentException) {
-        false
+        Presence.GONE
+    } catch (e: UnsupportedOperationException) {
+        Presence.UNKNOWN
+    }
+
+    private fun view(context: Context, uri: Uri, mimeType: String?) {
+        val type = mimeType ?: context.contentResolver.getType(uri)
+        start(context, Intent(Intent.ACTION_VIEW).setDataAndType(uri, type).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+    }
+
+    /** Files at [folder] of the shared storage; Downloads falls back to the system Downloads list. */
+    private fun openFolder(context: Context, folder: String): Boolean {
+        val directory = DocumentsContract.buildDocumentUri(EXTERNAL_STORAGE, "primary:" + folder.trim('/'))
+        return try {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).setDataAndType(directory, DocumentsContract.Document.MIME_TYPE_DIR).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            true
+        } catch (e: ActivityNotFoundException) {
+            if (folder == Environment.DIRECTORY_DOWNLOADS) {
+                start(context, Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
+                true
+            } else {
+                false
+            }
+        }
     }
 
     private fun start(context: Context, intent: Intent) {
@@ -95,5 +146,5 @@ internal object HistoryActions {
         }
     }
 
-    private const val APK_MIME_TYPE = "application/vnd.android.package-archive"
+    private const val EXTERNAL_STORAGE = "com.android.externalstorage.documents"
 }

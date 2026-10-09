@@ -25,6 +25,7 @@ class ContentUriSource(
     private val uris: List<Uri>,
     private val text: String?,
 ) : TransferSource {
+    override val sourceUris: List<Uri> get() = uris
 
     override val description: String = when {
         uris.size == 1 -> uris.first().lastPathSegment ?: "file"

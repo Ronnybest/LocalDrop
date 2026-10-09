@@ -35,6 +35,8 @@ class HistoryEntry(
     val bytes: Long? = null,
     /** How long a send took; known for files this phone sent. */
     val durationMs: Long? = null,
+    /** The folder of the file on this phone, relative to its storage ("Download", "DCIM/Camera"); when known. */
+    val folder: String? = null,
 ) {
     enum class Kind { FILES, TEXT, LINK }
 }
@@ -44,7 +46,12 @@ class HistoryEntry(
  * never backed up (noBackupFilesDir). Received texts keep only their first characters, links in
  * full so they can be opened again. The user can delete any entry.
  */
-class HistoryStore(private val file: File, private val clock: () -> Long = System::currentTimeMillis) {
+class HistoryStore(
+    private val file: File,
+    private val clock: () -> Long = System::currentTimeMillis,
+    /** Entries gone from the history (deleted or expired): read access kept for them can go. */
+    private val onDropped: (List<HistoryEntry>) -> Unit = {},
+) {
 
     private val _entries = MutableStateFlow<List<HistoryEntry>>(emptyList())
     val entries: StateFlow<List<HistoryEntry>> = _entries.asStateFlow()
@@ -55,7 +62,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
         if (loaded) return
         loaded = true
         _entries.value = try {
-            fresh(decode(AtomicFile(file).readFully()))
+            val all = decode(AtomicFile(file).readFully())
+            fresh(all).also { kept -> all.filter { it !in kept }.takeIf { it.isNotEmpty() }?.let(onDropped) }
         } catch (e: FileNotFoundException) {
             emptyList()
         } catch (e: IOException) {
@@ -78,10 +86,11 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
         mimeType: String? = null,
         bytes: Long? = null,
         durationMs: Long? = null,
+        folder: String? = null,
     ) {
         load()
         val stored = if (kind == HistoryEntry.Kind.TEXT) title.trim().take(TEXT_PREVIEW) else title
-        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType, bytes, durationMs)
+        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType, bytes, durationMs, folder)
         save(fresh(listOf(entry) + _entries.value))
     }
 
@@ -98,6 +107,8 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
     }
 
     private fun save(entries: List<HistoryEntry>) {
+        val kept = entries.mapTo(HashSet()) { it.id }
+        val dropped = _entries.value.filter { it.id !in kept }
         try {
             val atomic = AtomicFile(file)
             val out = atomic.startWrite()
@@ -112,6 +123,7 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
             Log.e(TAG, "Could not save history", e)
         }
         _entries.value = entries
+        if (dropped.isNotEmpty()) onDropped(dropped)
     }
 
     internal companion object {
@@ -140,6 +152,7 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                                     entry.mimeType?.let { put("mime", CborValue.Text(it)) }
                                     entry.bytes?.let { put("bytes", CborValue.UInt(it)) }
                                     entry.durationMs?.let { put("duration", CborValue.UInt(it)) }
+                                    entry.folder?.let { put("folder", CborValue.Text(it)) }
                                 },
                             )
                         },
@@ -167,6 +180,7 @@ class HistoryStore(private val file: File, private val clock: () -> Long = Syste
                     mimeType = (entry.entries["mime"] as? CborValue.Text)?.value,
                     bytes = (entry.entries["bytes"] as? CborValue.UInt)?.value,
                     durationMs = (entry.entries["duration"] as? CborValue.UInt)?.value,
+                    folder = (entry.entries["folder"] as? CborValue.Text)?.value,
                 )
             }
         }

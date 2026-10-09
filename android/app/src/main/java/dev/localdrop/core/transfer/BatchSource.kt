@@ -13,6 +13,8 @@ class BatchSource(first: TransferSource) : TransferSource {
     override val description: String
         get() = synchronized(lock) { members.singleOrNull()?.description ?: "${members.size} shares" }
 
+    override val sourceUris get() = synchronized(lock) { members.flatMap { it.sourceUris } }
+
     override val parts: List<TransferSource>
         get() = synchronized(lock) { members.toList() }
 

@@ -1,6 +1,8 @@
 package dev.localdrop.app
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.StatFs
 import dev.localdrop.core.crypto.IdentityKey
 import dev.localdrop.core.crypto.KeystoreIdentityKey
@@ -69,7 +71,18 @@ class AppContainer(context: Context) {
     val outgoingStore = OutgoingStore(File(appContext.noBackupFilesDir, "outgoing"))
 
     /** Recent transfers for the home screen; this phone only, never backed up. */
-    val historyStore = HistoryStore(File(appContext.noBackupFilesDir, "history.cbor"))
+    val historyStore: HistoryStore = HistoryStore(File(appContext.noBackupFilesDir, "history.cbor")) { dropped ->
+        // Access kept to files picked on the home screen goes with their last entry.
+        val stillUsed = historyStore.entries.value.mapNotNullTo(HashSet()) { it.uri }
+        val persisted = appContext.contentResolver.persistedUriPermissions.mapTo(HashSet()) { it.uri.toString() }
+        dropped.mapNotNull { it.uri }.filter { it in persisted && it !in stillUsed }.forEach { uri ->
+            try {
+                appContext.contentResolver.releasePersistableUriPermission(Uri.parse(uri), Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (e: SecurityException) {
+                // Already gone.
+            }
+        }
+    }
 
     val availabilityWatcher by lazy { AvailabilityWatcher(bluetoothEnvironment, bleScanner, trustedDeviceStore, localNetworks) }
 

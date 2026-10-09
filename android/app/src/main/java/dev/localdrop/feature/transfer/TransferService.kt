@@ -15,6 +15,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Environment
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
@@ -32,6 +33,7 @@ import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.app.MainActivity
 import dev.localdrop.core.device.TrustedDevice
+import dev.localdrop.core.history.FileLocation
 import dev.localdrop.core.history.HistoryEntry
 import dev.localdrop.core.queue.AvailabilityTrigger
 import dev.localdrop.core.queue.QueuedTransfer
@@ -425,7 +427,7 @@ class TransferService : Service() {
             return
         }
         owned.forEach(::drop)
-        postFinalState(state, batch.source.clipboardText)
+        postFinalState(state, batch.source)
         if (state is TransferState.Completed || state is TransferState.TextCopied) {
             // The device is reachable right now: its other waiting sends go next.
             items.filter { it.deviceId == batch.deviceId && it.waitingSinceMs != null }.forEach { it.retryAtMs = 0 }
@@ -667,11 +669,13 @@ class TransferService : Service() {
         notifyIfAllowed(PARKED_NOTIFICATION_ID, notification)
     }
 
-    private fun postFinalState(state: TransferState, sentText: String?) {
+    private fun postFinalState(state: TransferState, source: TransferSource) {
         val name = currentDeviceName
+        val sentText = source.clipboardText
         when (state) {
             is TransferState.Completed -> {
                 val summary = state.summary
+                val sourceUri = source.sourceUris.singleOrNull()?.takeIf { summary.fileCount == 1 }
                 history.add(
                     incoming = false,
                     peerName = name,
@@ -680,6 +684,10 @@ class TransferService : Service() {
                     count = summary.fileCount,
                     bytes = summary.totalBytes,
                     durationMs = state.durationMs,
+                    // Where the files are on this phone, while the share still lets LocalDrop look.
+                    uri = sourceUri?.toString(),
+                    mimeType = sourceUri?.let { contentResolver.getType(it) },
+                    folder = source.sourceUris.firstOrNull()?.let { FileLocation.folderOf(this, it) },
                 )
                 postResult(
                     towards(name),
@@ -766,6 +774,7 @@ class TransferService : Service() {
                     uri = first.uri.toString().takeIf { files.size == 1 },
                     mimeType = first.mimeType.takeIf { files.size == 1 },
                     bytes = files.sumOf { it.size },
+                    folder = Environment.DIRECTORY_DOWNLOADS,
                 )
                 // An app installs only from an app allowed to install, which LocalDrop doesn't ask to
                 // be: Files is, and opens the installer when the APK is tapped in Downloads.
