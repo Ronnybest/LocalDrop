@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.webkit.MimeTypeMap
 import dev.localdrop.core.protocol.CborException
 import dev.localdrop.core.protocol.CborValue
@@ -109,7 +110,8 @@ class DownloadWriter private constructor(
         val fixed = generateSequence(counter) { it + 1 }.take(MAX_COUNTER)
             .map { "$base ($it)$extension" }
             .firstOrNull { !isTaken(it) } ?: return
-        resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, fixed) }, null, null)
+        val rows = resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, fixed) }, null, null)
+        Log.i(TAG, "MediaStore named it \"$given\"; renamed to \"${displayName(fixed)}\" ($rows row)")
     }
 
     /** Another file in Downloads has [name]. LocalDrop sees its own files, the ones that clash here. */
@@ -138,6 +140,7 @@ class DownloadWriter private constructor(
         } ?: fallback
 
     companion object {
+        private const val TAG = "LD/transfer"
         private val UNIQUE_SUFFIX = Regex(" \\((\\d+)\\)")
         private const val MAX_COUNTER = 1000
         private const val UNKNOWN_TYPE = "application/octet-stream"
