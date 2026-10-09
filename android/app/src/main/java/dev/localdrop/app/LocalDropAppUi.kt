@@ -1,5 +1,9 @@
 package dev.localdrop.app
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -24,7 +28,7 @@ private enum class Screen { Home, AddMac, Diagnostics, History }
 
 /**
  * Home with the Macs; Add Mac, Settings and all of Recent on top of it. Navigation 3 keeps the
- * stack, with its own transitions (for now its default crossfade). Predictive back is off in the
+ * stack, with its crossfade (500 ms instead of 700). Predictive back is off in the
  * manifest for now.
  */
 @Composable
@@ -71,6 +75,9 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
         NavDisplay(
             backStack = backStack,
             onBack = ::back,
+            // Navigation 3's crossfade, a little quicker than its 700 ms.
+            transitionSpec = { crossfade() },
+            popTransitionSpec = { crossfade() },
             entryProvider = { screen ->
                 when (screen) {
                     Screen.Home -> NavEntry(screen) {
@@ -99,3 +106,7 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
         )
     }
 }
+
+private fun crossfade() = fadeIn(tween(CROSSFADE_MS)) togetherWith fadeOut(tween(CROSSFADE_MS))
+
+private const val CROSSFADE_MS = 500
