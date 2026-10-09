@@ -1,6 +1,5 @@
 package dev.localdrop.feature.devices
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -67,7 +66,6 @@ fun AddDeviceScreen(
     onBack: () -> Unit,
     viewModel: DevicesViewModel = viewModel(factory = DevicesViewModel.Factory),
 ) {
-    BackHandler(onBack = onBack)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val pairedFingerprints by viewModel.pairedFingerprints.collectAsStateWithLifecycle()
 

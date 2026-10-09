@@ -1,6 +1,5 @@
 package dev.localdrop.feature.settings
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -55,7 +54,6 @@ fun DiagnosticsScreen(
     onBack: () -> Unit,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
-    BackHandler(onBack = onBack)
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val hapticsOn by Haptics.enabled(context).collectAsStateWithLifecycle()

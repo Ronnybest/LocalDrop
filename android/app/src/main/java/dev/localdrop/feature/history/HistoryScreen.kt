@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import dev.localdrop.app.ui.Segments
 import java.util.Calendar
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -75,7 +74,6 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var filter by rememberSaveable { mutableStateOf(HistoryFilter.ALL) }
-    BackHandler(onBack = onBack)
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
