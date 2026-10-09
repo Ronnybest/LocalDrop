@@ -661,11 +661,13 @@ final class AppModel {
 
         #if DEBUG
         // For development: `-LocalDropTestDeliveryFile <path in Downloads> -LocalDropTestDeliveryDevice <deviceId>`
-        // queues a delivery at launch, so Mac → phone can be exercised without clicking.
-        if let path = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryFile"),
-           let device = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryDevice") {
+        // queues a delivery at launch, so Mac → phone can be exercised without clicking. Several
+        // files as a property list array: `-LocalDropTestDeliveryFile '("a.bin", "b.jpg")'`.
+        let defaults = UserDefaults.standard
+        if let paths = defaults.stringArray(forKey: "LocalDropTestDeliveryFile") ?? defaults.string(forKey: "LocalDropTestDeliveryFile").map({ [$0] }),
+           let device = defaults.string(forKey: "LocalDropTestDeliveryDevice") {
             Log.transfer.info("Debug: queueing a test delivery")
-            send([URL(fileURLWithPath: path)], to: device)
+            send(paths.map { URL(fileURLWithPath: $0) }, to: device)
         }
         // `-LocalDropTestDeliveryText <text> -LocalDropTestDeliveryDevice <deviceId>`: text for the phone's clipboard.
         if let text = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryText"),

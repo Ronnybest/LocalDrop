@@ -61,6 +61,8 @@ data class TransferProgress(
     val bytesPerSecond: Long,
     /** Over a longer window, for the time left: steadier than [bytesPerSecond]. */
     val averageBytesPerSecond: Long = bytesPerSecond,
+    /** Every file's size in order, so progress can be shown file by file. */
+    val fileSizes: List<Long> = emptyList(),
 )
 
 /**
@@ -680,7 +682,7 @@ class TransferManager(
             while (samples.size > 1 && now - samples.first().first > AVERAGE_WINDOW_MS) samples.removeFirst()
             val speed = samples.rate(now, bytes, SPEED_WINDOW_MS)
             val average = samples.rate(now, bytes, AVERAGE_WINDOW_MS)
-            advance(TransferState.Receiving(peerName, TransferProgress(bytes, request.totalSize, current.name, current.fileId, request.files.size, speed, average)))
+            advance(TransferState.Receiving(peerName, TransferProgress(bytes, request.totalSize, current.name, current.fileId, request.files.size, speed, average, request.files.map { it.size })))
         }
     }
 
@@ -828,6 +830,7 @@ class TransferManager(
         @Volatile var stalled = false
 
         private val totalBytes = files.sumOf { it.size }
+        private val fileSizes = files.map { it.size }
         private var bytesSent = 0L
         private var lastEmitAt = 0L
         private val samples = ArrayDeque<Pair<Long, Long>>()
@@ -942,7 +945,7 @@ class TransferManager(
             val now = SystemClock.elapsedRealtime()
             val speed = samples.rate(now, bytesSent, SPEED_WINDOW_MS)
             val average = samples.rate(now, bytesSent, AVERAGE_WINDOW_MS)
-            return TransferProgress(bytesSent, totalBytes, file.name, index, files.size, speed, average)
+            return TransferProgress(bytesSent, totalBytes, file.name, index, files.size, speed, average, fileSizes)
         }
     }
 

@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -19,12 +20,14 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.text.format.Formatter
 import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.app.MainActivity
@@ -36,6 +39,7 @@ import dev.localdrop.core.transfer.BatchSource
 import dev.localdrop.core.transfer.ContentUriSource
 import dev.localdrop.core.transfer.SendTarget
 import dev.localdrop.core.transfer.TestDataSource
+import dev.localdrop.core.transfer.TransferProgress
 import dev.localdrop.core.transfer.TransferSource
 import dev.localdrop.core.transfer.TransferState
 import dev.localdrop.core.transfer.isFinal
@@ -314,7 +318,7 @@ class TransferService : Service() {
             val device = container.trustedDeviceStore.find(next.deviceId)
             if (device == null) {
                 drop(next)
-                postResult(getString(R.string.notification_failed_title, getString(R.string.notification_unknown_device)), getString(R.string.error_not_paired))
+                postResult(towards(getString(R.string.notification_unknown_device)), getString(R.string.notification_not_sent), getString(R.string.error_not_paired), failed = true)
                 continue
             }
             // Every due share to this device goes in one transfer: the receiver asks once.
@@ -489,7 +493,7 @@ class TransferService : Service() {
         Log.i(TAG, "Parking ${kept.size} kept send(s); ${lost.size} without a copy are given up")
         lost.forEach { item ->
             val name = deviceName(item.deviceId)
-            postResult(getString(R.string.notification_failed_title, name), getString(R.string.queue_not_kept, name))
+            postResult(towards(name), getString(R.string.notification_not_sent), getString(R.string.queue_not_kept, name), failed = true)
         }
         if (kept.isNotEmpty()) showParked(kept)
     }
@@ -567,37 +571,30 @@ class TransferService : Service() {
             lastProgressNotificationMs = 0
         }
         val name = currentDeviceName
-        val builder = ongoingBuilder()
+        val sending = receiving == null
+        val builder = ongoingBuilder(if (sending) towards(name) else from(name))
         when (state) {
-            is TransferState.Connecting -> builder.setContentTitle(getString(R.string.transfer_connecting, name)).setProgress(0, 0, true)
+            is TransferState.Connecting -> builder.setContentTitle(getString(R.string.notification_connecting)).setProgress(0, 0, true)
             is TransferState.Pairing -> builder.setContentTitle(getString(R.string.notification_pairing_title, name))
                 .setContentText(getString(R.string.notification_pairing_text))
             is TransferState.Preparing -> builder.setContentTitle(getString(R.string.transfer_preparing)).setProgress(0, 0, true)
             is TransferState.AwaitingApproval -> {
                 // Grows as more shares are added to the request on the Mac's screen.
                 val summary = state.summary
-                val what = if (summary.fileCount == 1) summary.firstFileName else resources.getQuantityString(R.plurals.notification_files, summary.fileCount, summary.fileCount)
-                builder.setContentTitle(getString(R.string.transfer_waiting, name))
-                    .setContentText("$what · ${getString(R.string.transfer_waiting_detail, name)}")
+                builder.setContentTitle(TransferText.what(this, summary.fileCount, summary.firstFileName))
+                    .setContentText(getString(R.string.notification_awaiting_mac))
                     .setProgress(0, 0, true)
             }
-            is TransferState.Transferring -> {
-                val progress = state.progress
-                val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
-                builder.setContentTitle(getString(R.string.notification_sending_to, name))
-                    .setContentText(TransferText.progressLine(this, progress))
-                    .liveProgress(percent)
-            }
-            is TransferState.Verifying -> builder.setContentTitle(getString(R.string.transfer_verifying)).setProgress(0, 0, true)
-            is TransferState.Receiving -> {
-                val progress = state.progress
-                val percent = if (progress.totalBytes > 0) (progress.bytesSent * 100 / progress.totalBytes).toInt() else 100
-                builder.setContentTitle(getString(R.string.notification_receiving_from, name))
-                    .setContentText(TransferText.progressLine(this, progress))
-                    .liveProgress(percent)
-            }
+            is TransferState.Transferring -> builder.transferProgress(state.progress, sending = true)
+            is TransferState.Verifying -> builder.setContentTitle(TransferText.what(this, state.progress.fileCount, state.progress.currentFileName))
+                .setContentText(getString(R.string.transfer_verifying))
+                .setProgress(0, 0, true)
+            is TransferState.Receiving -> builder.transferProgress(state.progress, sending = false)
             else -> return
         }
+        // A Live Update from the first step to the last: it stays in one place at the top of the
+        // shade instead of starting among silent notifications and jumping up once data flows.
+        builder.setRequestPromotedOngoing(true)
         builder.addAction(0, getString(R.string.action_cancel), serviceIntent(ACTION_CANCEL, REQUEST_CANCEL))
         notifyIfAllowed(ONGOING_NOTIFICATION_ID, builder.build())
     }
@@ -633,8 +630,9 @@ class TransferService : Service() {
         val names = waiting.map { deviceName(it.deviceId) }.distinct().joinToString()
         val count = waiting.sumOf { it.queued?.itemCount ?: 1 }
         val notification = ongoingBuilder()
-            .setContentTitle(getString(R.string.queue_waiting_title, names))
-            .setContentText(resources.getQuantityString(R.plurals.queue_waiting_text, count, count))
+            .setSubText(towards(names))
+            .setContentTitle(resources.getQuantityString(R.plurals.notification_queue_title, count, count))
+            .setContentText(getString(R.string.notification_queue_text))
             .addAction(0, getString(R.string.action_cancel), serviceIntent(ACTION_CANCEL, REQUEST_CANCEL))
             .addAction(0, getString(R.string.action_send_now), serviceIntent(ACTION_RESUME, REQUEST_RESUME))
             .build()
@@ -643,7 +641,8 @@ class TransferService : Service() {
 
     private fun showSpooling(item: OutgoingTransfer) {
         val notification = ongoingBuilder()
-            .setContentTitle(getString(R.string.queue_waiting_title, deviceName(item.deviceId)))
+            .setSubText(towards(deviceName(item.deviceId)))
+            .setContentTitle(getString(R.string.notification_queue_saving))
             .setContentText(getString(R.string.queue_spooling))
             .setProgress(0, 0, true)
             .addAction(0, getString(R.string.action_cancel), serviceIntent(ACTION_CANCEL, REQUEST_CANCEL))
@@ -654,9 +653,9 @@ class TransferService : Service() {
     private fun showParked(parked: List<OutgoingTransfer>) {
         val names = parked.map { deviceName(it.deviceId) }.distinct().joinToString()
         val text = getString(R.string.queue_parked_text, names)
-        val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
-            .setSmallIcon(R.drawable.ic_stat_localdrop)
-            .setContentTitle(getString(R.string.queue_parked_title, names))
+        val notification = resultBuilder(towards(names))
+            .setAutoCancel(false)
+            .setContentTitle(getString(R.string.notification_not_sent))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(openAppIntent())
@@ -671,16 +670,20 @@ class TransferService : Service() {
         when (state) {
             is TransferState.Completed -> {
                 val summary = state.summary
-                val what = if (summary.fileCount == 1) summary.firstFileName else resources.getQuantityString(R.plurals.notification_files, summary.fileCount, summary.fileCount)
                 postResult(
-                    getString(R.string.transfer_completed, name),
-                    "$what · ${Formatter.formatShortFileSize(this, summary.totalBytes)}",
+                    towards(name),
+                    TransferText.what(this, summary.fileCount, summary.firstFileName),
+                    getString(
+                        R.string.notification_sent,
+                        Formatter.formatShortFileSize(this, summary.totalBytes),
+                        TransferText.duration(this, state.durationMs),
+                    ),
                 )
             }
-            is TransferState.TextCopied -> postResult(getString(R.string.text_copied_title, name), getString(R.string.text_copied_body))
-            is TransferState.Failed -> postResult(getString(R.string.notification_failed_title, name), TransferText.error(this, state.error, name))
+            is TransferState.TextCopied -> postResult(towards(name), getString(R.string.notification_copied), getString(R.string.text_copied_body))
+            is TransferState.Failed -> postResult(towards(name), getString(R.string.notification_not_sent), TransferText.error(this, state.error, name), failed = true)
             is TransferState.Cancelled -> if (state.byPeer) {
-                postResult(getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
+                postResult(towards(name), getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
             }
             else -> Unit
         }
@@ -696,8 +699,10 @@ class TransferService : Service() {
     private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
         val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
-            .setContentTitle(getString(R.string.incoming_title, state.peerName))
-            .setContentText(TransferText.summaryLine(this, state.summary))
+            .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
+            .setSubText(from(state.peerName))
+            .setContentTitle(TransferText.what(this, state.summary.fileCount, state.summary.firstFileName))
+            .setContentText(getString(R.string.notification_incoming_text, Formatter.formatShortFileSize(this, state.summary.totalBytes)))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setOngoing(true)
@@ -748,25 +753,27 @@ class TransferService : Service() {
                     Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
                 }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 val openIntent = PendingIntent.getActivity(this, REQUEST_OPEN_RECEIVED, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-                val text = when {
-                    isApp -> getString(R.string.received_app, first.name)
-                    files.size == 1 -> first.name
-                    else -> getString(R.string.received_where)
-                }
-                val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
-                    .setSmallIcon(R.drawable.ic_stat_localdrop)
-                    .setContentTitle(resources.getQuantityString(R.plurals.received_files, files.size, files.size, name))
+                val text = getString(if (isApp) R.string.notification_received_app else R.string.notification_received)
+                val builder = resultBuilder(from(name))
+                    .setContentTitle(TransferText.what(this, files.size, first.name))
                     .setContentText(text)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-                    .setAutoCancel(true)
                     .setContentIntent(openIntent)
                     .addAction(0, getString(if (isApp) R.string.action_show_downloads else R.string.action_open), openIntent)
-                    .build()
+                if (files.size == 1 && !isApp) {
+                    thumbnail(first.uri)?.let(builder::setLargeIcon)
+                    val share = Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).setType(first.mimeType).putExtra(Intent.EXTRA_STREAM, first.uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                        null,
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    builder.addAction(0, getString(R.string.action_share), PendingIntent.getActivity(this, REQUEST_SHARE_RECEIVED, share, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+                }
+                val notification = builder.build()
                 notifyIfAllowed(resultNotificationId++, notification)
             }
-            is TransferState.Failed -> postResult(getString(R.string.notification_receive_failed_title, name), TransferText.error(this, state.error, name))
+            is TransferState.Failed -> postResult(from(name), getString(R.string.notification_not_received), TransferText.error(this, state.error, name), failed = true)
             is TransferState.Cancelled -> if (state.byPeer) {
-                postResult(getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
+                postResult(from(name), getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
             }
             else -> Unit
         }
@@ -780,13 +787,10 @@ class TransferService : Service() {
         getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(getString(R.string.app_name), text))
         val link = text.trim().takeIf { !it.contains(Regex("\\s")) }?.let(Uri::parse)?.takeIf { it.scheme == "http" || it.scheme == "https" }
         val preview = text.trim().take(TEXT_PREVIEW_LENGTH)
-        val builder = NotificationCompat.Builder(this, CHANNEL_RESULTS)
-            .setSmallIcon(R.drawable.ic_stat_localdrop)
-            .setContentTitle(getString(if (link != null) R.string.received_link_title else R.string.received_text_title, name))
+        val builder = resultBuilder(from(name))
+            .setContentTitle(getString(if (link != null) R.string.notification_link_copied else R.string.notification_text_copied))
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
-            .setAutoCancel(true)
-            .setContentIntent(openAppIntent())
         if (link != null) {
             val open = PendingIntent.getActivity(
                 this,
@@ -799,14 +803,12 @@ class TransferService : Service() {
         notifyIfAllowed(resultNotificationId++, builder.build())
     }
 
-    private fun postResult(title: String, text: String) {
-        val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
-            .setSmallIcon(R.drawable.ic_stat_localdrop)
+    private fun postResult(direction: String, title: String, text: String, failed: Boolean = false) {
+        val notification = resultBuilder(direction)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setAutoCancel(true)
-            .setContentIntent(openAppIntent())
+            .apply { if (failed) setColor(ContextCompat.getColor(this@TransferService, R.color.notification_error)) }
             .build()
         notifyIfAllowed(resultNotificationId++, notification)
         if (!notifications.areNotificationsEnabled()) {
@@ -814,28 +816,65 @@ class TransferService : Service() {
         }
     }
 
+    /** The header line: where files go, or where they come from. */
+    private fun towards(name: String) = getString(R.string.notification_towards, name)
+
+    private fun from(name: String) = getString(R.string.notification_from, name)
+
     /**
-     * Progress that stays in sight, like the filling drop in the Mac's menu bar: on Android 16+
-     * a Live Update — a status bar chip with the percentage, pinned to the top of the shade and
-     * shown on the lock screen. Older versions show the usual progress bar.
+     * A transfer under way: what, how long is left, and progress that stays in sight, like the
+     * filling drop in the Mac's menu bar. On Android 16+ a Live Update: a status bar chip with
+     * the time left, pinned to the top of the shade and shown on the lock screen; the drop travels
+     * along the bar from the phone to the Mac (or back), one segment per file. Older versions
+     * show the usual progress bar.
      */
-    private fun NotificationCompat.Builder.liveProgress(percent: Int): NotificationCompat.Builder =
-        setProgress(100, percent, false)
+    private fun NotificationCompat.Builder.transferProgress(progress: TransferProgress, sending: Boolean): NotificationCompat.Builder {
+        val total = progress.totalBytes.coerceAtLeast(1)
+        val percent = (progress.bytesSent * 100 / total).toInt().coerceIn(0, 100)
+        val brand = ContextCompat.getColor(this@TransferService, R.color.ic_launcher_background)
+        val sizes = progress.fileSizes.takeIf { it.size in 2..MAX_PROGRESS_SEGMENTS }
+        val segments = sizes?.map { NotificationCompat.ProgressStyle.Segment((it * PROGRESS_SCALE / total).toInt().coerceAtLeast(1)).setColor(brand) }
+            ?: listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_SCALE).setColor(brand))
+        val scale = segments.sumOf { it.length }
+        val phone = IconCompat.createWithResource(this@TransferService, R.drawable.ic_phone)
+        val mac = IconCompat.createWithResource(this@TransferService, R.drawable.ic_laptop)
+        return setContentTitle(TransferText.what(this@TransferService, progress.fileCount, progress.currentFileName))
+            .setContentText(TransferText.notificationLine(this@TransferService, progress))
+            .setProgress(100, percent, false)
             .setStyle(
                 NotificationCompat.ProgressStyle()
-                    .addProgressSegment(NotificationCompat.ProgressStyle.Segment(100))
-                    .setProgress(percent),
+                    .setProgressSegments(segments)
+                    .setProgress((progress.bytesSent.toDouble() / total * scale).toInt().coerceIn(0, scale))
+                    .setProgressTrackerIcon(IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_tracker))
+                    .setProgressStartIcon(if (sending) phone else mac)
+                    .setProgressEndIcon(if (sending) mac else phone),
             )
             .setRequestPromotedOngoing(true)
-            .setShortCriticalText("$percent%")
+            .setShortCriticalText(TransferText.chipTimeLeft(this@TransferService, progress) ?: "$percent%")
+    }
 
-    private fun ongoingBuilder() = NotificationCompat.Builder(this, CHANNEL_PROGRESS)
+    private fun ongoingBuilder(direction: String? = null) = NotificationCompat.Builder(this, CHANNEL_PROGRESS)
         .setSmallIcon(R.drawable.ic_stat_localdrop)
         .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
+        .setSubText(direction)
         .setOngoing(true)
         .setOnlyAlertOnce(true)
         .setCategory(NotificationCompat.CATEGORY_PROGRESS)
         .setContentIntent(openAppIntent())
+
+    private fun resultBuilder(direction: String) = NotificationCompat.Builder(this, CHANNEL_RESULTS)
+        .setSmallIcon(R.drawable.ic_stat_localdrop)
+        .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
+        .setSubText(direction)
+        .setAutoCancel(true)
+        .setContentIntent(openAppIntent())
+
+    /** A received photo or video, small, for the notification; null for other files. */
+    private fun thumbnail(uri: Uri): Bitmap? = try {
+        contentResolver.loadThumbnail(uri, Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null)
+    } catch (e: IOException) {
+        null
+    }
 
     private fun notifyIfAllowed(id: Int, notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -925,6 +964,12 @@ class TransferService : Service() {
         private const val REQUEST_DECLINE_INCOMING = 8
         private const val REQUEST_OPEN_RECEIVED = 9
         private const val REQUEST_OPEN_LINK = 30
+        private const val REQUEST_SHARE_RECEIVED = 31
+        private const val THUMBNAIL_SIZE = 256
+        /** Progress units across the bar; segments split it by file size. */
+        private const val PROGRESS_SCALE = 1000
+        /** More files than this show as one segment: thin slivers say nothing. */
+        private const val MAX_PROGRESS_SEGMENTS = 10
         private const val TEXT_PREVIEW_LENGTH = 300
         private const val REQUEST_RECEIVE = 10
         private const val TIMER_SLACK_MS = 50L

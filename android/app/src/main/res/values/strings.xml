@@ -43,13 +43,7 @@
     <string name="action_send_now">Send now</string>
     <string name="action_discard">Discard</string>
     <string name="error_rejected_asleep">%1$s is asleep. Wake it up and try again.</string>
-    <string name="queue_waiting_title">Waiting for %1$s</string>
-    <plurals name="queue_waiting_text">
-        <item quantity="one">Sends automatically when it’s nearby and awake · %d item</item>
-        <item quantity="other">Sends automatically when it’s nearby and awake · %d items</item>
-    </plurals>
     <string name="queue_spooling">Keeping a copy to send later…</string>
-    <string name="queue_parked_title">Not sent to %1$s</string>
     <string name="queue_parked_text">%1$s wasn’t available for an hour. Kept on this phone for 7 days — tap Try again when it’s nearby, or just open LocalDrop.</string>
     <string name="queue_not_kept">%1$s wasn’t available, and there wasn’t room on this phone to keep a copy for later.</string>
     <plurals name="home_waiting">
@@ -81,11 +75,9 @@
     <string name="channel_results">Transfer results</string>
     <string name="channel_pairing">Pairing requests</string>
     <string name="notification_preparing">Preparing to send…</string>
-    <string name="notification_sending_to">Sending to %1$s</string>
     <string name="notification_pairing_title">Pair with %1$s</string>
     <string name="notification_pairing_text">Compare the code on both devices.</string>
     <string name="notification_pairing_code">Pairing code %1$s</string>
-    <string name="notification_failed_title">Couldn\'t send to %1$s</string>
     <string name="notification_unknown_device">your Mac</string>
     <string name="error_not_paired">This Mac is no longer paired. Open LocalDrop to add it again.</string>
 
@@ -180,9 +172,7 @@
     <string name="transfer_minutes_seconds_left">about %1$d min %2$d s left</string>
     <string name="transfer_hours_minutes_left">about %1$d h %2$d min left</string>
     <string name="received_text_title">Text from %1$s copied</string>
-    <string name="received_link_title">Link from %1$s copied</string>
     <string name="received_where">Saved in Downloads · integrity verified</string>
-    <string name="received_app">%1$s · to install, tap it in Downloads</string>
     <string name="action_show_downloads">Downloads</string>
     <string name="nothing_received">%1$s has nothing for this phone right now.</string>
     <string name="error_phone_space">Not enough free space on this phone (%1$s needed).</string>
@@ -197,5 +187,33 @@
     <string name="receiving_link_scope">Android shows its general text about syncing, such as a caller\'s name. LocalDrop does none of that: the link only lets it start receiving files in the background, with no access to contacts, calls, photos, files, messages or location. Without it, files from the Mac arrive when you tap the notification. Turn it off any time in the Mac\'s menu below.</string>
     <string name="action_later">Later</string>
     <string name="action_receive_in_background">Receive in the background</string>
-    <string name="notification_receive_failed_title">Couldn\'t receive from %1$s</string>
+
+    <!-- Transfer notifications: the header says where, the title what, one line what now. -->
+    <string name="notification_towards" translatable="false">→ %1$s</string>
+    <string name="notification_from" translatable="false">← %1$s</string>
+    <string name="notification_connecting">Connecting…</string>
+    <string name="notification_awaiting_mac">Waiting for the Mac to accept</string>
+    <string name="notification_file_index">file %1$d of %2$d</string>
+    <string name="chip_seconds">%d s</string>
+    <string name="chip_minutes">%d min</string>
+    <string name="chip_hours">%d h</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_minutes_seconds">%1$d min %2$d s</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <plurals name="notification_queue_title">
+        <item quantity="one">%d item waiting to send</item>
+        <item quantity="other">%d items waiting to send</item>
+    </plurals>
+    <string name="notification_queue_text">Goes on its own when the Mac is nearby and awake</string>
+    <string name="notification_queue_saving">Waiting to send</string>
+    <string name="notification_sent">Sent · %1$s in %2$s</string>
+    <string name="notification_copied">Copied to the Mac\'s clipboard</string>
+    <string name="notification_not_sent">Not sent</string>
+    <string name="notification_not_received">Not received</string>
+    <string name="notification_incoming_text">%1$s · accept?</string>
+    <string name="notification_received">Saved in Downloads</string>
+    <string name="notification_received_app">Saved in Downloads · tap it there to install</string>
+    <string name="notification_text_copied">Text copied</string>
+    <string name="notification_link_copied">Link copied</string>
+    <string name="action_share">Share</string>
 </resources>

@@ -41,15 +41,7 @@
     <string name="action_send_now">Отправить сейчас</string>
     <string name="action_discard">Удалить</string>
     <string name="error_rejected_asleep">%1$s спит. Разбудите его и попробуйте снова.</string>
-    <string name="queue_waiting_title">Ожидание %1$s</string>
-    <plurals name="queue_waiting_text">
-        <item quantity="one">Отправится само, когда он будет рядом и проснётся · %d объект</item>
-        <item quantity="few">Отправится само, когда он будет рядом и проснётся · %d объекта</item>
-        <item quantity="many">Отправится само, когда он будет рядом и проснётся · %d объектов</item>
-        <item quantity="other">Отправится само, когда он будет рядом и проснётся · %d объекта</item>
-    </plurals>
     <string name="queue_spooling">Сохраняю копию, чтобы отправить позже…</string>
-    <string name="queue_parked_title">Не отправлено на %1$s</string>
     <string name="queue_parked_text">%1$s был недоступен целый час. Копия хранится на телефоне 7 дней — нажмите «Повторить», когда он будет рядом, или просто откройте LocalDrop.</string>
     <string name="queue_not_kept">%1$s был недоступен, а на телефоне не хватило места, чтобы сохранить копию на потом.</string>
     <plurals name="home_waiting">
@@ -83,11 +75,9 @@
     <string name="channel_results">Итоги передач</string>
     <string name="channel_pairing">Запросы на привязку</string>
     <string name="notification_preparing">Подготовка к отправке…</string>
-    <string name="notification_sending_to">Отправка на %1$s</string>
     <string name="notification_pairing_title">Привязка %1$s</string>
     <string name="notification_pairing_text">Сравните код на обоих устройствах.</string>
     <string name="notification_pairing_code">Код привязки %1$s</string>
-    <string name="notification_failed_title">Не удалось отправить на %1$s</string>
     <string name="notification_unknown_device">ваш Mac</string>
     <string name="error_not_paired">Этот Mac больше не привязан. Откройте LocalDrop, чтобы добавить его снова.</string>
 
@@ -186,9 +176,7 @@
     <string name="transfer_minutes_seconds_left">осталось ≈ %1$d мин %2$d с</string>
     <string name="transfer_hours_minutes_left">осталось ≈ %1$d ч %2$d мин</string>
     <string name="received_text_title">Текст с %1$s скопирован</string>
-    <string name="received_link_title">Ссылка с %1$s скопирована</string>
     <string name="received_where">Сохранено в «Загрузки» · целостность проверена</string>
-    <string name="received_app">%1$s · чтобы установить, нажмите на него в «Загрузках»</string>
     <string name="action_show_downloads">«Загрузки»</string>
     <string name="nothing_received">У %1$s сейчас нет файлов для этого телефона.</string>
     <string name="error_phone_space">На телефоне недостаточно места (нужно %1$s).</string>
@@ -203,5 +191,33 @@
     <string name="action_receive_in_background">Принимать в фоне</string>
     <string name="receiving_needs_link_title">Принимать файлы с %1$s в фоне</string>
     <string name="receiving_needs_link_body">Android один раз спросит, можно ли связать LocalDrop с этим Mac. Тогда файлы с Mac придут, даже когда LocalDrop закрыт.</string>
-    <string name="notification_receive_failed_title">Не удалось получить от %1$s</string>
+
+    <!-- Уведомления о передаче: в шапке куда, в заголовке что, одна строка — что сейчас. -->
+    <string name="notification_connecting">Подключение…</string>
+    <string name="notification_awaiting_mac">Ждёт ответа на Mac</string>
+    <string name="notification_file_index">файл %1$d из %2$d</string>
+    <string name="chip_seconds">%d с</string>
+    <string name="chip_minutes">%d мин</string>
+    <string name="chip_hours">%d ч</string>
+    <string name="duration_seconds">%1$d с</string>
+    <string name="duration_minutes_seconds">%1$d мин %2$d с</string>
+    <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
+    <plurals name="notification_queue_title">
+        <item quantity="one">%d объект ждёт отправки</item>
+        <item quantity="few">%d объекта ждут отправки</item>
+        <item quantity="many">%d объектов ждут отправки</item>
+        <item quantity="other">%d объекта ждут отправки</item>
+    </plurals>
+    <string name="notification_queue_text">Уйдёт само, когда Mac будет рядом и проснётся</string>
+    <string name="notification_queue_saving">Ждёт отправки</string>
+    <string name="notification_sent">Отправлено · %1$s за %2$s</string>
+    <string name="notification_copied">Скопировано в буфер обмена Mac</string>
+    <string name="notification_not_sent">Не отправлено</string>
+    <string name="notification_not_received">Не получено</string>
+    <string name="notification_incoming_text">%1$s · принять?</string>
+    <string name="notification_received">Сохранено в «Загрузки»</string>
+    <string name="notification_received_app">Сохранено в «Загрузки» · чтобы установить, нажмите на него там</string>
+    <string name="notification_text_copied">Текст скопирован</string>
+    <string name="notification_link_copied">Ссылка скопирована</string>
+    <string name="action_share">Поделиться</string>
 </resources>

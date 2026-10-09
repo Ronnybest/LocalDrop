@@ -74,25 +74,49 @@ object TransferText {
         return "$what · ${Formatter.formatShortFileSize(context, summary.totalBytes)}"
     }
 
-    /** "IMG_2841.jpg · 42 MB of 428 MB · 12 MB/s" */
-    fun progressLine(context: Context, progress: TransferProgress): String {
-        val name = if (progress.fileCount > 1) {
-            context.getString(R.string.transfer_file_of, progress.currentFileName, progress.fileIndex + 1, progress.fileCount)
+    /** "IMG_2841.jpg" or "3 files": what a notification is about. */
+    fun what(context: Context, fileCount: Int, firstFileName: String): String =
+        if (fileCount == 1) firstFileName else context.resources.getQuantityString(R.plurals.notification_files, fileCount, fileCount)
+
+    /**
+     * The one line of a progress notification: "About 30 s left · 243 MB of 1 GB", or with
+     * several files "About 1 min 15 s left · file 2 of 3". Speed is on the transfer screen.
+     */
+    fun notificationLine(context: Context, progress: TransferProgress): String {
+        val left = timeLeft(context, progress)?.replaceFirstChar { it.titlecase() }
+        val detail = if (progress.fileCount > 1) {
+            context.getString(R.string.notification_file_index, progress.fileIndex + 1, progress.fileCount)
         } else {
-            progress.currentFileName
+            context.getString(
+                R.string.transfer_bytes,
+                Formatter.formatShortFileSize(context, progress.bytesSent),
+                Formatter.formatShortFileSize(context, progress.totalBytes),
+            )
         }
-        val bytes = context.getString(
-            R.string.transfer_bytes,
-            Formatter.formatShortFileSize(context, progress.bytesSent),
-            Formatter.formatShortFileSize(context, progress.totalBytes),
-        )
-        val speed = if (progress.bytesPerSecond > 0) {
-            " · " + context.getString(R.string.transfer_speed, Formatter.formatShortFileSize(context, progress.bytesPerSecond))
-        } else {
-            ""
+        return listOfNotNull(left, detail).joinToString(" · ")
+    }
+
+    /**
+     * For the status bar chip, which has room for a few characters: "30 s", "2 min", "2 h",
+     * rounded up. The notification itself shows the exact estimate. Null while unknown.
+     */
+    fun chipTimeLeft(context: Context, progress: TransferProgress): String? {
+        val seconds = secondsLeft(progress) ?: return null
+        return when {
+            seconds < 60 -> context.getString(R.string.chip_seconds, seconds)
+            seconds < 3600 -> context.getString(R.string.chip_minutes, (seconds + 59) / 60)
+            else -> context.getString(R.string.chip_hours, (seconds + 3599) / 3600)
         }
-        val left = timeLeft(context, progress)?.let { " · $it" }.orEmpty()
-        return "$name · $bytes$speed$left"
+    }
+
+    /** "38 s", "2 min 5 s", "1 h 3 min": how long a finished transfer took. */
+    fun duration(context: Context, durationMs: Long): String {
+        val seconds = maxOf(1L, (durationMs + 500) / 1000).toInt()
+        return when {
+            seconds < 60 -> context.getString(R.string.duration_seconds, seconds)
+            seconds < 3600 -> context.getString(R.string.duration_minutes_seconds, seconds / 60, seconds % 60)
+            else -> context.getString(R.string.duration_hours_minutes, seconds / 3600, seconds % 3600 / 60)
+        }
     }
 
     /**
@@ -102,6 +126,16 @@ object TransferText {
      * Null while unknown.
      */
     fun timeLeft(context: Context, progress: TransferProgress): String? {
+        val rounded = secondsLeft(progress) ?: return null
+        return when {
+            rounded < 60 -> context.getString(R.string.transfer_seconds_left, rounded)
+            rounded < 3600 && rounded % 60 != 0 -> context.getString(R.string.transfer_minutes_seconds_left, rounded / 60, rounded % 60)
+            rounded < 3600 -> context.getString(R.string.transfer_minutes_left, rounded / 60)
+            else -> context.getString(R.string.transfer_hours_minutes_left, rounded / 3600, rounded % 3600 / 60)
+        }
+    }
+
+    private fun secondsLeft(progress: TransferProgress): Int? {
         val remaining = progress.totalBytes - progress.bytesSent
         if (progress.averageBytesPerSecond <= 0 || remaining <= 0) return null
         val seconds = remaining.toDouble() / progress.averageBytesPerSecond
@@ -111,12 +145,6 @@ object TransferText {
             seconds < 3600 -> 15
             else -> 60
         }
-        val rounded = maxOf(1, (ceil(seconds / step) * step).toInt())
-        return when {
-            rounded < 60 -> context.getString(R.string.transfer_seconds_left, rounded)
-            rounded < 3600 && rounded % 60 != 0 -> context.getString(R.string.transfer_minutes_seconds_left, rounded / 60, rounded % 60)
-            rounded < 3600 -> context.getString(R.string.transfer_minutes_left, rounded / 60)
-            else -> context.getString(R.string.transfer_hours_minutes_left, rounded / 3600, rounded % 3600 / 60)
-        }
+        return maxOf(1, (ceil(seconds / step) * step).toInt())
     }
 }
