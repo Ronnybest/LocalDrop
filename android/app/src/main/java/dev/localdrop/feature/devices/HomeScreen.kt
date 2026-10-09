@@ -9,6 +9,7 @@ import android.text.format.DateUtils
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import dev.localdrop.feature.clipboard.ClipboardTileService
 import dev.localdrop.core.wake.CompanionLink
 import android.util.Log
@@ -160,6 +161,8 @@ private fun AddTileButton() {
 }
 
 private const val TILE_PREFS = "tile"
+private const val LINK_PREFS = "companion_link"
+private const val KEY_LINK_LATER = "later"
 private const val KEY_TILE_ADDED = "added"
 
 @Composable
@@ -170,6 +173,9 @@ private fun DeviceMenu(
     /** null when the Mac can't send to this phone. */
     receiveAutomatically: Boolean?,
     onReceiveAutomatically: (Boolean) -> Unit,
+    /** Linked as a companion device; null when the Mac can't send to this phone. */
+    receiveInBackground: Boolean?,
+    onReceiveInBackground: (Boolean) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -193,6 +199,16 @@ private fun DeviceMenu(
                     onClick = {
                         expanded = false
                         onReceiveAutomatically(!receiveAutomatically)
+                    },
+                )
+            }
+            if (receiveInBackground != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_receive_in_background)) },
+                    trailingIcon = { Checkbox(checked = receiveInBackground, onCheckedChange = null) },
+                    onClick = {
+                        expanded = false
+                        onReceiveInBackground(!receiveInBackground)
                     },
                 )
             }
@@ -241,6 +257,17 @@ fun HomeScreen(
     val linkApproval = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
         linked = CompanionLink.isLinked(context)
     }
+    // The link can also be removed in Android's settings.
+    LifecycleResumeEffect(Unit) {
+        linked = CompanionLink.isLinked(context)
+        onPauseOrDispose { }
+    }
+    // "Later" hides the suggestion; the Mac's menu still offers it.
+    val linkPrefs = remember { context.getSharedPreferences(LINK_PREFS, Context.MODE_PRIVATE) }
+    var linkPostponed by remember { mutableStateOf(linkPrefs.getBoolean(KEY_LINK_LATER, false)) }
+    fun requestLink(mac: TrustedDevice) {
+        CompanionLink.request(context, mac) { linkApproval.launch(IntentSenderRequest.Builder(it).build()) }
+    }
 
     Scaffold(
         topBar = {
@@ -261,14 +288,23 @@ fun HomeScreen(
                 }
             } else {
                 val sender = devices.filter { it.canSend }.maxByOrNull { it.lastSeenMs }
-                if (!linked && sender != null) {
+                if (!linked && !linkPostponed && sender != null) {
                     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(stringResource(R.string.receiving_needs_link_title, sender.deviceName), style = MaterialTheme.typography.titleMedium)
-                            Text(stringResource(R.string.receiving_needs_link_body, sender.deviceName), style = MaterialTheme.typography.bodyMedium)
-                            Button(onClick = {
-                                CompanionLink.request(context, sender) { linkApproval.launch(IntentSenderRequest.Builder(it).build()) }
-                            }) { Text(stringResource(R.string.action_allow)) }
+                            Text(stringResource(R.string.receiving_needs_link_body), style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                stringResource(R.string.receiving_link_scope),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { requestLink(sender) }) { Text(stringResource(R.string.action_allow)) }
+                                TextButton(onClick = {
+                                    linkPostponed = true
+                                    linkPrefs.edit { putBoolean(KEY_LINK_LATER, true) }
+                                }) { Text(stringResource(R.string.action_later)) }
+                            }
                         }
                     }
                 }
@@ -325,6 +361,15 @@ fun HomeScreen(
                                     onForget = { pendingForget = device },
                                     receiveAutomatically = if (device.canSend) device.receiveAutomatically else null,
                                     onReceiveAutomatically = { viewModel.setReceiveAutomatically(device.deviceId, it) },
+                                    receiveInBackground = if (device.canSend) linked else null,
+                                    onReceiveInBackground = { on ->
+                                        if (on) {
+                                            requestLink(device)
+                                        } else {
+                                            CompanionLink.unlink(context)
+                                            linked = CompanionLink.isLinked(context)
+                                        }
+                                    },
                                 )
                             },
                         )

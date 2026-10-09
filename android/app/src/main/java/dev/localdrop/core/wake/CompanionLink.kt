@@ -34,6 +34,21 @@ object CompanionLink {
     }
 
     /**
+     * Removes the association: LocalDrop goes back to asking with a notification before receiving
+     * in the background.
+     */
+    fun unlink(context: Context) {
+        val manager = context.getSystemService(CompanionDeviceManager::class.java) ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            manager.myAssociations.forEach { manager.disassociate(it.id) }
+        } else {
+            @Suppress("DEPRECATION")
+            manager.associations.forEach { manager.disassociate(it) }
+        }
+        Log.i(TAG, "Unlinked")
+    }
+
+    /**
      * Asks Android to associate with [mac]. The system finds it over Bluetooth by its current
      * private name, so only this Mac is offered; [onIntent] launches the system dialog.
      */
@@ -72,18 +87,24 @@ object CompanionLink {
         }
     }
 
-    /** This Mac's private names for the current token slot and its neighbours (protocol.md §2.2). */
+    /**
+     * This Mac's private names for the current token slot and its neighbours (protocol.md §2.2),
+     * while it is available (status "L"), shown as "LocalDrop · MacBook Pro": the system dialog
+     * and the stored association would otherwise show the rotating token ("LGMcfSwA"). A rename
+     * must keep at least one character of the Bluetooth name — the status "L" begins
+     * "LocalDrop" — and its prefix is limited to 10 characters, so the Mac's name goes after.
+     */
     private fun filter(mac: TrustedDevice, scanFilter: ScanFilter): BluetoothLeDeviceFilter {
         val builder = BluetoothLeDeviceFilter.Builder().setScanFilter(scanFilter)
         mac.presenceKey?.let { key ->
             val slot = PresenceCrypto.slot(System.currentTimeMillis())
             val tokens = (slot - 1..slot + 1).joinToString("|") { Regex.escape(PresenceCrypto.encodeToken(PresenceCrypto.token(key, it))) }
-            builder.setNamePattern(java.util.regex.Pattern.compile("^[LNB](?:$tokens)$"))
-            // Show the Mac's real name instead of its rotating Bluetooth name.
+            builder.setNamePattern(java.util.regex.Pattern.compile("^L(?:$tokens)$"))
             try {
-                builder.setRenameFromName(mac.deviceName, "", 0, 0)
+                builder.setRenameFromName("", "ocalDrop · ${mac.deviceName}", 0, 1)
             } catch (e: IllegalArgumentException) {
-                Log.i(TAG, "Can't rename the Mac in the system dialog: ${e.message}")
+                // The dialog then shows the Bluetooth name; linking works the same.
+                Log.w(TAG, "Can't show the Mac's name in the system dialog: ${e.message}")
             }
         }
         return builder.build()

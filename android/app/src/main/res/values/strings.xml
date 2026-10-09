@@ -185,9 +185,11 @@
     <string name="notification_receiving_from">Receiving from %1$s</string>
     <string name="notification_incoming_tap">%1$s has files for you</string>
     <string name="notification_incoming_tap_text">Tap to receive them.</string>
-    <string name="action_allow_receiving">Receive files from this Mac…</string>
     <string name="action_receive_automatically">Accept files without asking</string>
-    <string name="receiving_needs_link_title">Receive files from %1$s</string>
-    <string name="receiving_needs_link_body">Allow LocalDrop to connect to %1$s in the background, so files you send from the Mac arrive even when LocalDrop is closed. Android asks once.</string>
+    <string name="receiving_needs_link_title">Receive files from %1$s in the background</string>
+    <string name="receiving_needs_link_body">Android asks once whether LocalDrop may be linked to this Mac. Then files from the Mac arrive even when LocalDrop is closed.</string>
+    <string name="receiving_link_scope">Android shows its general text about syncing, such as a caller\'s name. LocalDrop does none of that: the link only lets it start receiving files in the background, with no access to contacts, calls, photos, files, messages or location. Without it, files from the Mac arrive when you tap the notification. Turn it off any time in the Mac\'s menu below.</string>
+    <string name="action_later">Later</string>
+    <string name="action_receive_in_background">Receive in the background</string>
     <string name="notification_receive_failed_title">Couldn\'t receive from %1$s</string>
 </resources>
