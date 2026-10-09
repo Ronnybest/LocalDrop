@@ -22,7 +22,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 
 ## Features
 
-- **And back.** Start dragging files anywhere on the Mac and your phones slide in at the edge of the screen: drop the files on one. Or use **Share › LocalDrop** in Finder, Photos and other apps, ✈ next to the phone in the menu, or drop files on the menu bar drop. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
+- **And back.** Start dragging files anywhere on the Mac and your phones slide in at the edge of the screen: drop the files on one. Or use **Share › LocalDrop** in Finder, Photos and other apps, or ✈ next to the phone in the menu. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
 - **Progress in sight.** On Android 16 and later a transfer is a Live Update: a chip with the percentage in the status bar and on the lock screen, like the drop filling up in the Mac's menu bar.
 - **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **LocalDrop** target sends to your default Mac in one tap.
 - **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
