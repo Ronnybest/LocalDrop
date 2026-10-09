@@ -735,21 +735,29 @@ class TransferService : Service() {
             is TransferState.Received -> {
                 val files = state.files
                 val first = files.first()
-                // One file opens in its app; several open the Downloads list.
-                val open = if (files.size == 1) {
+                // An app installs only from an app allowed to install, which LocalDrop doesn't ask to
+                // be: Files is, and opens the installer when the APK is tapped in Downloads.
+                val isApp = files.size == 1 && (first.mimeType == APK_MIME_TYPE || first.name.endsWith(".apk", ignoreCase = true))
+                // One file opens in its app; several (or an app to install) open the Downloads list.
+                val open = if (files.size == 1 && !isApp) {
                     Intent(Intent.ACTION_VIEW).setDataAndType(first.uri, first.mimeType).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 } else {
                     Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
                 }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 val openIntent = PendingIntent.getActivity(this, REQUEST_OPEN_RECEIVED, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-                val text = if (files.size == 1) first.name else getString(R.string.received_where)
+                val text = when {
+                    isApp -> getString(R.string.received_app, first.name)
+                    files.size == 1 -> first.name
+                    else -> getString(R.string.received_where)
+                }
                 val notification = NotificationCompat.Builder(this, CHANNEL_RESULTS)
                     .setSmallIcon(R.drawable.ic_stat_localdrop)
                     .setContentTitle(resources.getQuantityString(R.plurals.received_files, files.size, files.size, name))
                     .setContentText(text)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(text))
                     .setAutoCancel(true)
                     .setContentIntent(openIntent)
-                    .addAction(0, getString(R.string.action_open), openIntent)
+                    .addAction(0, getString(if (isApp) R.string.action_show_downloads else R.string.action_open), openIntent)
                     .build()
                 notifyIfAllowed(resultNotificationId++, notification)
             }
@@ -871,6 +879,7 @@ class TransferService : Service() {
         const val CHANNEL_INCOMING = "incoming"
         const val INCOMING_NOTIFICATION_ID = 4
         const val INCOMING_GROUP = "incoming"
+        private const val APK_MIME_TYPE = "application/vnd.android.package-archive"
         private const val INCOMING_SUMMARY_ID = 5
         private const val ONGOING_NOTIFICATION_ID = 1
         private const val PAIRING_NOTIFICATION_ID = 2

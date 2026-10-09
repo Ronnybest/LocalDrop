@@ -182,6 +182,8 @@
         <item quantity="other">%1$d файла получено от %2$s</item>
     </plurals>
     <string name="received_where">Сохранено в «Загрузки» · целостность проверена</string>
+    <string name="received_app">%1$s · чтобы установить, нажмите на него в «Загрузках»</string>
+    <string name="action_show_downloads">«Загрузки»</string>
     <string name="nothing_received">У %1$s сейчас нет файлов для этого телефона.</string>
     <string name="error_phone_space">На телефоне недостаточно места (нужно %1$s).</string>
     <string name="error_save_failed">Не удалось сохранить %1$s на телефоне.</string>

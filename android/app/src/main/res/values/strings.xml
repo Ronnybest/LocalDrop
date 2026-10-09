@@ -176,6 +176,8 @@
         <item quantity="other">%1$d files received from %2$s</item>
     </plurals>
     <string name="received_where">Saved in Downloads · integrity verified</string>
+    <string name="received_app">%1$s · to install, tap it in Downloads</string>
+    <string name="action_show_downloads">Downloads</string>
     <string name="nothing_received">%1$s has nothing for this phone right now.</string>
     <string name="error_phone_space">Not enough free space on this phone (%1$s needed).</string>
     <string name="error_save_failed">%1$s couldn\'t be saved on this phone.</string>
