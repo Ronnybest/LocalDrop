@@ -87,7 +87,7 @@ Gallery → Share → MacBook Pro → (на Mac: уведомление или �
 | TransferResult | `file_result` / `transfer_result` |
 | Presence | BLE-токен + `presence_key` (новое) |
 
-## 4. Direct Share для доверенного Mac на Android 11+
+## 4. Direct Share для доверенного Mac на Android 10+
 
 **API:** Sharing Shortcuts (API 29+). `ChooserTargetService` не используется: он объявлен
 устаревшим в API 30.
@@ -432,7 +432,7 @@ textToClipboard    (Mac) класть полученный текст в буф�
 | Грант на `content://` временный | Отложенная отправка не прочитает файл | Передавать грант сервису; для очереди — spool с лимитом размера и явным отказом для огромных файлов |
 | Запуск foreground service из фона запрещён с Android 12 | Очередь не стартует сама в фоне | M5: старт только из Share-активности (разрешено). M8: CompanionDeviceManager (API 31+ — исключение для старта из фона; API 33+ — self-managed связь) либо уведомление «Mac рядом — отправить?». Android 14+: user-initiated data transfer jobs. Android 15: лимит 6 ч на `dataSync` |
 | Фоновое BLE-сканирование ограничено | Присутствие в фоне неточное | Сканирование по требованию; для очереди — скан с фильтром через `PendingIntent` |
-| Android 11: скан требует геолокацию и включённый Location | Без них нет `Nearby` | Быстрый путь через `lastEndpoint` работает без BLE; понятная подсказка |
+| Android 10–11: скан требует геолокацию и включённый Location | Без них нет `Nearby` | Быстрый путь через `lastEndpoint` работает без BLE; понятная подсказка |
 | Mac спит — BLE и сеть недоступны | `Offline` | Честный статус + очередь (M8); будить Mac не пытаемся |
 | macOS-реклама — только local name (8 символов) | Мало места под токен | 40-битный токен, ротация 15 мин, допуск ±1 слот на часы |
 | Расхождение часов телефона и Mac | Токен не совпал | Проверка 3 слотов (±15 мин); fallback — `lastEndpoint` и GATT |

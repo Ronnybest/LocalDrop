@@ -40,7 +40,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 
 | | |
 | --- | --- |
-| **Android** | Android 11 or later with Bluetooth LE |
+| **Android** | Android 10 or later with Bluetooth LE |
 | **Mac** | macOS 14 or later; Liquid Glass design on macOS 26 and later |
 | **Network** | The phone and the Mac on the same Wi-Fi, or the Mac connected to the phone's hotspot |
 

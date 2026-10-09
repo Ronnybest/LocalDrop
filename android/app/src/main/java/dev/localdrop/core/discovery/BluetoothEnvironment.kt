@@ -69,7 +69,7 @@ class BluetoothEnvironment(private val context: Context) {
         /**
          * Runtime permissions BLE discovery needs on this API level.
          * Android 12+: BLUETOOTH_SCAN (declared neverForLocation) and BLUETOOTH_CONNECT for GATT.
-         * Android 11: ACCESS_FINE_LOCATION; BLUETOOTH/BLUETOOTH_ADMIN are install-time.
+         * Android 10–11: ACCESS_FINE_LOCATION; BLUETOOTH/BLUETOOTH_ADMIN are install-time.
          */
         fun requiredPermissions(): List<String> =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

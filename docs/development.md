@@ -92,9 +92,9 @@ LocalDrop/
 
 ## Ограничения платформ
 
-### Android 11 (API 30)
+### Android 10–11 (API 29–30)
 
-* **BLE-скан требует `ACCESS_FINE_LOCATION` и включённой геолокации.** На Android 11 без
+* **BLE-скан требует `ACCESS_FINE_LOCATION` и включённой геолокации.** На Android 10–11 без
   включённого Location скан возвращает пустой результат без ошибки — приложение явно
   проверяет `LocationManager.isLocationEnabled` и просит включить.
 * На Android 12+ вместо этого используются `BLUETOOTH_SCAN` (`neverForLocation`) и
@@ -148,7 +148,7 @@ LocalDrop/
 скорость упирается в половину эфира канала. Точка доступа телефона даёт прямой
 радиоканал. Точку доступа включает и подключает к ней Mac пользователь; автоматическое
 управление сетями (и Wi-Fi Direct) в MVP не используется: Mac при этом теряет свою сеть,
-а на Android 11 приложение не может выбрать диапазон точки доступа.
+а на Android 10–11 приложение не может выбрать диапазон точки доступа.
 
 
 * Многие публичные/гостевые сети включают client isolation — устройства видят друг друга по
@@ -185,7 +185,7 @@ cd android && ./gradlew assembleDebug
 LOCALDROP_MAC_PORT=<порт из меню Mac> LOCALDROP_MAC_ID=<deviceId Mac> ./gradlew testDebugUnitTest
 ```
 
-minSdk 30 (Android 11), targetSdk 36. Установка: `./gradlew installDebug`.
+minSdk 29 (Android 10), targetSdk 36. Установка: `./gradlew installDebug`.
 
 ## Статус
 

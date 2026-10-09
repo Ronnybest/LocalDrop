@@ -40,7 +40,7 @@
 
 | | |
 | --- | --- |
-| **Android** | Android 11 или новее с Bluetooth LE |
+| **Android** | Android 10 или новее с Bluetooth LE |
 | **Mac** | macOS 14 или новее; дизайн Liquid Glass — на macOS 26 и новее |
 | **Сеть** | Телефон и Mac в одной сети Wi-Fi или Mac подключён к точке доступа телефона |
 
