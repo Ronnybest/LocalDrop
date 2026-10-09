@@ -36,7 +36,6 @@
     <string name="action_forget">Forget</string>
     <string name="tile_clipboard_label">Clipboard to Mac</string>
     <string name="process_text_label">Send to Mac</string>
-    <string name="action_add_tile">Add “Clipboard to Mac” to Quick Settings</string>
     <string name="tile_no_mac">Pair a Mac first</string>
     <string name="tile_choose_mac">Choose a Mac</string>
     <string name="clipboard_empty">Clipboard is empty</string>
@@ -50,9 +49,7 @@
         <item quantity="one">%d item waiting to be sent</item>
         <item quantity="other">%d items waiting to be sent</item>
     </plurals>
-    <string name="action_make_default">Make default</string>
     <string name="action_more">More</string>
-    <string name="label_default">Default</string>
     <string name="action_back">Back</string>
 
     <string name="pairing_title">Pair with %1$s?</string>
@@ -88,9 +85,6 @@
 
     <string name="home_empty_title">Send files to your Mac from any app</string>
     <string name="home_empty_body">Pair your Mac once. After that, share a photo or file from any app and pick your Mac — LocalDrop doesn\'t need to be open.</string>
-    <string name="home_how_to_send">To send, share from any app and pick your Mac in the share sheet.</string>
-    <string name="home_your_macs">Your Macs</string>
-    <string name="action_add_another_mac">Add another Mac</string>
     <string name="add_mac_title">Add a Mac</string>
     <string name="add_mac_body">On your Mac, open LocalDrop in the menu bar and turn on “Visible to new devices”. Keep it close to this phone and tap it below. You\'ll compare a code once.</string>
     <string name="presence_nearby_ready">Nearby · ready</string>
@@ -216,4 +210,22 @@
     <string name="notification_text_copied">Text copied</string>
     <string name="notification_link_copied">Link copied</string>
     <string name="action_share">Share</string>
+
+    <!-- Home: the main Mac's card, hints, recent transfers, other Macs. -->
+    <string name="action_send_files">Files</string>
+    <string name="action_send_clipboard">Clipboard</string>
+    <string name="home_recent">Recent</string>
+    <string name="home_other_macs">Other Macs</string>
+    <string name="history_text">Text</string>
+    <string name="history_copied">Copied</string>
+    <string name="history_file_gone">The file is no longer in Downloads</string>
+    <string name="history_line" translatable="false">%1$s · %2$s</string>
+    <string name="tile_hint_title">Clipboard in Quick Settings</string>
+    <string name="tile_hint_body">One tap sends what you copied to the Mac.</string>
+    <string name="action_add">Add</string>
+    <string name="card_sending">Sending</string>
+    <string name="card_receiving">Receiving</string>
+    <string name="sheet_main_mac">Main Mac</string>
+    <string name="sheet_device_key">Device key</string>
+    <string name="time_just_now">just now</string>
 </resources>

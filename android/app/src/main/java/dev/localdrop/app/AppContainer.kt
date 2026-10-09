@@ -9,6 +9,7 @@ import dev.localdrop.core.device.CapabilityAnnouncer
 import dev.localdrop.core.device.TrustedDeviceStore
 import dev.localdrop.core.discovery.BleScanner
 import dev.localdrop.core.discovery.BonjourResolver
+import dev.localdrop.core.history.HistoryStore
 import dev.localdrop.core.presence.PresenceMonitor
 import dev.localdrop.core.queue.AvailabilityWatcher
 import dev.localdrop.core.queue.OutgoingStore
@@ -63,6 +64,9 @@ class AppContainer(context: Context) {
 
     /** Sends kept for later, in noBackupFilesDir: never backed up, never cleared as cache. */
     val outgoingStore = OutgoingStore(File(appContext.noBackupFilesDir, "outgoing"))
+
+    /** Recent transfers for the home screen; this phone only, never backed up. */
+    val historyStore = HistoryStore(File(appContext.noBackupFilesDir, "history.cbor"))
 
     val availabilityWatcher by lazy { AvailabilityWatcher(bluetoothEnvironment, bleScanner, trustedDeviceStore, localNetworks) }
 

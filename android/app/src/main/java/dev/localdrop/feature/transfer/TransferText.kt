@@ -1,6 +1,7 @@
 package dev.localdrop.feature.transfer
 
 import android.content.Context
+import android.net.Uri
 import android.text.format.Formatter
 import dev.localdrop.R
 import dev.localdrop.core.discovery.DiscoveryBlocker
@@ -148,3 +149,9 @@ object TransferText {
         return maxOf(1, (ceil(seconds / step) * step).toInt())
     }
 }
+
+/** The text as a web link when it is one and nothing else, so it can be opened: null otherwise. */
+fun webLink(text: String): Uri? = text.trim()
+    .takeIf { it.isNotEmpty() && !it.contains(Regex("\\s")) }
+    ?.let(Uri::parse)
+    ?.takeIf { it.scheme == "http" || it.scheme == "https" }

@@ -32,6 +32,7 @@ import dev.localdrop.R
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.app.MainActivity
 import dev.localdrop.core.device.TrustedDevice
+import dev.localdrop.core.history.HistoryEntry
 import dev.localdrop.core.queue.AvailabilityTrigger
 import dev.localdrop.core.queue.QueuedTransfer
 import dev.localdrop.core.queue.SpoolSpaceException
@@ -144,6 +145,7 @@ class TransferService : Service() {
     private val container get() = (application as LocalDropApplication).container
     private val manager get() = container.transferManager
     private val outgoingStore get() = container.outgoingStore
+    private val history get() = container.historyStore
     private val notifications get() = NotificationManagerCompat.from(this)
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -423,7 +425,7 @@ class TransferService : Service() {
             return
         }
         owned.forEach(::drop)
-        postFinalState(state)
+        postFinalState(state, batch.source.clipboardText)
         if (state is TransferState.Completed || state is TransferState.TextCopied) {
             // The device is reachable right now: its other waiting sends go next.
             items.filter { it.deviceId == batch.deviceId && it.waitingSinceMs != null }.forEach { it.retryAtMs = 0 }
@@ -665,11 +667,12 @@ class TransferService : Service() {
         notifyIfAllowed(PARKED_NOTIFICATION_ID, notification)
     }
 
-    private fun postFinalState(state: TransferState) {
+    private fun postFinalState(state: TransferState, sentText: String?) {
         val name = currentDeviceName
         when (state) {
             is TransferState.Completed -> {
                 val summary = state.summary
+                history.add(incoming = false, peerName = name, kind = HistoryEntry.Kind.FILES, title = summary.firstFileName, count = summary.fileCount)
                 postResult(
                     towards(name),
                     TransferText.what(this, summary.fileCount, summary.firstFileName),
@@ -680,7 +683,10 @@ class TransferService : Service() {
                     ),
                 )
             }
-            is TransferState.TextCopied -> postResult(towards(name), getString(R.string.notification_copied), getString(R.string.text_copied_body))
+            is TransferState.TextCopied -> {
+                sentText?.let { history.add(incoming = false, peerName = name, kind = textKind(it), title = it.trim()) }
+                postResult(towards(name), getString(R.string.notification_copied), getString(R.string.text_copied_body))
+            }
             is TransferState.Failed -> postResult(towards(name), getString(R.string.notification_not_sent), TransferText.error(this, state.error, name), failed = true)
             is TransferState.Cancelled -> if (state.byPeer) {
                 postResult(towards(name), getString(R.string.transfer_cancelled), getString(R.string.transfer_cancelled_by_peer, name))
@@ -738,10 +744,20 @@ class TransferService : Service() {
         val name = currentDeviceName
         when (state) {
             is TransferState.Received -> {
+                state.texts.forEach { history.add(incoming = true, peerName = name, kind = textKind(it), title = it.trim()) }
                 if (state.texts.isNotEmpty()) postTextReceived(state.texts.last(), name)
                 val files = state.files
                 if (files.isEmpty()) return
                 val first = files.first()
+                history.add(
+                    incoming = true,
+                    peerName = name,
+                    kind = HistoryEntry.Kind.FILES,
+                    title = first.name,
+                    count = files.size,
+                    uri = first.uri.toString().takeIf { files.size == 1 },
+                    mimeType = first.mimeType.takeIf { files.size == 1 },
+                )
                 // An app installs only from an app allowed to install, which LocalDrop doesn't ask to
                 // be: Files is, and opens the installer when the APK is tapped in Downloads.
                 val isApp = files.size == 1 && (first.mimeType == APK_MIME_TYPE || first.name.endsWith(".apk", ignoreCase = true))
@@ -784,7 +800,7 @@ class TransferService : Service() {
      */
     private fun postTextReceived(text: String, name: String) {
         getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(getString(R.string.app_name), text))
-        val link = text.trim().takeIf { !it.contains(Regex("\\s")) }?.let(Uri::parse)?.takeIf { it.scheme == "http" || it.scheme == "https" }
+        val link = webLink(text)
         val preview = text.trim().take(TEXT_PREVIEW_LENGTH)
         val builder = resultBuilder(from(name))
             .setContentTitle(getString(if (link != null) R.string.notification_link_copied else R.string.notification_text_copied))
@@ -801,6 +817,8 @@ class TransferService : Service() {
         }
         notifyIfAllowed(resultNotificationId++, builder.build())
     }
+
+    private fun textKind(text: String) = if (webLink(text) != null) HistoryEntry.Kind.LINK else HistoryEntry.Kind.TEXT
 
     private fun postResult(direction: String, title: String, text: String, failed: Boolean = false) {
         val notification = resultBuilder(direction)

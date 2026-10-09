@@ -16,14 +16,18 @@ import dev.localdrop.feature.transfer.TransferViewModel
 
 private enum class Screen { Home, AddMac, Diagnostics }
 
-/** The app is for setup and management; an active session takes over the screen while it lasts. */
+/** Home with the Macs; Add Mac and Diagnostics on top of it. */
 @Composable
 fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = TransferViewModel.Factory)) {
     val transfer by transferViewModel.state.collectAsStateWithLifecycle()
     val testDataSize by transferViewModel.testDataSize.collectAsStateWithLifecycle()
     var screen by rememberSaveable { mutableStateOf(Screen.Home) }
 
-    if (transfer !is TransferState.Idle) {
+    // Sending and receiving show on the home screen, in the Mac's card. Pairing, and a session
+    // started from Add Mac, take over the screen while they last.
+    val pairing = transfer is TransferState.Pairing || transfer is TransferState.Paired ||
+        (screen == Screen.AddMac && transfer !is TransferState.Idle)
+    if (pairing) {
         TransferScreen(
             state = transfer,
             onConfirmPairing = transferViewModel::confirmPairing,
@@ -40,6 +44,10 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
     }
     when (screen) {
         Screen.Home -> HomeScreen(
+            transfer = transfer,
+            onCancelTransfer = transferViewModel::cancel,
+            onAcceptIncoming = transferViewModel::acceptIncoming,
+            onDeclineIncoming = transferViewModel::declineIncoming,
             onAddMac = { screen = Screen.AddMac },
             onOpenDiagnostics = { screen = Screen.Diagnostics },
         )

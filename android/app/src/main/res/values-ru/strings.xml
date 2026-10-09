@@ -34,7 +34,6 @@
     <string name="action_forget">Забыть</string>
     <string name="tile_clipboard_label">Буфер обмена на Mac</string>
     <string name="process_text_label">Отправить на Mac</string>
-    <string name="action_add_tile">Добавить «Буфер обмена на Mac» в быстрые настройки</string>
     <string name="tile_no_mac">Сначала привяжите Mac</string>
     <string name="tile_choose_mac">Выберите Mac</string>
     <string name="clipboard_empty">Буфер обмена пуст</string>
@@ -50,9 +49,7 @@
         <item quantity="many">%d объектов ждут отправки</item>
         <item quantity="other">%d объекта ждут отправки</item>
     </plurals>
-    <string name="action_make_default">Сделать основным</string>
     <string name="action_more">Ещё</string>
-    <string name="label_default">Основной</string>
     <string name="action_back">Назад</string>
 
     <string name="pairing_title">Привязать %1$s?</string>
@@ -88,9 +85,6 @@
 
     <string name="home_empty_title">Отправляйте файлы на Mac из любого приложения</string>
     <string name="home_empty_body">Привяжите Mac один раз. Дальше делитесь фото или файлом из любого приложения и выбирайте свой Mac — открывать LocalDrop не нужно.</string>
-    <string name="home_how_to_send">Чтобы отправить, нажмите «Поделиться» в любом приложении и выберите свой Mac.</string>
-    <string name="home_your_macs">Ваши Mac</string>
-    <string name="action_add_another_mac">Добавить ещё Mac</string>
     <string name="add_mac_title">Добавить Mac</string>
     <string name="add_mac_body">На Mac откройте LocalDrop в строке меню и включите видимость для новых устройств. Держите Mac рядом с телефоном и выберите его ниже. Код нужно будет сравнить один раз.</string>
     <string name="presence_nearby_ready">Рядом · готов</string>
@@ -220,4 +214,21 @@
     <string name="notification_text_copied">Текст скопирован</string>
     <string name="notification_link_copied">Ссылка скопирована</string>
     <string name="action_share">Поделиться</string>
+
+    <!-- Главный экран: карточка основного Mac, подсказки, недавние передачи, другие Mac. -->
+    <string name="action_send_files">Файлы</string>
+    <string name="action_send_clipboard">Буфер</string>
+    <string name="home_recent">Недавние</string>
+    <string name="home_other_macs">Другие Mac</string>
+    <string name="history_text">Текст</string>
+    <string name="history_copied">Скопировано</string>
+    <string name="history_file_gone">Файла больше нет в «Загрузках»</string>
+    <string name="tile_hint_title">Буфер обмена в быстрых настройках</string>
+    <string name="tile_hint_body">Одно нажатие — и скопированное уйдёт на Mac.</string>
+    <string name="action_add">Добавить</string>
+    <string name="card_sending">Отправка</string>
+    <string name="card_receiving">Приём</string>
+    <string name="sheet_main_mac">Основной Mac</string>
+    <string name="sheet_device_key">Ключ устройства</string>
+    <string name="time_just_now">только что</string>
 </resources>
