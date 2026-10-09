@@ -128,9 +128,19 @@ private struct TransferView: View {
                 actions
             }
             if transfer.phase == .receiving {
-                ProgressView(value: transfer.fraction)
-                    .progressViewStyle(.linear)
-                    .controlSize(.small)
+                VStack(spacing: 4) {
+                    ProgressView(value: transfer.fraction)
+                        .progressViewStyle(.linear)
+                        .controlSize(.small)
+                    // Pinned to both edges, so changing numbers don't move the rest.
+                    HStack {
+                        Text(transfer.timeLeft ?? " ")
+                        Spacer(minLength: 8)
+                        Text("\(Int(transfer.fraction * 100))%")
+                    }
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -150,12 +160,7 @@ private struct TransferView: View {
                     .glassButton(prominent: true)
             }
         case .receiving:
-            HStack(spacing: 10) {
-                Text("\(Int(transfer.fraction * 100))%")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                CircleButton(symbol: "xmark", help: String(localized: "Cancel"), action: cancel)
-            }
+            CircleButton(symbol: "xmark", help: String(localized: "Cancel"), action: cancel)
         case .completed(let urls):
             HStack(spacing: 8) {
                 Button("Show") {
@@ -189,7 +194,6 @@ private struct TransferView: View {
         case .receiving:
             String(localized: "\(bytes(transfer.bytesReceived)) of \(bytes(transfer.totalSize))")
                 + (transfer.bytesPerSecond > 0 ? " · " + String(localized: "\(bytes(Int64(transfer.bytesPerSecond)))/s") : "")
-                + (transfer.timeLeft.map { " · " + $0 } ?? "")
         case .completed:
             String(localized: "From \(transfer.peerName) · integrity verified")
         case .failed, .cancelled:
