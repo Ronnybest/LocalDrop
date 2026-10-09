@@ -6,6 +6,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -733,7 +734,9 @@ class TransferService : Service() {
         val name = currentDeviceName
         when (state) {
             is TransferState.Received -> {
+                if (state.texts.isNotEmpty()) postTextReceived(state.texts.last(), name)
                 val files = state.files
+                if (files.isEmpty()) return
                 val first = files.first()
                 // An app installs only from an app allowed to install, which LocalDrop doesn't ask to
                 // be: Files is, and opens the installer when the APK is tapped in Downloads.
@@ -767,6 +770,33 @@ class TransferService : Service() {
             }
             else -> Unit
         }
+    }
+
+    /**
+     * Text or a link from the Mac, put on the clipboard. A link opens only when tapped, as on the
+     * Mac (messages.md `text`).
+     */
+    private fun postTextReceived(text: String, name: String) {
+        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(getString(R.string.app_name), text))
+        val link = text.trim().takeIf { !it.contains(Regex("\\s")) }?.let(Uri::parse)?.takeIf { it.scheme == "http" || it.scheme == "https" }
+        val preview = text.trim().take(TEXT_PREVIEW_LENGTH)
+        val builder = NotificationCompat.Builder(this, CHANNEL_RESULTS)
+            .setSmallIcon(R.drawable.ic_stat_localdrop)
+            .setContentTitle(getString(if (link != null) R.string.received_link_title else R.string.received_text_title, name))
+            .setContentText(preview)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent())
+        if (link != null) {
+            val open = PendingIntent.getActivity(
+                this,
+                REQUEST_OPEN_LINK,
+                Intent(Intent.ACTION_VIEW, link).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            builder.setContentIntent(open).addAction(0, getString(R.string.action_open), open)
+        }
+        notifyIfAllowed(resultNotificationId++, builder.build())
     }
 
     private fun postResult(title: String, text: String) {
@@ -894,6 +924,8 @@ class TransferService : Service() {
         private const val REQUEST_ACCEPT_INCOMING = 7
         private const val REQUEST_DECLINE_INCOMING = 8
         private const val REQUEST_OPEN_RECEIVED = 9
+        private const val REQUEST_OPEN_LINK = 30
+        private const val TEXT_PREVIEW_LENGTH = 300
         private const val REQUEST_RECEIVE = 10
         private const val TIMER_SLACK_MS = 50L
         private const val PROGRESS_NOTIFICATION_INTERVAL_MS = 1_000L

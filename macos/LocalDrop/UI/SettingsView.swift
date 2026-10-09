@@ -188,6 +188,7 @@ private struct DevicesSettings: View {
                         cancelDelivery: model.cancelDelivery
                     )
                     .sendsDroppedFiles(to: item, using: model.send)
+                    .sendMenu(for: item, model: model)
                 }
             } header: {
                 Text("Devices")

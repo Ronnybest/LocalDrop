@@ -218,4 +218,9 @@ nonisolated enum OutgoingMessages {
     }
 
     static var nothingPending: Message { Message(type: MessageType.nothingPending) }
+
+    /// Text for the phone's clipboard, offered in answer to `receive_ready` (messages.md).
+    static func text(_ transferId: Data, text: String) -> Message {
+        Message(type: MessageType.text, body: ["transferId": .bytes(transferId), "text": .text(text)])
+    }
 }

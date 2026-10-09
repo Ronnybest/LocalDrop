@@ -31,6 +31,17 @@ nonisolated final class TransferSender {
     private let coordinator: any SessionCoordinator
     private let token: TransferCancelToken
 
+    /// Text goes straight to the phone's clipboard: `text`, answered by `text_result`.
+    static func sendText(_ text: String, over channel: SecureChannel) async throws -> DeliveryOutcome {
+        let transferId = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) })
+        try await channel.send(OutgoingMessages.text(transferId, text: text))
+        let result = try await channel.receive(timeout: replyTimeout, stage: "text result")
+        try result.expect(MessageType.textResult)
+        let status = (try? result.text("status")) ?? "declined"
+        Log.transfer.info("Text delivered: \(text.utf8.count) bytes, \(status, privacy: .public)")
+        return status == "copied" ? .completed(files: 0, bytes: Int64(text.utf8.count)) : .rejected(reason: "declined")
+    }
+
     init(deliveryId: UUID, files: [URL], channel: SecureChannel, coordinator: any SessionCoordinator, token: TransferCancelToken) {
         self.deliveryId = deliveryId
         self.files = files

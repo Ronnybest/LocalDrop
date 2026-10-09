@@ -76,6 +76,7 @@ struct MenuBarView: View {
                                     .padding(.vertical, 8)
                                     .contentShape(Rectangle())
                                     .sendsDroppedFiles(to: item, using: model.send)
+                                    .sendMenu(for: item, model: model)
                                 if index < recent.count - 1 {
                                     Divider().padding(.leading, 54)
                                 }

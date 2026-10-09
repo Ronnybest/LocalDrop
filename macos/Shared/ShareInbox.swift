@@ -12,10 +12,12 @@ nonisolated enum ShareInbox {
         var id: String { deviceId }
     }
 
-    /// One share: copies of the files (in the request's directory) and the phone they go to.
+    /// One share: copies of the files (in the request's directory), or text or a link for the
+    /// phone's clipboard, and the phone they go to.
     struct Request: Codable, Sendable {
         let deviceId: String
         let files: [String]
+        var text: String?
     }
 
     private static let log = Logger(subsystem: "dev.localdrop.mac", category: "share")
@@ -69,6 +71,27 @@ nonisolated enum ShareInbox {
         return (try? JSONDecoder().decode([Phone].self, from: data)) ?? []
     }
 
+    /// Text or a link for [deviceId]'s clipboard.
+    static func submit(text: String, to deviceId: String) throws {
+        guard let inbox else { throw CocoaError(.fileNoSuchFile) }
+        let directory = inbox.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        do {
+            let request = try JSONEncoder().encode(Request(deviceId: deviceId, files: [], text: text))
+            try request.write(to: directory.appendingPathComponent("request.json"), options: .atomic)
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+        notifyApp()
+    }
+
+    private static func notifyApp() {
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(requestNotification as CFString), nil, nil, true
+        )
+    }
+
     /// Copies [files] into a new request for [deviceId] — on APFS a clone, instant and free —
     /// writes the request last, then tells the app.
     static func submit(_ files: [URL], to deviceId: String) throws {
@@ -93,8 +116,6 @@ nonisolated enum ShareInbox {
             try? FileManager.default.removeItem(at: directory)
             throw error
         }
-        CFNotificationCenterPostNotification(
-            CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(requestNotification as CFString), nil, nil, true
-        )
+        notifyApp()
     }
 }

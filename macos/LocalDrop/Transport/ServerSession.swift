@@ -50,10 +50,18 @@ protocol SessionCoordinator: AnyObject, Sendable {
     func textReceived(_ text: String, peer: PeerInfo) -> Bool
 
     /// The next delivery waiting for this phone, now being offered to it; nil when none.
-    func takeDelivery(for peer: PeerInfo) -> (id: UUID, files: [URL], token: TransferCancelToken)?
+    func takeDelivery(for peer: PeerInfo) -> PendingDelivery?
     func deliveryStarted(_ id: UUID)
     func deliveryProgress(_ id: UUID, bytesSent: Int64)
     func deliveryFinished(_ id: UUID, outcome: DeliveryOutcome)
+}
+
+/// A delivery handed to the session that serves the phone it is for.
+nonisolated struct PendingDelivery: Sendable {
+    let id: UUID
+    let files: [URL]
+    let text: String?
+    let token: TransferCancelToken
 }
 
 /// Responder side of one TCP session (protocol/protocol.md §5, protocol/security.md §3, §5).
@@ -193,10 +201,15 @@ nonisolated final class ServerSession {
     /// - Returns: false when the phone cancelled: it has closed the session, and so has this Mac.
     private func serveDeliveries(_ handshake: Handshake) async throws -> Bool {
         while let delivery = await coordinator.takeDelivery(for: handshake.peer) {
-            let sender = TransferSender(deliveryId: delivery.id, files: delivery.files, channel: handshake.channel,
-                                        coordinator: coordinator, token: delivery.token)
             do {
-                let outcome = try await sender.run()
+                let outcome: DeliveryOutcome
+                if let text = delivery.text {
+                    outcome = try await TransferSender.sendText(text, over: handshake.channel)
+                } else {
+                    let sender = TransferSender(deliveryId: delivery.id, files: delivery.files, channel: handshake.channel,
+                                                coordinator: coordinator, token: delivery.token)
+                    outcome = try await sender.run()
+                }
                 await coordinator.deliveryFinished(delivery.id, outcome: outcome)
                 if case .cancelledByPeer = outcome { return false }
             } catch {

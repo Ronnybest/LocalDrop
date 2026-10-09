@@ -86,8 +86,8 @@ sealed interface TransferState {
     data class AwaitingLocalDecision(val peerName: String, val summary: TransferSummary) : TransferState
     data class Receiving(val peerName: String, val progress: TransferProgress) : TransferState
 
-    /** Files from the Mac were saved in Downloads. */
-    data class Received(val peerName: String, val files: List<ReceivedFile>) : TransferState
+    /** Files from the Mac were saved in Downloads; [texts] go to the clipboard. */
+    data class Received(val peerName: String, val files: List<ReceivedFile>, val texts: List<String> = emptyList()) : TransferState
 
     /** The Mac had nothing (more) for this phone, or everything was declined. */
     data class NothingReceived(val peerName: String) : TransferState
@@ -470,6 +470,7 @@ class TransferManager(
         channel.send(Message(MessageType.RECEIVE_READY))
         Log.i(TAG, "receive_ready sent to ${peer.deviceId}")
         val received = mutableListOf<ReceivedFile>()
+        val texts = mutableListOf<String>()
         var next = readAsync(channel, DELIVERY_WAIT_MS, "delivery")
         while (true) {
             val message = next.await()
@@ -479,12 +480,30 @@ class TransferManager(
                     val request = decoding { IncomingRequest.parse(message) }
                     next = receiveTransfer(channel, peer, request, options, received)
                 }
+                // Text or a link for the clipboard: taken without asking, like on the Mac (messages.md `text`).
+                MessageType.TEXT -> {
+                    val transferId = decoding { message.bytes("transferId", 16) }
+                    val text = decoding { message.text("text") }
+                    if (text.isEmpty() || text.toByteArray(Charsets.UTF_8).size > ProtocolConstants.MAX_TEXT_SIZE) {
+                        throw ConnectionException.ProtocolViolation("text of ${text.length} characters")
+                    }
+                    texts += text
+                    Log.i(TAG, "Text from ${peer.deviceId}: ${text.length} characters")
+                    channel.send(TransferMessages.textResult(transferId, copied = true))
+                    next = readAsync(channel, DELIVERY_WAIT_MS, "delivery")
+                }
                 MessageType.CANCEL -> throw ConnectionException.CancelledByPeer()
                 else -> throw ConnectionException.ProtocolViolation("unexpected ${message.type} while waiting for a delivery")
             }
         }
         Log.i(TAG, "Delivery from ${peer.deviceId} done: ${received.size} file(s) saved")
-        advance(if (received.isEmpty()) TransferState.NothingReceived(peer.name) else TransferState.Received(peer.name, received))
+        advance(
+            if (received.isEmpty() && texts.isEmpty()) {
+                TransferState.NothingReceived(peer.name)
+            } else {
+                TransferState.Received(peer.name, received, texts)
+            },
+        )
     }
 
     /**

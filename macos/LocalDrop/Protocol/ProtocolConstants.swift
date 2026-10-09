@@ -25,6 +25,8 @@ nonisolated enum ProtocolConstants {
     static let capabilities = ["files", "multipleFiles", "text", "clipboardReceive", "autoAccept", "presenceToken", "send"]
     /// A phone that can receive from this Mac (protocol.md §2.6).
     static let receiveCapability = "receive"
+    /// A device that takes `text` straight to its clipboard (protocol.md §2.6).
+    static let clipboardReceiveCapability = "clipboardReceive"
 
     /// Longest `text` message, in UTF-8 bytes (protocol/messages.md).
     static let maxTextSize = 262_144

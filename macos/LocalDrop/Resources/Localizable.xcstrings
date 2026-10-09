@@ -1814,6 +1814,36 @@
           }
         }
       }
+    },
+    "Send Files…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить файлы…"
+          }
+        }
+      }
+    },
+    "Send Clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить буфер обмена"
+          }
+        }
+      }
+    },
+    "Copied to %@'s clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировано в буфер обмена %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -170,6 +170,16 @@ private struct DeliveryActions: View {
 }
 
 extension View {
+    /// Right-click on a phone: files, or what is on the clipboard (text and links land on the phone's clipboard).
+    func sendMenu(for item: DeviceListItem, model: AppModel) -> some View {
+        contextMenu {
+            if item.canReceive {
+                Button("Send Files…") { model.chooseFiles(for: item.id) }
+                Button("Send Clipboard") { model.sendClipboard(to: item.id) }
+            }
+        }
+    }
+
     /// Files dropped anywhere on a phone's row are sent to it; the row lights up while files hover over it.
     func sendsDroppedFiles(to item: DeviceListItem, using drop: @escaping ([URL], String) -> Void) -> some View {
         modifier(DropToSend(item: item, drop: drop))

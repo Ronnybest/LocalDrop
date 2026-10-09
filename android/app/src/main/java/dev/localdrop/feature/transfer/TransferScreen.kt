@@ -121,11 +121,15 @@ fun TransferScreen(
                 is TransferState.Receiving -> ProgressContent(state.progress, verifying = false, onCancel, receivingFrom = state.peerName)
                 is TransferState.Received -> {
                     Text(
-                        pluralStringResource(R.plurals.received_files, state.files.size, state.files.size, state.peerName),
+                        if (state.files.isEmpty()) {
+                            stringResource(R.string.received_text_title, state.peerName)
+                        } else {
+                            pluralStringResource(R.plurals.received_files, state.files.size, state.files.size, state.peerName)
+                        },
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
                     )
-                    Text(
+                    if (state.files.isNotEmpty()) Text(
                         stringResource(R.string.received_where),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

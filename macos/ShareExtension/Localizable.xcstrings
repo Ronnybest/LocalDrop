@@ -132,6 +132,26 @@
           }
         }
       }
+    },
+    "A link, to the phone's clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ссылка, в буфер обмена телефона"
+          }
+        }
+      }
+    },
+    "Text, to the phone's clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст, в буфер обмена телефона"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

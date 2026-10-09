@@ -57,8 +57,15 @@ final class AppModel {
 
     /// Files on their way to phones (Mac → Android, protocol.md §2.8).
     private(set) var deliveries: [OutgoingDelivery] = [] {
-        didSet { releaseSharedFiles() }
+        didSet {
+            releaseSharedFiles()
+            saveDeliveries()
+        }
     }
+    /// The queue on disk, so it survives restarts; nil until restored at launch.
+    @ObservationIgnored private var deliveryStore: DeliveryStore?
+    /// Restored files whose security scope stays open while a delivery holds them.
+    @ObservationIgnored private var scopedFiles: Set<URL> = []
     /// Inbox directories of shares from the Share extension that are queued; removed once no
     /// delivery holds their files any more.
     @ObservationIgnored private var sharedDirectories: Set<URL> = []
@@ -143,6 +150,7 @@ final class AppModel {
             trustStore = store
             store.onChange = { [weak self] in self?.publishSharePhones() }
             publishSharePhones()
+            restoreDeliveries(directory: try TrustedDeviceStore.defaultLocation().deletingLastPathComponent())
             listenForShares()
             // The first check is the slow one (~90 ms); not when the menu opens.
             shareMenu.refresh()
@@ -208,13 +216,52 @@ final class AppModel {
     func send(_ urls: [URL], to deviceId: String) {
         let files = urls.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true }
         guard !files.isEmpty, let record = trustStore?.devices.first(where: { $0.deviceId == deviceId }) else { return }
-        if let waiting = deliveries.first(where: { $0.deviceId == deviceId && $0.phase == .waiting }) {
+        if let waiting = deliveries.first(where: { $0.deviceId == deviceId && $0.phase == .waiting && $0.text == nil }) {
             waiting.add(files)
+            saveDeliveries()
         } else {
             deliveries.append(OutgoingDelivery(deviceId: deviceId, deviceName: record.deviceName, files: files))
         }
         Log.transfer.info("Queued \(files.count) file(s) for \(deviceId, privacy: .public)")
         advertiser?.refresh()
+    }
+
+    /// Text or a link for the phone's clipboard. A phone without `clipboardReceive` gets it as a
+    /// .txt file, as does text too long for one message (messages.md `text`).
+    func sendText(_ text: String, to deviceId: String) {
+        guard !text.isEmpty, let record = trustStore?.devices.first(where: { $0.deviceId == deviceId }) else { return }
+        let toClipboard = record.capabilities?.contains(ProtocolConstants.clipboardReceiveCapability) == true
+        guard toClipboard, text.utf8.count <= ProtocolConstants.maxTextSize else {
+            sendTextAsFile(text, to: deviceId)
+            return
+        }
+        deliveries.append(OutgoingDelivery(deviceId: deviceId, deviceName: record.deviceName, text: text))
+        Log.transfer.info("Queued text for \(deviceId, privacy: .public)")
+        advertiser?.refresh()
+    }
+
+    private func sendTextAsFile(_ text: String, to deviceId: String) {
+        do {
+            let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+                .appendingPathComponent("LocalDrop/Text", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let stamp = Date().formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false).timeSeparator(.omitted))
+            let file = directory.appendingPathComponent("Text \(stamp).txt")
+            try Data(text.utf8).write(to: file)
+            send([file], to: deviceId)
+        } catch {
+            Log.transfer.error("Could not save text to send: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Sends what is on the clipboard: text or a link, or copied files.
+    func sendClipboard(to deviceId: String) {
+        let pasteboard = NSPasteboard.general
+        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            send(urls, to: deviceId)
+        } else if let text = pasteboard.string(forType: .string) {
+            sendText(text, to: deviceId)
+        }
     }
 
     /// Paired phones that receive files, in the order of the device list.
@@ -262,6 +309,38 @@ final class AppModel {
         }
     }
 
+    // MARK: - Delivery queue on disk
+
+    private func restoreDeliveries(directory: URL) {
+        var store = DeliveryStore(directory: directory)
+        let restored = store.load().filter { delivery in trustStore?.devices.contains { $0.deviceId == delivery.deviceId } == true }
+        deliveryStore = store
+        guard !restored.isEmpty else { return }
+        let inbox = ShareInbox.inbox?.standardizedFileURL.path
+        for delivery in restored {
+            for file in delivery.files {
+                scopedFiles.insert(file)
+                // Files from the Share extension: their inbox directory is already taken.
+                let directory = file.deletingLastPathComponent().standardizedFileURL
+                if let inbox, directory.path.hasPrefix(inbox) { sharedDirectories.insert(directory) }
+            }
+        }
+        deliveries = restored
+        Log.transfer.info("Restored \(restored.count) waiting deliver(ies)")
+        advertiser?.refresh()
+    }
+
+    private func saveDeliveries() {
+        guard deliveryStore != nil else { return }
+        deliveryStore?.save(deliveries)
+        // A restored file's security scope closes once no delivery holds it.
+        let inUse = Set(deliveries.flatMap(\.files))
+        for file in scopedFiles where !inUse.contains(file) {
+            file.stopAccessingSecurityScopedResource()
+            scopedFiles.remove(file)
+        }
+    }
+
     // MARK: - Share extension
 
     /// Tells the Share extension which phones it can offer: paired phones that receive files.
@@ -295,6 +374,12 @@ final class AppModel {
 
     private func takeShares() {
         for (request, directory) in ShareInbox.pendingRequests() where !sharedDirectories.contains(directory) {
+            if let text = request.text {
+                Log.transfer.info("Share extension: text for \(request.deviceId, privacy: .public)")
+                sendText(text, to: request.deviceId)
+                try? FileManager.default.removeItem(at: directory)
+                continue
+            }
             let files = request.files.map { directory.appendingPathComponent($0) }
             guard trustStore?.devices.contains(where: { $0.deviceId == request.deviceId }) == true else {
                 Log.transfer.warning("Dropping a share for a device that is no longer paired")
@@ -485,6 +570,12 @@ final class AppModel {
            let device = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryDevice") {
             Log.transfer.info("Debug: queueing a test delivery")
             send([URL(fileURLWithPath: path)], to: device)
+        }
+        // `-LocalDropTestDeliveryText <text> -LocalDropTestDeliveryDevice <deviceId>`: text for the phone's clipboard.
+        if let text = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryText"),
+           let device = UserDefaults.standard.string(forKey: "LocalDropTestDeliveryDevice") {
+            Log.transfer.info("Debug: queueing test text")
+            sendText(text, to: device)
         }
         #endif
     }
@@ -852,13 +943,13 @@ extension AppModel: SessionCoordinator {
 
     func isPairingAllowed() -> Bool { isPairingModeActive }
 
-    func takeDelivery(for peer: PeerInfo) -> (id: UUID, files: [URL], token: TransferCancelToken)? {
+    func takeDelivery(for peer: PeerInfo) -> PendingDelivery? {
         guard trustState(deviceId: peer.deviceId, identityKey: peer.identityKey) == .trusted,
               let delivery = deliveries.first(where: { $0.deviceId == peer.deviceId && $0.phase == .waiting }) else { return nil }
         delivery.phase = .awaitingAcceptance
         delivery.bytesSent = 0
         advertiser?.refresh()
-        return (delivery.id, delivery.files, delivery.cancelToken)
+        return PendingDelivery(id: delivery.id, files: delivery.files, text: delivery.text, token: delivery.cancelToken)
     }
 
     func deliveryStarted(_ id: UUID) {
@@ -879,6 +970,8 @@ extension AppModel: SessionCoordinator {
             delivery.phase = .waiting
             delivery.bytesSent = 0
             return
+        case .completed where delivery.text != nil:
+            notifications.postMessage(title: String(localized: "Copied to \(delivery.deviceName)'s clipboard"), body: delivery.title)
         case .completed(let files, let bytes):
             let size = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
             notifications.postMessage(

@@ -181,6 +181,8 @@
         <item quantity="many">%1$d файлов получено от %2$s</item>
         <item quantity="other">%1$d файла получено от %2$s</item>
     </plurals>
+    <string name="received_text_title">Текст с %1$s скопирован</string>
+    <string name="received_link_title">Ссылка с %1$s скопирована</string>
     <string name="received_where">Сохранено в «Загрузки» · целостность проверена</string>
     <string name="received_app">%1$s · чтобы установить, нажмите на него в «Загрузках»</string>
     <string name="action_show_downloads">«Загрузки»</string>

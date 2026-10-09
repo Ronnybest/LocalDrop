@@ -82,6 +82,11 @@ object TransferMessages {
 
     // region Receiver side (Mac → phone, protocol.md §2.8)
 
+    fun textResult(transferId: ByteArray, copied: Boolean) = Message(
+        MessageType.TEXT_RESULT,
+        mapOf("transferId" to CborValue.Bytes(transferId), "status" to CborValue.Text(if (copied) "copied" else "declined")),
+    )
+
     fun accept(transferId: ByteArray, fileCount: Int) = Message(
         MessageType.TRANSFER_ACCEPT,
         mapOf("transferId" to CborValue.Bytes(transferId), "fileCount" to CborValue.UInt(fileCount.toLong())),

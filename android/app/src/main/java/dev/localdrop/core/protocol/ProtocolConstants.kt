@@ -30,7 +30,7 @@ object ProtocolConstants {
     const val SHORT_ID_LENGTH = 6
 
     /** What this phone can do (protocol.md §2.6). */
-    val CAPABILITIES = listOf("files", "multipleFiles", "text", "receive")
+    val CAPABILITIES = listOf("files", "multipleFiles", "text", "receive", "clipboardReceive")
 
     /** The Mac can send to this phone (protocol.md §2.6). */
     const val CAP_SEND = "send"
