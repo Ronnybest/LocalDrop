@@ -41,8 +41,8 @@
 
 ## 3. Сборки для обычных пользователей
 
-**Mac:** DMG, подписанный Developer ID и нотаризованный. Членство Apple Developer оплачено
-9 октября 2026, ждёт активации.
+**Mac:** DMG, подписанный Developer ID и нотаризованный, собирает `macos/scripts/release.sh`
+(членство Apple Developer активно с 10 октября 2026). Осталось выложить его в GitHub Releases.
 
 **Android, Google Play:** личный аккаунт Play Console, имя разработчика «Zeppon», отдельная почта
 поддержки. Данные на проверке в Google.

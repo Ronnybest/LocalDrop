@@ -99,6 +99,8 @@ open build/Build/Products/Debug/LocalDrop.app
 DEVELOPMENT_TEAM=<ваш Team ID> macos/scripts/install.sh
 ```
 
+DMG для обычных пользователей — подписанный Developer ID и нотаризованный Apple — собирает `DEVELOPMENT_TEAM=<ваш Team ID> macos/scripts/release.sh`. Нужны платное членство Apple Developer, сертификат **Developer ID Application** и данные для нотаризации, один раз сохранённые командой `xcrun notarytool store-credentials localdrop-notary`; скрипт обращается к ним по имени профиля и пароля не видит.
+
 Тесты Mac: `xcodebuild test -project macos/LocalDrop.xcodeproj -scheme LocalDrop -destination 'platform=macOS'` (с теми же настройками подписи, что выше).
 
 Или откройте `macos/LocalDrop.xcodeproj` в Xcode, выберите свою команду в **Signing** и запустите. Подписывайте командой: ad-hoc-подпись меняется при каждой сборке, и macOS каждый раз спрашивает доступ к связке ключей.

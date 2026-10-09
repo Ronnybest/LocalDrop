@@ -99,6 +99,8 @@ To build a Release copy, install it to `/Applications` and start it:
 DEVELOPMENT_TEAM=<your team ID> macos/scripts/install.sh
 ```
 
+A DMG for people outside development — signed with Developer ID and notarized by Apple — is built by `DEVELOPMENT_TEAM=<your team ID> macos/scripts/release.sh`. It needs a paid Apple Developer membership, a **Developer ID Application** certificate and notary credentials saved once with `xcrun notarytool store-credentials localdrop-notary`; the script names the profile and never sees the password.
+
 Run the Mac tests with `xcodebuild test -project macos/LocalDrop.xcodeproj -scheme LocalDrop -destination 'platform=macOS'` (add the same signing settings as above).
 
 Or open `macos/LocalDrop.xcodeproj` in Xcode, choose your team under **Signing** and run. Sign with a team: ad-hoc signatures change with every build, and macOS then asks for Keychain access each time.
