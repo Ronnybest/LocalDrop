@@ -21,6 +21,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import android.graphics.Bitmap
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.SwipeToDismissBox
@@ -49,9 +54,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.localdrop.feature.settings.Haptic
 import dev.localdrop.feature.settings.rememberHaptics
 
+/** How a row says whether its file came or went. */
+enum class DirectionStyle {
+    /** A small arrow on the corner of the preview: the short list on the home screen. */
+    BADGE,
+
+    /** "From MacBook Pro" / "To MacBook Pro": the full list, read row by row. */
+    TEXT,
+}
+
 /** Recent transfers as one segmented group; each row swipes away on its own, as in any list. */
 fun LazyListScope.historyGroup(
     entries: List<HistoryEntry>,
+    style: DirectionStyle,
     onOpen: (HistoryEntry) -> Unit,
     onDelete: (HistoryEntry) -> Unit,
 ) {
@@ -59,6 +74,7 @@ fun LazyListScope.historyGroup(
         HistoryItem(
             entry = entry,
             shape = segmentShape(index, entries.size),
+            style = style,
             onOpen = { onOpen(entry) },
             onDelete = { onDelete(entry) },
             modifier = Modifier.animateItem(),
@@ -71,7 +87,7 @@ fun LazyListScope.historyGroup(
  * swiping it away to either side deletes it from the history, not the file.
  */
 @Composable
-private fun HistoryItem(entry: HistoryEntry, shape: Shape, onOpen: () -> Unit, onDelete: () -> Unit, modifier: Modifier) {
+private fun HistoryItem(entry: HistoryEntry, shape: Shape, style: DirectionStyle, onOpen: () -> Unit, onDelete: () -> Unit, modifier: Modifier) {
     val haptic = rememberHaptics()
     val state = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -96,12 +112,12 @@ private fun HistoryItem(entry: HistoryEntry, shape: Shape, onOpen: () -> Unit, o
             }
         },
     ) {
-        HistoryRow(entry, segmentShapes(shape), onOpen)
+        HistoryRow(entry, segmentShapes(shape), style, onOpen)
     }
 }
 
 @Composable
-private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () -> Unit) {
+private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, style: DirectionStyle, onClick: () -> Unit) {
     val title = when {
         entry.kind == HistoryEntry.Kind.FILES && entry.count > 1 -> pluralStringResource(R.plurals.notification_files, entry.count, entry.count)
         entry.kind == HistoryEntry.Kind.TEXT && entry.title.isBlank() -> stringResource(R.string.history_text)
@@ -116,31 +132,20 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
     val hidden by ThumbnailSetting.hidden(LocalContext.current).collectAsStateWithLifecycle()
     val thumbnail by rememberThumbnail(entry.uri.takeIf { kind.isVisual && hidden != true })
     val leading: @Composable () -> Unit = {
-        Crossfade(targetState = thumbnail, label = "thumbnail") { preview ->
-            if (preview != null) {
-                Image(
-                    bitmap = preview.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)),
-                )
-            } else {
-                RoundIcon(size = 40, shape = RoundedCornerShape(12.dp), tint = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                    Icon(painterResource(kind.icon), contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+        Box {
+            Preview(thumbnail, kind)
+            if (style == DirectionStyle.BADGE) DirectionBadge(entry.incoming, Modifier.align(Alignment.BottomEnd).offset(x = 5.dp, y = 5.dp))
         }
     }
     val supporting: @Composable () -> Unit = {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(
-                painterResource(if (entry.incoming) R.drawable.ic_download else R.drawable.ic_upload),
-                contentDescription = stringResource(if (entry.incoming) R.string.history_received else R.string.history_sent),
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(entry.peerName, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+        Text(
+            when (style) {
+                DirectionStyle.BADGE -> entry.peerName
+                DirectionStyle.TEXT -> stringResource(if (entry.incoming) R.string.history_from else R.string.history_to, entry.peerName)
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
     val trailing: @Composable () -> Unit = { Text(shortTime(entry.timeMs), style = MaterialTheme.typography.labelMedium) }
     val headline: @Composable () -> Unit = { Text(title, maxLines = 2, overflow = TextOverflow.MiddleEllipsis) }
@@ -153,6 +158,44 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, onClick: () 
         trailingContent = trailing,
         content = headline,
     )
+}
+
+/** The file's own preview for photos and videos, else an icon of its kind on a neutral tile. */
+@Composable
+private fun Preview(thumbnail: Bitmap?, kind: FileKind) {
+    Crossfade(targetState = thumbnail, label = "thumbnail") { preview ->
+        if (preview != null) {
+            Image(
+                bitmap = preview.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)),
+            )
+        } else {
+            RoundIcon(size = 40, shape = RoundedCornerShape(12.dp), tint = MaterialTheme.colorScheme.surfaceContainerHighest) {
+                Icon(painterResource(kind.icon), contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** Received (arrow down, primary) or sent (arrow up, tertiary), cut out of the row's background. */
+@Composable
+private fun DirectionBadge(incoming: Boolean, modifier: Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        shape = CircleShape,
+        color = if (incoming) scheme.primary else scheme.tertiary,
+        contentColor = if (incoming) scheme.onPrimary else scheme.onTertiary,
+        border = BorderStroke(2.dp, scheme.surfaceContainerHigh),
+        modifier = modifier.size(18.dp),
+    ) {
+        Icon(
+            painterResource(if (incoming) R.drawable.ic_arrow_down else R.drawable.ic_arrow_up),
+            contentDescription = stringResource(if (incoming) R.string.history_received else R.string.history_sent),
+            modifier = Modifier.padding(3.dp),
+        )
+    }
 }
 
 /** "16:27" today, "Yesterday", then "9 Oct". */

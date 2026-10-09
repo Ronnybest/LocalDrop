@@ -256,4 +256,8 @@
     <string name="history_no_access">LocalDrop больше не может открыть этот файл</string>
     <string name="settings_hide_thumbnails">Скрывать миниатюры</string>
     <string name="settings_hide_thumbnails_body">В «Недавних» фото и видео — значками, без превью</string>
+    <string name="history_from">От %1$s</string>
+    <string name="history_to">На %1$s</string>
+    <string name="history_filter_all">Все</string>
+    <string name="history_filter_empty">За 30 дней здесь ничего нет</string>
 </resources>

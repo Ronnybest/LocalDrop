@@ -21,6 +21,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.LaunchedEffect
+import dev.localdrop.feature.history.DirectionStyle
 import dev.localdrop.feature.history.historyGroup
 import dev.localdrop.app.ui.Segments
 import dev.localdrop.app.ui.segmentColors
@@ -525,6 +526,7 @@ fun HomeScreen(
                 item(key = "recent") { SectionTitle(stringResource(R.string.home_recent), Modifier.animateItem()) }
                 historyGroup(
                     entries = history.take(RECENT_COUNT),
+                    style = DirectionStyle.BADGE,
                     onOpen = { HistoryActions.open(context, it) },
                     onDelete = { viewModel.removeHistory(it) },
                 )

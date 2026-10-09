@@ -253,4 +253,8 @@
     <string name="history_no_access">LocalDrop can no longer open this file</string>
     <string name="settings_hide_thumbnails">Hide thumbnails</string>
     <string name="settings_hide_thumbnails_body">Recent shows photos and videos as icons</string>
+    <string name="history_from">From %1$s</string>
+    <string name="history_to">To %1$s</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_empty">Nothing here in the last 30 days</string>
 </resources>

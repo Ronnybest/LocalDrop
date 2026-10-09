@@ -1,6 +1,11 @@
 package dev.localdrop.feature.history
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.FilterChip
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.remember
@@ -69,6 +74,7 @@ class HistoryViewModel(private val store: HistoryStore) : ViewModel() {
 fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)) {
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var filter by rememberSaveable { mutableStateOf(HistoryFilter.ALL) }
     BackHandler(onBack = onBack)
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -95,12 +101,39 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
             }
             return@Scaffold
         }
-        val days = entries.groupBy { dayOf(it.timeMs) }
+        val shown = when (filter) {
+            HistoryFilter.ALL -> entries
+            HistoryFilter.RECEIVED -> entries.filter { it.incoming }
+            HistoryFilter.SENT -> entries.filterNot { it.incoming }
+        }
+        val days = shown.groupBy { dayOf(it.timeMs) }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(Segments.Gap),
         ) {
+            item(key = "filter") {
+                // All, received or sent: on a long list, one direction at a time.
+                Row(Modifier.animateItem().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HistoryFilter.entries.forEach { option ->
+                        FilterChip(
+                            selected = filter == option,
+                            onClick = { filter = option },
+                            label = { Text(stringResource(option.label)) },
+                        )
+                    }
+                }
+            }
+            if (shown.isEmpty()) {
+                item(key = "none") {
+                    Text(
+                        stringResource(R.string.history_filter_empty),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.animateItem().padding(12.dp),
+                    )
+                }
+            }
             days.forEach { (day, dayEntries) ->
                 item(key = "day$day") {
                     Text(
@@ -112,12 +145,19 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
                 }
                 historyGroup(
                     entries = dayEntries,
+                    style = DirectionStyle.TEXT,
                     onOpen = { HistoryActions.open(context, it) },
                     onDelete = { viewModel.remove(it) },
                 )
             }
         }
     }
+}
+
+private enum class HistoryFilter(val label: Int) {
+    ALL(R.string.history_filter_all),
+    RECEIVED(R.string.history_received),
+    SENT(R.string.history_sent),
 }
 
 private fun dayOf(timeMs: Long): Long {
