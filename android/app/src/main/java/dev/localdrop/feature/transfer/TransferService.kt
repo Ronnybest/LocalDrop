@@ -834,8 +834,8 @@ class TransferService : Service() {
         val segments = sizes?.map { NotificationCompat.ProgressStyle.Segment((it * PROGRESS_SCALE / total).toInt().coerceAtLeast(1))}
             ?: listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_SCALE))
         val scale = segments.sumOf { it.length }
-        val phone = IconCompat.createWithResource(this@TransferService, R.drawable.ic_phone)
-        val mac = IconCompat.createWithResource(this@TransferService, R.drawable.ic_laptop)
+        val phone = IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_phone)
+        val mac = IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_laptop)
         return setContentTitle(TransferText.what(this@TransferService, progress.fileCount, progress.currentFileName))
             .setContentText(TransferText.notificationLine(this@TransferService, progress))
             .setProgress(100, percent, false)
