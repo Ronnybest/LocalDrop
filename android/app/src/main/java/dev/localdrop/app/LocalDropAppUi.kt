@@ -24,8 +24,8 @@ private enum class Screen { Home, AddMac, Diagnostics, History }
 
 /**
  * Home with the Macs; Add Mac, Settings and all of Recent on top of it. Navigation 3 keeps the
- * stack, with its own transitions (for now its default crossfade) and predictive back: the screen
- * shrinks under the back gesture with Home showing behind it.
+ * stack, with its own transitions (for now its default crossfade). Predictive back is off in the
+ * manifest for now.
  */
 @Composable
 fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = TransferViewModel.Factory)) {

@@ -43,10 +43,10 @@
         android:required="false" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
 
-    <!-- Predictive back: the system back gesture previews where it goes (Android 13+; on by
-         default from Android 16). Screens leave the back to Navigation 3. -->
+    <!-- Predictive back is off for now: with Navigation 3's default transitions a quick back
+         gesture shrank the screen and then cut it. Back plays the ordinary pop transition. -->
     <application
-        android:enableOnBackInvokedCallback="true"
+        android:enableOnBackInvokedCallback="false"
         android:name=".app.LocalDropApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
