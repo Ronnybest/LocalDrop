@@ -183,6 +183,8 @@
     </plurals>
     <string name="transfer_seconds_left">осталось ≈ %1$d с</string>
     <string name="transfer_minutes_left">осталось ≈ %1$d мин</string>
+    <string name="transfer_minutes_seconds_left">осталось ≈ %1$d мин %2$d с</string>
+    <string name="transfer_hours_minutes_left">осталось ≈ %1$d ч %2$d мин</string>
     <string name="received_text_title">Текст с %1$s скопирован</string>
     <string name="received_link_title">Ссылка с %1$s скопирована</string>
     <string name="received_where">Сохранено в «Загрузки» · целостность проверена</string>

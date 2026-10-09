@@ -28,6 +28,8 @@ final class IncomingTransfer {
     var bytesReceived: Int64 = 0
     var currentFile: String
     private(set) var bytesPerSecond: Double = 0
+    /// Over the last 10 seconds, for the time left: steadier than [bytesPerSecond].
+    private(set) var averageBytesPerSecond: Double = 0
     private var samples: [(time: ContinuousClock.Instant, bytes: Int64)] = []
 
     init(entryId: UUID, peerName: String, request: TransferRequest) {
@@ -40,24 +42,29 @@ final class IncomingTransfer {
 
     var fraction: Double { totalSize > 0 ? min(1, Double(bytesReceived) / Double(totalSize)) : 1 }
 
-    var timeLeft: String? { TimeLeft.text(remainingBytes: totalSize - bytesReceived, bytesPerSecond: bytesPerSecond) }
+    var timeLeft: String? { TimeLeft.text(remainingBytes: totalSize - bytesReceived, bytesPerSecond: averageBytesPerSecond) }
 
     var title: String {
         files.count == 1 ? files[0].name : String(localized: "\(files.count) files")
     }
 
-    /// Records progress and updates the speed over a sliding two-second window.
+    /// Bytes per second from the oldest sample since [start] to the newest.
+    private static func rate(_ samples: [(time: ContinuousClock.Instant, bytes: Int64)], since start: ContinuousClock.Instant) -> Double {
+        guard let first = samples.first(where: { $0.time >= start }), let last = samples.last, last.time > first.time else { return 0 }
+        let elapsed = last.time - first.time
+        let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        return Double(last.bytes - first.bytes) / seconds
+    }
+
+    /// Records progress: speed over the last 2 seconds, and over 10 for the time left.
     func record(bytesReceived: Int64, currentFile: String) {
         let now = ContinuousClock.now
         self.bytesReceived = bytesReceived
         self.currentFile = currentFile
         samples.append((now, bytesReceived))
-        samples.removeAll { now - $0.time > .seconds(2) }
-        if let first = samples.first, first.time != now {
-            let elapsed = now - first.time
-            let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
-            bytesPerSecond = Double(bytesReceived - first.bytes) / seconds
-        }
+        samples.removeAll { now - $0.time > .seconds(10) }
+        bytesPerSecond = Self.rate(samples, since: now - .seconds(2))
+        averageBytesPerSecond = Self.rate(samples, since: now - .seconds(10))
     }
 }
 

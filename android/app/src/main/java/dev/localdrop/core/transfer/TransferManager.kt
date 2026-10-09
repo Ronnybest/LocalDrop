@@ -59,6 +59,8 @@ data class TransferProgress(
     val fileIndex: Int,
     val fileCount: Int,
     val bytesPerSecond: Long,
+    /** Over a longer window, for the time left: steadier than [bytesPerSecond]. */
+    val averageBytesPerSecond: Long = bytesPerSecond,
 )
 
 /**
@@ -675,10 +677,10 @@ class TransferManager(
             if (!force && now - lastEmitAt < PROGRESS_INTERVAL_MS) return
             lastEmitAt = now
             samples.addLast(now to bytes)
-            while (samples.size > 1 && now - samples.first().first > SPEED_WINDOW_MS) samples.removeFirst()
-            val (firstTime, firstBytes) = samples.first()
-            val speed = if (samples.size > 1 && now > firstTime) (bytes - firstBytes) * 1000 / (now - firstTime) else 0
-            advance(TransferState.Receiving(peerName, TransferProgress(bytes, request.totalSize, current.name, current.fileId, request.files.size, speed)))
+            while (samples.size > 1 && now - samples.first().first > AVERAGE_WINDOW_MS) samples.removeFirst()
+            val speed = samples.rate(now, bytes, SPEED_WINDOW_MS)
+            val average = samples.rate(now, bytes, AVERAGE_WINDOW_MS)
+            advance(TransferState.Receiving(peerName, TransferProgress(bytes, request.totalSize, current.name, current.fileId, request.files.size, speed, average)))
         }
     }
 
@@ -932,15 +934,15 @@ class TransferManager(
             if (!force && now - lastEmitAt < PROGRESS_INTERVAL_MS) return
             lastEmitAt = now
             samples.addLast(now to bytesSent)
-            while (samples.size > 1 && now - samples.first().first > SPEED_WINDOW_MS) samples.removeFirst()
+            while (samples.size > 1 && now - samples.first().first > AVERAGE_WINDOW_MS) samples.removeFirst()
             advance(TransferState.Transferring(peerName, progress(file, index)))
         }
 
         private fun progress(file: SourceFile, index: Int): TransferProgress {
-            val (firstTime, firstBytes) = samples.firstOrNull() ?: (0L to 0L)
-            val elapsed = SystemClock.elapsedRealtime() - firstTime
-            val speed = if (samples.size > 1 && elapsed > 0) (bytesSent - firstBytes) * 1000 / elapsed else 0
-            return TransferProgress(bytesSent, totalBytes, file.name, index, files.size, speed)
+            val now = SystemClock.elapsedRealtime()
+            val speed = samples.rate(now, bytesSent, SPEED_WINDOW_MS)
+            val average = samples.rate(now, bytesSent, AVERAGE_WINDOW_MS)
+            return TransferProgress(bytesSent, totalBytes, file.name, index, files.size, speed, average)
         }
     }
 
@@ -1025,6 +1027,7 @@ class TransferManager(
         const val WATCHDOG_INTERVAL_MS = 5_000L
         const val PROGRESS_INTERVAL_MS = 100L
         const val SPEED_WINDOW_MS = 2_000L
+        const val AVERAGE_WINDOW_MS = 10_000L
         const val CANCEL_GRACE_MS = 2_000L
         const val PEER_EXPLANATION_WAIT_MS = 500L
 
@@ -1064,4 +1067,10 @@ fun TransferState.peerName(): String = when (this) {
     is TransferState.Paired -> peerName
     is TransferState.Failed -> peerName
     is TransferState.Cancelled -> peerName
+}
+
+/** Bytes per second since the oldest (time, bytes) sample at most [windowMs] old; 0 until there are two. */
+private fun ArrayDeque<Pair<Long, Long>>.rate(now: Long, bytes: Long, windowMs: Long): Long {
+    val (time, from) = firstOrNull { now - it.first <= windowMs } ?: return 0
+    return if (now > time) (bytes - from) * 1000 / (now - time) else 0
 }

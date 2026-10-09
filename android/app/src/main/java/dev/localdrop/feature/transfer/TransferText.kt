@@ -96,17 +96,27 @@ object TransferText {
     }
 
     /**
-     * Roughly how long the transfer still takes, from its recent speed: whole seconds up to 10,
-     * then in steps of 5 seconds, then in minutes, so the number doesn't jitter. Null while unknown.
+     * Roughly how long the transfer still takes, from its recent speed, rounded up so the number
+     * doesn't jitter: whole seconds up to 10, steps of 5 seconds up to a minute, then minutes and
+     * seconds in steps of 15 (so it moves about every 15 seconds), from an hour hours and minutes.
+     * Null while unknown.
      */
     fun timeLeft(context: Context, progress: TransferProgress): String? {
         val remaining = progress.totalBytes - progress.bytesSent
-        if (progress.bytesPerSecond <= 0 || remaining <= 0) return null
-        val seconds = remaining.toDouble() / progress.bytesPerSecond
+        if (progress.averageBytesPerSecond <= 0 || remaining <= 0) return null
+        val seconds = remaining.toDouble() / progress.averageBytesPerSecond
+        val step = when {
+            seconds < 10 -> 1
+            seconds < 60 -> 5
+            seconds < 3600 -> 15
+            else -> 60
+        }
+        val rounded = maxOf(1, (ceil(seconds / step) * step).toInt())
         return when {
-            seconds < 10 -> context.getString(R.string.transfer_seconds_left, maxOf(1, ceil(seconds).toInt()))
-            seconds < 60 -> context.getString(R.string.transfer_seconds_left, ceil(seconds / 5).toInt() * 5)
-            else -> context.getString(R.string.transfer_minutes_left, ceil(seconds / 60).toInt())
+            rounded < 60 -> context.getString(R.string.transfer_seconds_left, rounded)
+            rounded < 3600 && rounded % 60 != 0 -> context.getString(R.string.transfer_minutes_seconds_left, rounded / 60, rounded % 60)
+            rounded < 3600 -> context.getString(R.string.transfer_minutes_left, rounded / 60)
+            else -> context.getString(R.string.transfer_hours_minutes_left, rounded / 3600, rounded % 3600 / 60)
         }
     }
 }

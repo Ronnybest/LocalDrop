@@ -177,6 +177,8 @@
     </plurals>
     <string name="transfer_seconds_left">about %1$d s left</string>
     <string name="transfer_minutes_left">about %1$d min left</string>
+    <string name="transfer_minutes_seconds_left">about %1$d min %2$d s left</string>
+    <string name="transfer_hours_minutes_left">about %1$d h %2$d min left</string>
     <string name="received_text_title">Text from %1$s copied</string>
     <string name="received_link_title">Link from %1$s copied</string>
     <string name="received_where">Saved in Downloads · integrity verified</string>
