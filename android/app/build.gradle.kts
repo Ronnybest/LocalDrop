@@ -38,6 +38,8 @@ android {
 }
 
 tasks.withType<Test>().configureEach {
+    // Shared with the Mac's tests (ProtocolVectorsTest): a change there reruns the tests.
+    inputs.file(rootProject.file("../protocol/test-vectors.properties")).withPathSensitivity(PathSensitivity.NONE)
     // Opt-in interop test against a running macOS app (see MacHandshakeIntegrationTest).
     listOf("LOCALDROP_MAC_PORT", "LOCALDROP_MAC_ID", "LOCALDROP_MAC_PAIRING").forEach { name ->
         System.getenv(name)?.let { environment(name, it) }

@@ -99,6 +99,8 @@ open build/Build/Products/Debug/LocalDrop.app
 DEVELOPMENT_TEAM=<ваш Team ID> macos/scripts/install.sh
 ```
 
+Тесты Mac: `xcodebuild test -project macos/LocalDrop.xcodeproj -scheme LocalDrop -destination 'platform=macOS'` (с теми же настройками подписи, что выше).
+
 Или откройте `macos/LocalDrop.xcodeproj` в Xcode, выберите свою команду в **Signing** и запустите. Подписывайте командой: ad-hoc-подпись меняется при каждой сборке, и macOS каждый раз спрашивает доступ к связке ключей.
 
 **Android** — JDK 25 (подойдёт встроенный в Android Studio) и Android SDK:
@@ -113,7 +115,7 @@ cd android
 | --- | --- |
 | `android/` | Android-приложение: Kotlin, Jetpack Compose, корутины; цель «Поделиться», сервис передачи, присутствие, очередь |
 | `macos/` | Mac-приложение: Swift 6, агент в строке меню на SwiftUI и AppKit, BSD-сокеты с DispatchIO, CoreBluetooth, CryptoKit |
-| `protocol/` | Протокол v1: обнаружение, рукопожатие, сообщения, модель безопасности |
+| `protocol/` | Протокол v1: обнаружение, рукопожатие, сообщения, модель безопасности; `test-vectors.properties` — тестовые примеры, которые проверяют обе платформы |
 | `docs/` | Архитектура, продуктовые решения и заметки разработчика |
 
 ## Участие

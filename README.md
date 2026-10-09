@@ -99,6 +99,8 @@ To build a Release copy, install it to `/Applications` and start it:
 DEVELOPMENT_TEAM=<your team ID> macos/scripts/install.sh
 ```
 
+Run the Mac tests with `xcodebuild test -project macos/LocalDrop.xcodeproj -scheme LocalDrop -destination 'platform=macOS'` (add the same signing settings as above).
+
 Or open `macos/LocalDrop.xcodeproj` in Xcode, choose your team under **Signing** and run. Sign with a team: ad-hoc signatures change with every build, and macOS then asks for Keychain access each time.
 
 **Android** — JDK 25 (the one bundled with Android Studio works) and the Android SDK:
@@ -113,7 +115,7 @@ cd android
 | --- | --- |
 | `android/` | The Android app: Kotlin, Jetpack Compose, coroutines; share target, transfer service, presence, queue |
 | `macos/` | The Mac app: Swift 6, SwiftUI and AppKit menu bar agent, BSD sockets with DispatchIO, CoreBluetooth, CryptoKit |
-| `protocol/` | Wire protocol v1: discovery, handshake, messages, security model |
+| `protocol/` | Wire protocol v1: discovery, handshake, messages, security model; `test-vectors.properties`, checked by the tests on both platforms |
 | `docs/` | Architecture, product decisions and developer notes |
 
 ## Contributing

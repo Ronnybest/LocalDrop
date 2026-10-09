@@ -9,7 +9,10 @@ struct LocalDropApp: App {
     init() {
         // MenuBarExtra content is built lazily, so services start here, at launch.
         let model = AppModel()
-        model.start()
+        // Hosting unit tests: no Bluetooth, network or panels next to the running LocalDrop.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            model.start()
+        }
         _model = State(initialValue: model)
         _dropZone = State(initialValue: DropZoneController(model: model))
     }
