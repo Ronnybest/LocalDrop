@@ -14,10 +14,11 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 /**
- * One swipe shared by the rows of a segmented group, so they move as one linked whole: the
- * swiped row follows the finger, its neighbours are pulled along a little (see [pullFor]) and
- * spring after it; released short of the threshold everything bounces back, past it the row
- * flies off and the rest settle and close up.
+ * One swipe shared by the rows of a segmented group, after the notification shade of Android 16
+ * (whose "magnetic" rows aren't available to apps): the swiped row follows the finger and its
+ * two neighbours are held to it slightly (see [pullFor]); past the delete point it comes loose —
+ * the neighbours spring back, a tick — and reattaches if the finger returns. Let go short of
+ * it and everything settles back; past it the row flies off and the group closes up.
  */
 @Stable
 class SwipeChain {
@@ -34,13 +35,15 @@ class SwipeChain {
     var removedId by mutableStateOf<String?>(null)
         private set
     private var width = 1f
+    private var maxPull = 0f
     private var leaving = false
     private var armed = false
 
     /** 0 at rest, 1 at the point where letting go deletes. */
     val progress: Float get() = if (draggedId == null) 0f else (abs(offset) / (width * DISMISS_FRACTION)).coerceIn(0f, 1f)
 
-    fun start(id: String, group: String, index: Int, width: Int) {
+    fun start(id: String, group: String, index: Int, width: Int, maxPull: Float) {
+        this.maxPull = maxPull
         draggedId = id
         this.group = group
         this.index = index
@@ -60,17 +63,13 @@ class SwipeChain {
     }
 
     /**
-     * How far a row of [group] at [rowIndex] is pulled along: the swiped row itself fully, its
-     * neighbours a quarter, the next ones barely; none while the swiped row flies off.
+     * How far a neighbour of the swiped row is held along: a little, up to [maxPull]; nothing
+     * once the row has come loose or for rows further away.
      */
     fun pullFor(group: String, rowIndex: Int): Float {
-        if (draggedId == null || this.group != group || leaving) return 0f
-        val pull = offset.coerceIn(-width * DISMISS_FRACTION, width * DISMISS_FRACTION)
-        return when (abs(rowIndex - index)) {
-            1 -> pull * NEIGHBOUR_PULL
-            2 -> pull * NEXT_PULL
-            else -> 0f
-        }
+        if (draggedId == null || this.group != group || leaving || armed) return 0f
+        if (abs(rowIndex - index) != 1) return 0f
+        return (offset * NEIGHBOUR_PULL).coerceIn(-maxPull, maxPull)
     }
 
     suspend fun release(id: String, velocity: Float, onDismiss: () -> Unit) {
@@ -91,8 +90,7 @@ class SwipeChain {
 
     private companion object {
         const val DISMISS_FRACTION = 0.35f
-        const val NEIGHBOUR_PULL = 0.24f
-        const val NEXT_PULL = 0.07f
+        const val NEIGHBOUR_PULL = 0.12f
         const val FLING_VELOCITY = 1_800f
         const val DISMISS_MS = 180
     }

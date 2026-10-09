@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import dev.localdrop.app.ui.SwipeChain
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
@@ -96,20 +97,23 @@ private fun HistoryItem(
     val haptic = rememberHaptics()
     val scope = rememberCoroutineScope()
     var width by remember { mutableIntStateOf(0) }
+    val maxPull = with(LocalDensity.current) { MAX_NEIGHBOUR_PULL.toPx() }
     val dragged = chain.draggedId == entry.id
     val sameGroup = chain.draggedId != null && chain.group == group
     val progress = chain.progress
 
-    // Neighbours follow the pull on a soft spring: they lag a little and settle with a wobble.
+    // Neighbours follow the pull on a soft spring, and spring back when the row comes loose.
     val follow by animateFloatAsState(
         chain.pullFor(group, index),
         spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
         label = "follow",
     )
+    val loosen by animateFloatAsState(if (dragged) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "loosen")
     val shape = segmentShape(
         index = index,
         count = count,
-        loosen = if (dragged) progress else 0f,
+        // The swiped row rounds fully as soon as it moves; the neighbours round what faced it as it goes.
+        loosen = loosen,
         roundTop = if (sameGroup && chain.index == index - 1) progress * 0.8f else 0f,
         roundBottom = if (sameGroup && chain.index == index + 1) progress * 0.8f else 0f,
     )
@@ -121,7 +125,7 @@ private fun HistoryItem(
             .draggable(
                 state = dragState,
                 orientation = Orientation.Horizontal,
-                onDragStarted = { chain.start(entry.id, group, index, width) },
+                onDragStarted = { chain.start(entry.id, group, index, width, maxPull) },
                 onDragStopped = { velocity -> scope.launch { chain.release(entry.id, velocity, onDelete) } },
             ),
     ) {
@@ -223,3 +227,5 @@ private fun shortTime(timeMs: Long): String {
     }
 }
 
+/** How far a neighbour is held along by the swiped row, at most. */
+private val MAX_NEIGHBOUR_PULL = 10.dp
