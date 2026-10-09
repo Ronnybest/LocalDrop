@@ -62,7 +62,8 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         // NSHostingView sizing the window resized it from inside layout, and rendering the glass
         // there laid it out again, recursing until the stack overflowed (macOS 26).
         let content = MenuBarView(model: model)
-            .menuPanelBackground(cornerRadius: Self.cornerRadius)
+            .background(PanelGlassBackground(cornerRadius: Self.cornerRadius))
+            .clipShape(.rect(cornerRadius: Self.cornerRadius))
             .fixedSize(horizontal: false, vertical: true)
             .onGeometryChange(for: CGSize.self, of: { $0.size }) { [weak self] size in
                 DispatchQueue.main.async { self?.fit(size) }

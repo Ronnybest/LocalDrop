@@ -84,19 +84,6 @@ struct PanelGlassBackground: NSViewRepresentable {
 }
 
 extension View {
-    /// The menu panel's background. SwiftUI's own glass on macOS 26: SwiftUI glass cards over an
-    /// NSGlassEffectView recursed while resolving the material when the panel resized, until the
-    /// stack overflowed.
-    @ViewBuilder
-    func menuPanelBackground(cornerRadius: CGFloat) -> some View {
-        if #available(macOS 26, *) {
-            glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
-        } else {
-            background(PanelGlassBackground(cornerRadius: cornerRadius))
-                .clipShape(.rect(cornerRadius: cornerRadius))
-        }
-    }
-
     /// Content of a floating panel: padded, on a glass card that fills the transparent window.
     func panelCard(width: CGFloat, cornerRadius: CGFloat = 26) -> some View {
         frame(width: width, alignment: .leading)
