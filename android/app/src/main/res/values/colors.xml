@@ -3,4 +3,7 @@
     <color name="ic_launcher_background">#1E5EFF</color>
     <!-- Accent of a failed transfer's notification. -->
     <color name="notification_error">#D93025</color>
+    <!-- The dot on a transfer notification's progress bar: the color the system draws the bar
+         in, which is the dynamic palette's primary (values-v31, values-night-v31). -->
+    <color name="progress_tracker">@color/ic_launcher_background</color>
 </resources>

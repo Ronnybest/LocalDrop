@@ -699,7 +699,6 @@ class TransferService : Service() {
     private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
         val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
-            .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
             .setSubText(from(state.peerName))
             .setContentTitle(TransferText.what(this, state.summary.fileCount, state.summary.firstFileName))
             .setContentText(getString(R.string.notification_incoming_text, Formatter.formatShortFileSize(this, state.summary.totalBytes)))
@@ -831,10 +830,9 @@ class TransferService : Service() {
     private fun NotificationCompat.Builder.transferProgress(progress: TransferProgress, sending: Boolean): NotificationCompat.Builder {
         val total = progress.totalBytes.coerceAtLeast(1)
         val percent = (progress.bytesSent * 100 / total).toInt().coerceIn(0, 100)
-        val brand = ContextCompat.getColor(this@TransferService, R.color.ic_launcher_background)
         val sizes = progress.fileSizes.takeIf { it.size in 2..MAX_PROGRESS_SEGMENTS }
-        val segments = sizes?.map { NotificationCompat.ProgressStyle.Segment((it * PROGRESS_SCALE / total).toInt().coerceAtLeast(1)).setColor(brand) }
-            ?: listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_SCALE).setColor(brand))
+        val segments = sizes?.map { NotificationCompat.ProgressStyle.Segment((it * PROGRESS_SCALE / total).toInt().coerceAtLeast(1))}
+            ?: listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_SCALE))
         val scale = segments.sumOf { it.length }
         val phone = IconCompat.createWithResource(this@TransferService, R.drawable.ic_phone)
         val mac = IconCompat.createWithResource(this@TransferService, R.drawable.ic_laptop)
@@ -855,7 +853,6 @@ class TransferService : Service() {
 
     private fun ongoingBuilder(direction: String? = null) = NotificationCompat.Builder(this, CHANNEL_PROGRESS)
         .setSmallIcon(R.drawable.ic_stat_localdrop)
-        .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
         .setSubText(direction)
         .setOngoing(true)
         .setOnlyAlertOnce(true)
@@ -864,7 +861,6 @@ class TransferService : Service() {
 
     private fun resultBuilder(direction: String) = NotificationCompat.Builder(this, CHANNEL_RESULTS)
         .setSmallIcon(R.drawable.ic_stat_localdrop)
-        .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
         .setSubText(direction)
         .setAutoCancel(true)
         .setContentIntent(openAppIntent())

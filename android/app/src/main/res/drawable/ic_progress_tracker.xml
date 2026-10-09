@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What travels along the progress bar of a transfer notification: the LocalDrop drop on a
-     brand-blue disc, in color — the system draws tracker icons as they are. -->
+<!-- The point that travels along a transfer notification's progress bar: a plain dot in the
+     system's dynamic accent, the color the bar itself is drawn in (see colors.xml). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="@color/ic_launcher_background"
-        android:pathData="M12,0A12,12 0,1 1,12 24A12,12 0,1 1,12 0Z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M12,4.6C12,4.6 7.4,9.8 7.4,13.4A4.6,4.6 0,0 0,16.6 13.4C16.6,9.8 12,4.6 12,4.6Z" />
+        android:fillColor="@color/progress_tracker"
+        android:pathData="M12,5A7,7 0,1 1,12 19A7,7 0,1 1,12 5Z" />
 </vector>
