@@ -1830,6 +1830,50 @@
           }
         }
       }
+    },
+    "%lld files left out of the archive": {
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файл не попал в архив"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла не попали в архив"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файлов не попали в архив"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла не попали в архив"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "macOS doesn't let LocalDrop read them: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS не даёт LocalDrop их прочитать: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

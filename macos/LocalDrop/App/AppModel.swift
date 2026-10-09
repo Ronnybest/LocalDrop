@@ -243,17 +243,30 @@ final class AppModel {
         parents.forEach { zipping[$0, default: 0] += 1 }
         Task.detached {
             var archives: [URL] = []
+            var skipped: [String] = []
             var directory: URL?
             for folder in folders {
                 do {
                     let staging = try directory ?? Self.makeStagingDirectory()
                     directory = staging
-                    archives.append(try Self.zip(folder, into: staging))
+                    let zipped = try Self.zip(folder, into: staging)
+                    archives.append(zipped.archive)
+                    skipped += zipped.skipped
                 } catch {
                     Log.transfer.error("Could not zip \(folder.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 }
             }
+            if !skipped.isEmpty {
+                Log.transfer.warning("Left \(skipped.count) unreadable file(s) out of the archive")
+            }
             await MainActor.run {
+                if !skipped.isEmpty {
+                    let names = skipped.prefix(3).joined(separator: ", ") + (skipped.count > 3 ? "…" : "")
+                    self.notifications.postMessage(
+                        title: String(localized: "\(skipped.count) files left out of the archive"),
+                        body: String(localized: "macOS doesn't let LocalDrop read them: \(names)")
+                    )
+                }
                 for parent in parents {
                     self.zipping[parent, default: 1] -= 1
                     if self.zipping[parent] == 0 { self.zipping[parent] = nil }
@@ -283,16 +296,49 @@ final class AppModel {
         return directory
     }
 
-    nonisolated private static func zip(_ folder: URL, into directory: URL) throws -> URL {
+    /// The folder as a zip archive, and the files in it that couldn't be read. macOS won't zip a
+    /// folder with a single unreadable file (one another app labelled as its own, for example),
+    /// so the readable files are first copied — cloned, on APFS — and the copy is zipped.
+    nonisolated private static func zip(_ folder: URL, into directory: URL) throws -> (archive: URL, skipped: [String]) {
+        let fileManager = FileManager.default
+        let copy = directory.appendingPathComponent("Copy", isDirectory: true).appendingPathComponent(folder.lastPathComponent, isDirectory: true)
+        try fileManager.createDirectory(at: copy, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: copy.deletingLastPathComponent()) }
+
+        var skipped: [String] = []
+        let keys: [URLResourceKey] = [.isDirectoryKey, .isRegularFileKey]
+        let base = folder.standardizedFileURL.pathComponents.count
+        let items = fileManager.enumerator(at: folder, includingPropertiesForKeys: keys, options: [], errorHandler: { url, _ in
+            skipped.append(url.lastPathComponent)
+            return true
+        })
+        while let item = items?.nextObject() as? URL {
+            // Finder's own view settings, not content.
+            if item.lastPathComponent == ".DS_Store" { continue }
+            let relative = item.standardizedFileURL.pathComponents.dropFirst(base).joined(separator: "/")
+            let target = copy.appendingPathComponent(relative)
+            let values = try? item.resourceValues(forKeys: Set(keys))
+            do {
+                if values?.isDirectory == true {
+                    try fileManager.createDirectory(at: target, withIntermediateDirectories: true)
+                } else {
+                    try fileManager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try fileManager.copyItem(at: item, to: target)
+                }
+            } catch {
+                skipped.append(relative)
+            }
+        }
+
         var coordinatorError: NSError?
         var result: Result<URL, any Error> = .failure(CocoaError(.fileReadUnknown))
-        NSFileCoordinator().coordinate(readingItemAt: folder, options: .forUploading, error: &coordinatorError) { zipped in
+        NSFileCoordinator().coordinate(readingItemAt: copy, options: .forUploading, error: &coordinatorError) { zipped in
             // The archive is deleted when this returns: keep it.
             let archive = directory.appendingPathComponent(folder.lastPathComponent + ".zip")
-            result = Result { try FileManager.default.moveItem(at: zipped, to: archive); return archive }
+            result = Result { try fileManager.moveItem(at: zipped, to: archive); return archive }
         }
         if let coordinatorError { throw coordinatorError }
-        return try result.get()
+        return (try result.get(), skipped)
     }
 
     /// Text or a link for the phone's clipboard. A phone without `clipboardReceive` gets it as a
@@ -342,16 +388,22 @@ final class AppModel {
 
     /// Lets the user pick files for a phone. The menu bar app has no window, so the panel comes forward itself.
     func chooseFiles(for deviceId: String) {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = true
-        panel.prompt = String(localized: "Send")
-        NSApp.activate()
-        panel.begin { [weak self] response in
-            guard response == .OK else { return }
-            let urls = panel.urls
-            MainActor.assumeIsolated { self?.send(urls, to: deviceId) }
+        // After the menu (and a context menu in it) has closed: opened from inside, the panel
+        // ended up behind other apps' windows, since activation is only a request since macOS 14.
+        DispatchQueue.main.async { [weak self] in
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = true
+            panel.allowsMultipleSelection = true
+            panel.prompt = String(localized: "Send")
+            panel.level = .floating
+            NSApp.activate()
+            panel.begin { response in
+                guard response == .OK else { return }
+                let urls = panel.urls
+                MainActor.assumeIsolated { self?.send(urls, to: deviceId) }
+            }
+            panel.orderFrontRegardless()
         }
     }
 
