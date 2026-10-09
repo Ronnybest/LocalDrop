@@ -100,7 +100,8 @@ struct MenuBarView: View {
             }
         }
         .padding(14)
-        .frame(width: 330)
+        // macOS lines the window up with the icon; at 330 it ended flush with the screen edge.
+        .frame(width: 320)
         .task {
             // The menu is where users look after changing System Settings; show the current state.
             await model.notifications.refreshAuthorization()
