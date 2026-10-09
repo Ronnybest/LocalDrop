@@ -612,7 +612,7 @@ class TransferManager(
                     throw ConnectionException.SaveFailed(file.name, e)
                 }
                 published = true
-                received += ReceivedFile(writer.uri, writer.displayName(file.name), file.mimeType, file.size)
+                received += ReceivedFile(writer.uri, writer.displayName(file.name), writer.mimeType, file.size)
                 channel.send(TransferMessages.fileResult(request.transferId, file.fileId, ok = true))
                 val elapsedMs = SystemClock.elapsedRealtime() - fileStarted
                 Log.i(

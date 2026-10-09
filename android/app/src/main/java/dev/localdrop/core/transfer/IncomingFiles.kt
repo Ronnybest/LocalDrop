@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import dev.localdrop.core.protocol.CborException
 import dev.localdrop.core.protocol.CborValue
 import dev.localdrop.core.protocol.Message
@@ -79,6 +80,9 @@ class DownloadWriter private constructor(
     private val resolver: ContentResolver,
     val uri: Uri,
     private val output: OutputStream,
+    private val requestedName: String,
+    /** The sender's type, or the one Android knows for the extension when the sender had none. */
+    val mimeType: String,
 ) {
     fun write(data: ByteArray, offset: Int, length: Int) = output.write(data, offset, length)
 
@@ -86,6 +90,20 @@ class DownloadWriter private constructor(
     fun publish() {
         output.close()
         resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+        keepExtensionLast()
+    }
+
+    /**
+     * MediaStore makes a taken name unique with " (1)", but puts it after the extension when it
+     * doesn't know the file type ("data.bin (1)"), and the file no longer opens as what it is.
+     */
+    private fun keepExtensionLast() {
+        val given = displayName(requestedName)
+        val suffix = given.removePrefix(requestedName)
+        val dot = requestedName.lastIndexOf('.')
+        if (given == requestedName || !given.startsWith(requestedName) || !UNIQUE_SUFFIX.matches(suffix) || dot <= 0) return
+        val fixed = requestedName.substring(0, dot) + suffix + requestedName.substring(dot)
+        resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, fixed) }, null, null)
     }
 
     /** Removes an incomplete or damaged file. Best effort: called on failure paths. */
@@ -105,11 +123,22 @@ class DownloadWriter private constructor(
         } ?: fallback
 
     companion object {
+        private val UNIQUE_SUFFIX = Regex(" \\(\\d+\\)")
+        private const val UNKNOWN_TYPE = "application/octet-stream"
+
+        /** A Mac sends `application/octet-stream` for types macOS doesn't know, such as .apk. */
+        private fun mimeTypeOf(file: IncomingFile): String {
+            if (file.mimeType.isNotBlank() && file.mimeType != UNKNOWN_TYPE) return file.mimeType
+            val extension = file.name.substringAfterLast('.', "").lowercase()
+            return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: UNKNOWN_TYPE
+        }
+
         @Throws(IOException::class)
         fun create(resolver: ContentResolver, file: IncomingFile): DownloadWriter {
+            val mimeType = mimeTypeOf(file)
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-                put(MediaStore.MediaColumns.MIME_TYPE, file.mimeType)
+                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
                 put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
@@ -121,7 +150,7 @@ class DownloadWriter private constructor(
                 resolver.delete(uri, null, null)
                 throw e
             }
-            return DownloadWriter(resolver, uri, output)
+            return DownloadWriter(resolver, uri, output, file.name, mimeType)
         }
     }
 }
