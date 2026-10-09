@@ -15,7 +15,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
@@ -224,23 +225,30 @@ private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, modifier
         modifier = modifier,
         contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
     ) {
+        // The button keeps its size (no size animation, one line of text): the old state rolls up
+        // and fades out while the new one rolls in from below.
         AnimatedContent(
             targetState = shown,
-            transitionSpec = { (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.85f)) togetherWith fadeOut(tween(120)) },
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+            transitionSpec = {
+                (slideInVertically(tween(260)) { it / 2 } + fadeIn(tween(260))) togetherWith
+                    (slideOutVertically(tween(200)) { -it / 2 } + fadeOut(tween(160))) using null
+            },
             label = "clipboard",
         ) { current ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                 when (current) {
                     ClipboardState.IDLE -> {
                         Icon(painterResource(R.drawable.ic_tile_clipboard), null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.action_send_clipboard))
+                        Text(stringResource(R.string.action_send_clipboard), maxLines = 1, softWrap = false)
                     }
                     ClipboardState.SENDING -> CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
                     ClipboardState.DONE -> {
                         Icon(Icons.Default.Check, null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.history_sent))
+                        Text(stringResource(R.string.history_sent), maxLines = 1, softWrap = false)
                     }
                 }
             }
