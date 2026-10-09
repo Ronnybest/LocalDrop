@@ -824,7 +824,7 @@ class TransferService : Service() {
      * A transfer under way: what, how long is left, and progress that stays in sight, like the
      * filling drop in the Mac's menu bar. On Android 16+ a Live Update: a status bar chip with
      * the time left, pinned to the top of the shade and shown on the lock screen; a dot travels
-     * along the bar towards the receiving device, one segment per file. Older versions
+     * along the bar from the Mac or to it, one segment per file. Older versions
      * show the usual progress bar.
      */
     private fun NotificationCompat.Builder.transferProgress(progress: TransferProgress, sending: Boolean): NotificationCompat.Builder {
@@ -834,18 +834,18 @@ class TransferService : Service() {
         val segments = sizes?.map { NotificationCompat.ProgressStyle.Segment((it * PROGRESS_SCALE / total).toInt().coerceAtLeast(1))}
             ?: listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_SCALE))
         val scale = segments.sumOf { it.length }
-        // Only where the files go, at the end the bar flows into: the device that receives.
-        val receiver = IconCompat.createWithResource(this@TransferService, if (sending) R.drawable.ic_progress_laptop else R.drawable.ic_progress_phone)
+        // Only the other device: the phone is the one in hand. It stands on its side of the flow,
+        // at the start when files come from it, at the end when they go to it.
+        val peer = IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_laptop)
+        val style = NotificationCompat.ProgressStyle()
+            .setProgressSegments(segments)
+            .setProgress((progress.bytesSent.toDouble() / total * scale).toInt().coerceIn(0, scale))
+            .setProgressTrackerIcon(IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_tracker))
+        if (sending) style.setProgressEndIcon(peer) else style.setProgressStartIcon(peer)
         return setContentTitle(TransferText.what(this@TransferService, progress.fileCount, progress.currentFileName))
             .setContentText(TransferText.notificationLine(this@TransferService, progress))
             .setProgress(100, percent, false)
-            .setStyle(
-                NotificationCompat.ProgressStyle()
-                    .setProgressSegments(segments)
-                    .setProgress((progress.bytesSent.toDouble() / total * scale).toInt().coerceIn(0, scale))
-                    .setProgressTrackerIcon(IconCompat.createWithResource(this@TransferService, R.drawable.ic_progress_tracker))
-                    .setProgressEndIcon(receiver),
-            )
+            .setStyle(style)
             .setRequestPromotedOngoing(true)
             .setShortCriticalText(TransferText.chipTimeLeft(this@TransferService, progress) ?: "$percent%")
     }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The laptop at the end of a transfer notification's progress bar. The system draws the ends at a
+<!-- The Mac at one end of a transfer notification's progress bar. The system draws the ends at a
      fixed size: the drawing is scaled down inside it to leave room around the bar. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
