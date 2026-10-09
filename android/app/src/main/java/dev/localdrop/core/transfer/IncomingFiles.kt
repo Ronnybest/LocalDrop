@@ -99,12 +99,27 @@ class DownloadWriter private constructor(
      */
     private fun keepExtensionLast() {
         val given = displayName(requestedName)
-        val suffix = given.removePrefix(requestedName)
         val dot = requestedName.lastIndexOf('.')
-        if (given == requestedName || !given.startsWith(requestedName) || !UNIQUE_SUFFIX.matches(suffix) || dot <= 0) return
-        val fixed = requestedName.substring(0, dot) + suffix + requestedName.substring(dot)
+        val counter = UNIQUE_SUFFIX.matchEntire(given.removePrefix(requestedName))?.groupValues?.get(1)?.toIntOrNull()
+        if (counter == null || !given.startsWith(requestedName) || dot <= 0) return
+        // MediaStore counted "name.ext (n)", which it may not have used before, while
+        // "name (n).ext" from an earlier copy can be taken: take the first free number.
+        val base = requestedName.substring(0, dot)
+        val extension = requestedName.substring(dot)
+        val fixed = generateSequence(counter) { it + 1 }.take(MAX_COUNTER)
+            .map { "$base ($it)$extension" }
+            .firstOrNull { !isTaken(it) } ?: return
         resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, fixed) }, null, null)
     }
+
+    /** Another file in Downloads has [name]. LocalDrop sees its own files, the ones that clash here. */
+    private fun isTaken(name: String): Boolean = resolver.query(
+        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+        arrayOf(MediaStore.MediaColumns._ID),
+        "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?",
+        arrayOf(name, Environment.DIRECTORY_DOWNLOADS + "/"),
+        null,
+    )?.use { it.count > 0 } ?: false
 
     /** Removes an incomplete or damaged file. Best effort: called on failure paths. */
     fun discard() {
@@ -123,7 +138,8 @@ class DownloadWriter private constructor(
         } ?: fallback
 
     companion object {
-        private val UNIQUE_SUFFIX = Regex(" \\(\\d+\\)")
+        private val UNIQUE_SUFFIX = Regex(" \\((\\d+)\\)")
+        private const val MAX_COUNTER = 1000
         private const val UNKNOWN_TYPE = "application/octet-stream"
 
         /** A Mac sends `application/octet-stream` for types macOS doesn't know, such as .apk. */
