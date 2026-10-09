@@ -8,6 +8,8 @@ final class StatusItemController: NSObject, NSWindowDelegate {
     private let model: AppModel
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private var panel: MenuPanel?
+    /// Keeps the panel's SwiftUI content alive; the panel shows only its view.
+    private var panelContent: NSViewController?
     private var monitors: [Any] = []
     /// Opens the menu when files hover over the drop for a moment, so they can go onto one phone.
     private var springTask: Task<Void, Never>?
@@ -68,12 +70,16 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             .onGeometryChange(for: CGSize.self, of: { $0.size }) { [weak self] size in
                 DispatchQueue.main.async { self?.fit(size) }
             }
-        let hosting = NSHostingView(rootView: content)
+        let hosting = NSHostingController(rootView: content)
         hosting.sizingOptions = []
+        // Measured up front: without sizing options the view reports no fitting size, and the
+        // panel would be placed as if it had no width.
+        let size = hosting.sizeThatFits(in: CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude))
 
-        let panel = MenuPanel(contentRect: NSRect(origin: .zero, size: hosting.fittingSize),
+        let panel = MenuPanel(contentRect: NSRect(origin: .zero, size: size),
                               styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
-        panel.contentView = hosting
+        panel.contentView = hosting.view
+        panelContent = hosting
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
@@ -103,6 +109,7 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         panel?.delegate = nil
         panel?.orderOut(nil)
         panel = nil
+        panelContent = nil
         statusItem.button?.highlight(false)
         // A drop waiting for a phone is abandoned with the menu.
         model.filesToSend = nil
