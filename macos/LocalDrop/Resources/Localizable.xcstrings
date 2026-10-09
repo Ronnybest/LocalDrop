@@ -1874,6 +1874,90 @@
           }
         }
       }
+    },
+    "%lld folders": {
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld папка"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld папки"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld папок"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld папки"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Packing %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Упаковка «%@»…"
+          }
+        }
+      }
+    },
+    "Packing %@ · %lld%%": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Упаковка «%@» · %lld%%"
+          }
+        }
+      }
+    },
+    "LocalDrop — packing a folder": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop — упаковка папки"
+          }
+        }
+      }
+    },
+    "Couldn't send %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось отправить «%@»"
+          }
+        }
+      }
+    },
+    "LocalDrop couldn't pack the folder.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LocalDrop не смог упаковать папку."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

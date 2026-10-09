@@ -23,6 +23,8 @@ struct DeviceListItem: Identifiable {
     var pendingPromptEntryId: UUID?
     /// Files on their way to this device, if any.
     var delivery: OutgoingDelivery?
+    /// Folders for this device being packed.
+    var packing: FolderPacking?
 
     /// A paired phone whose LocalDrop can receive from this Mac.
     var canReceive: Bool {
@@ -36,6 +38,7 @@ extension AppModel {
         rawDeviceList.map { item in
             var item = item
             item.delivery = delivery(for: item.id)
+            item.packing = packings.first { $0.deviceId == item.id }
             return item
         }
     }
@@ -86,6 +89,13 @@ extension DeviceListItem {
 
     /// What the device is doing now, or when it was last seen.
     var status: (tint: Color, text: String) {
+        // A send under way comes first; folders packed meanwhile join the queue after it.
+        if let packing, delivery?.phase != .sending {
+            guard let fraction = packing.fraction else {
+                return (.accentColor, String(localized: "Packing \(packing.title)…"))
+            }
+            return (.accentColor, String(localized: "Packing \(packing.title) · \(Int(fraction * 100))%"))
+        }
         if let delivery {
             switch delivery.phase {
             case .waiting:
@@ -165,7 +175,9 @@ private struct DeliveryActions: View {
     let cancelDelivery: ((UUID) -> Void)?
 
     var body: some View {
-        if let delivery = item.delivery, let cancelDelivery {
+        if let packing = item.packing, item.delivery?.phase != .sending, let cancelDelivery {
+            CircleButton(symbol: "xmark", help: String(localized: "Cancel sending")) { cancelDelivery(packing.id) }
+        } else if let delivery = item.delivery, let cancelDelivery {
             CircleButton(symbol: "xmark", help: String(localized: "Cancel sending")) { cancelDelivery(delivery.id) }
         } else if item.canReceive, let send {
             CircleButton(symbol: "paperplane", help: String(localized: "Send files to \(item.name)")) { send(item.id) }

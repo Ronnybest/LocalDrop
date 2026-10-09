@@ -71,6 +71,8 @@ final class AppModel {
     @ObservationIgnored private var sharedDirectories: Set<URL> = []
     /// Directories of folders being zipped: kept until their archives are queued.
     @ObservationIgnored private var zipping: [URL: Int] = [:]
+    /// Folders being packed before they are queued.
+    private(set) var packings: [FolderPacking] = []
     @ObservationIgnored private var publishedPhones: [ShareInbox.Phone]?
     let notifications = NotificationController()
     /// Which Settings tab to show; the menu opens Devices directly.
@@ -235,31 +237,52 @@ final class AppModel {
         (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
     }
 
-    /// Folders go as zip archives that macOS makes (NSFileCoordinator `.forUploading`, as Mail
-    /// does), kept in a staging folder removed once they are sent.
+    /// Folders go as zip archives (see `FolderArchive`), kept in a staging folder removed once
+    /// they are sent. Packing shows in the menu and can be cancelled there.
     private func sendFolders(_ folders: [URL], to deviceId: String) {
-        Log.transfer.info("Zipping \(folders.count) folder(s) to send")
+        Log.transfer.info("Packing \(folders.count) folder(s) to send")
+        let packing = FolderPacking(deviceId: deviceId, folders: folders)
+        packings.append(packing)
         let parents = folders.map { $0.deletingLastPathComponent().standardizedFileURL }
         parents.forEach { zipping[$0, default: 0] += 1 }
+        let cancel = packing.cancelToken
         Task.detached {
+            let started = Date()
             var archives: [URL] = []
             var skipped: [String] = []
             var directory: URL?
-            for folder in folders {
+            for (index, folder) in folders.enumerated() where !cancel.isCancelled {
                 do {
                     let staging = try directory ?? Self.makeStagingDirectory()
                     directory = staging
-                    let zipped = try Self.zip(folder, into: staging)
-                    archives.append(zipped.archive)
-                    skipped += zipped.skipped
+                    let packed = try FolderArchive.pack(folder, into: staging, cancel: cancel) { fraction in
+                        let overall = (Double(index) + fraction) / Double(folders.count)
+                        Task { @MainActor in packing.fraction = overall }
+                    }
+                    archives.append(packed.archive)
+                    skipped += packed.skipped
+                } catch FolderArchive.PackError.cancelled {
+                    break
                 } catch {
-                    Log.transfer.error("Could not zip \(folder.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                    Log.transfer.error("Could not pack \(folder.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 }
             }
+            Log.transfer.info("Packed \(archives.count) archive(s) in \(Date().timeIntervalSince(started), format: .fixed(precision: 2)) s")
             if !skipped.isEmpty {
                 Log.transfer.warning("Left \(skipped.count) unreadable file(s) out of the archive")
             }
             await MainActor.run {
+                self.packings.removeAll { $0 === packing }
+                for parent in parents {
+                    self.zipping[parent, default: 1] -= 1
+                    if self.zipping[parent] == 0 { self.zipping[parent] = nil }
+                }
+                guard let directory else { return }
+                if cancel.isCancelled {
+                    Log.transfer.info("Cancelled packing")
+                    try? FileManager.default.removeItem(at: directory)
+                    return
+                }
                 if !skipped.isEmpty {
                     let names = skipped.prefix(3).joined(separator: ", ") + (skipped.count > 3 ? "…" : "")
                     self.notifications.postMessage(
@@ -267,14 +290,14 @@ final class AppModel {
                         body: String(localized: "macOS doesn't let LocalDrop read them: \(names)")
                     )
                 }
-                for parent in parents {
-                    self.zipping[parent, default: 1] -= 1
-                    if self.zipping[parent] == 0 { self.zipping[parent] = nil }
-                }
-                if let directory {
-                    self.sendStaged(archives, in: directory, to: deviceId)
+                if archives.isEmpty {
+                    try? FileManager.default.removeItem(at: directory)
+                    self.notifications.postMessage(
+                        title: String(localized: "Couldn't send \(packing.title)"),
+                        body: String(localized: "LocalDrop couldn't pack the folder.")
+                    )
                 } else {
-                    self.releaseSharedFiles()
+                    self.sendStaged(archives, in: directory, to: deviceId)
                 }
             }
         }
@@ -294,51 +317,6 @@ final class AppModel {
         let directory = base.appendingPathComponent("LocalDrop/Outgoing/\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
-    }
-
-    /// The folder as a zip archive, and the files in it that couldn't be read. macOS won't zip a
-    /// folder with a single unreadable file (one another app labelled as its own, for example),
-    /// so the readable files are first copied — cloned, on APFS — and the copy is zipped.
-    nonisolated private static func zip(_ folder: URL, into directory: URL) throws -> (archive: URL, skipped: [String]) {
-        let fileManager = FileManager.default
-        let copy = directory.appendingPathComponent("Copy", isDirectory: true).appendingPathComponent(folder.lastPathComponent, isDirectory: true)
-        try fileManager.createDirectory(at: copy, withIntermediateDirectories: true)
-        defer { try? fileManager.removeItem(at: copy.deletingLastPathComponent()) }
-
-        var skipped: [String] = []
-        let keys: [URLResourceKey] = [.isDirectoryKey, .isRegularFileKey]
-        let base = folder.standardizedFileURL.pathComponents.count
-        let items = fileManager.enumerator(at: folder, includingPropertiesForKeys: keys, options: [], errorHandler: { url, _ in
-            skipped.append(url.lastPathComponent)
-            return true
-        })
-        while let item = items?.nextObject() as? URL {
-            // Finder's own view settings, not content.
-            if item.lastPathComponent == ".DS_Store" { continue }
-            let relative = item.standardizedFileURL.pathComponents.dropFirst(base).joined(separator: "/")
-            let target = copy.appendingPathComponent(relative)
-            let values = try? item.resourceValues(forKeys: Set(keys))
-            do {
-                if values?.isDirectory == true {
-                    try fileManager.createDirectory(at: target, withIntermediateDirectories: true)
-                } else {
-                    try fileManager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
-                    try fileManager.copyItem(at: item, to: target)
-                }
-            } catch {
-                skipped.append(relative)
-            }
-        }
-
-        var coordinatorError: NSError?
-        var result: Result<URL, any Error> = .failure(CocoaError(.fileReadUnknown))
-        NSFileCoordinator().coordinate(readingItemAt: copy, options: .forUploading, error: &coordinatorError) { zipped in
-            // The archive is deleted when this returns: keep it.
-            let archive = directory.appendingPathComponent(folder.lastPathComponent + ".zip")
-            result = Result { try fileManager.moveItem(at: zipped, to: archive); return archive }
-        }
-        if let coordinatorError { throw coordinatorError }
-        return (try result.get(), skipped)
     }
 
     /// Text or a link for the phone's clipboard. A phone without `clipboardReceive` gets it as a
@@ -408,6 +386,10 @@ final class AppModel {
     }
 
     func cancelDelivery(_ id: UUID) {
+        if let packing = packings.first(where: { $0.id == id }) {
+            packing.cancelToken.cancel()
+            return
+        }
         guard let delivery = deliveries.first(where: { $0.id == id }) else { return }
         if delivery.phase == .waiting {
             deliveries.removeAll { $0.id == id }

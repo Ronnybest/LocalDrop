@@ -80,6 +80,9 @@ enum MenuBarIcon {
         if let delivery = model.deliveries.first(where: { $0.phase == .sending }) {
             return (progressIcon(delivery.fraction), String(localized: "LocalDrop — sending"))
         }
+        if let packing = model.packings.first {
+            return (progressIcon(packing.fraction ?? 0), String(localized: "LocalDrop — packing a folder"))
+        }
         if model.isPairingModeActive {
             return (visibleIcon, String(localized: "LocalDrop — visible to new devices"))
         }
