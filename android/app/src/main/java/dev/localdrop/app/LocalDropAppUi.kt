@@ -1,17 +1,5 @@
 package dev.localdrop.app
 
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -36,8 +24,8 @@ private enum class Screen { Home, AddMac, Diagnostics, History }
 
 /**
  * Home with the Macs; Add Mac, Settings and all of Recent on top of it. Navigation 3 keeps the
- * stack and gives the system's transitions, predictive back included: the screen shrinks under
- * the back gesture with Home showing behind it.
+ * stack, with its own transitions (for now its default crossfade) and predictive back: the screen
+ * shrinks under the back gesture with Home showing behind it.
  */
 @Composable
 fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = TransferViewModel.Factory)) {
@@ -83,12 +71,6 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
         NavDisplay(
             backStack = backStack,
             onBack = ::back,
-            transitionSpec = { sharedAxisX(forward = true) },
-            popTransitionSpec = { sharedAxisX(forward = false) },
-            // Under the back gesture the screen shrinks toward the swipe, Home standing still behind it.
-            predictivePopTransitionSpec = {
-                EnterTransition.None togetherWith scaleOut(targetScale = PREDICTIVE_SCALE)
-            },
             entryProvider = { screen ->
                 when (screen) {
                     Screen.Home -> NavEntry(screen) {
@@ -117,23 +99,3 @@ fun LocalDropAppUi(transferViewModel: TransferViewModel = viewModel(factory = Tr
         )
     }
 }
-
-/**
- * Material's shared axis X between screens: the old one fades out quickly while moving a little,
- * the new one slides in the same way and fades in after it — never both half-visible at once.
- */
-private fun sharedAxisX(forward: Boolean): ContentTransform {
-    val sign = if (forward) 1 else -1
-    val enter = slideInHorizontally(tween(AXIS_MS, easing = FastOutSlowInEasing)) { sign * it / AXIS_SHIFT } +
-        fadeIn(tween(AXIS_MS - AXIS_FADE_OUT_MS, delayMillis = AXIS_FADE_OUT_MS, easing = LinearOutSlowInEasing))
-    val exit = slideOutHorizontally(tween(AXIS_MS, easing = FastOutSlowInEasing)) { -sign * it / AXIS_SHIFT } +
-        fadeOut(tween(AXIS_FADE_OUT_MS, easing = FastOutLinearInEasing))
-    return enter togetherWith exit
-}
-
-private const val AXIS_MS = 300
-private const val AXIS_FADE_OUT_MS = 90
-
-/** The screens move a tenth of the width: enough to show direction, not a slide across. */
-private const val AXIS_SHIFT = 10
-private const val PREDICTIVE_SCALE = 0.9f
