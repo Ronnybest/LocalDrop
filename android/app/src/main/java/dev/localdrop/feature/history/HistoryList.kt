@@ -16,23 +16,12 @@ import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import dev.localdrop.app.ui.SwipeChain
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,25 +42,16 @@ import dev.localdrop.feature.devices.RoundIcon
 import dev.localdrop.feature.settings.Haptic
 import dev.localdrop.feature.settings.rememberHaptics
 
-/**
- * Recent transfers as one segmented group whose rows move as a linked whole (see SwipeChain):
- * the swiped row follows the finger, its neighbours are pulled along and round the corners that
- * faced it, everything springs back or closes up after it. [group] tells groups on one screen apart.
- */
+/** Recent transfers as one segmented group; each row swipes away on its own, as in any list. */
 fun LazyListScope.historyGroup(
     entries: List<HistoryEntry>,
-    group: String,
-    chain: SwipeChain,
     onOpen: (HistoryEntry) -> Unit,
     onDelete: (HistoryEntry) -> Unit,
 ) {
     itemsIndexed(entries, key = { _, entry -> entry.id }) { index, entry ->
         HistoryItem(
             entry = entry,
-            index = index,
-            count = entries.size,
-            group = group,
-            chain = chain,
+            shape = segmentShape(index, entries.size),
             onOpen = { onOpen(entry) },
             onDelete = { onDelete(entry) },
             modifier = Modifier.animateItem(),
@@ -84,65 +64,32 @@ fun LazyListScope.historyGroup(
  * swiping it away to either side deletes it from the history, not the file.
  */
 @Composable
-private fun HistoryItem(
-    entry: HistoryEntry,
-    index: Int,
-    count: Int,
-    group: String,
-    chain: SwipeChain,
-    onOpen: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier,
-) {
+private fun HistoryItem(entry: HistoryEntry, shape: Shape, onOpen: () -> Unit, onDelete: () -> Unit, modifier: Modifier) {
     val haptic = rememberHaptics()
-    val scope = rememberCoroutineScope()
-    var width by remember { mutableIntStateOf(0) }
-    val maxPull = with(LocalDensity.current) { MAX_NEIGHBOUR_PULL.toPx() }
-    val dragged = chain.draggedId == entry.id
-    val sameGroup = chain.draggedId != null && chain.group == group
-    val progress = chain.progress
-
-    // Neighbours follow the pull on a soft spring, and spring back when the row comes loose.
-    val follow by animateFloatAsState(
-        chain.pullFor(group, index),
-        spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
-        label = "follow",
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value != SwipeToDismissBoxValue.Settled) onDelete()
+            value != SwipeToDismissBoxValue.Settled
+        },
     )
-    val loosen by animateFloatAsState(if (dragged) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "loosen")
-    val shape = segmentShape(
-        index = index,
-        count = count,
-        // The swiped row rounds fully as soon as it moves; the neighbours round what faced it as it goes.
-        loosen = loosen,
-        roundTop = if (sameGroup && chain.index == index - 1) progress * 0.8f else 0f,
-        roundBottom = if (sameGroup && chain.index == index + 1) progress * 0.8f else 0f,
-    )
-    val dragState = rememberDraggableState { delta -> chain.drag(entry.id, delta) { haptic(Haptic.THRESHOLD) } }
-    Box(
-        modifier
-            .onSizeChanged { width = it.width }
-            .graphicsLayer { alpha = if (chain.removedId == entry.id) 0f else 1f }
-            .draggable(
-                state = dragState,
-                orientation = Orientation.Horizontal,
-                onDragStarted = { chain.start(entry.id, group, index, width, maxPull) },
-                onDragStopped = { velocity -> scope.launch { chain.release(entry.id, velocity, onDelete) } },
-            ),
-    ) {
-        if (dragged) {
-            // What letting go does, revealed under the row as it moves.
-            val start = chain.offset > 0
+    // A tick the moment the swipe goes far enough to delete on release.
+    LaunchedEffect(state.targetValue) {
+        if (state.targetValue != SwipeToDismissBoxValue.Settled) haptic(Haptic.THRESHOLD)
+    }
+    SwipeToDismissBox(
+        state = state,
+        modifier = modifier,
+        backgroundContent = {
+            val start = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             Box(
-                Modifier.matchParentSize().graphicsLayer { alpha = progress.coerceAtLeast(0.15f) }.clip(shape)
-                    .background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
+                Modifier.fillMaxSize().clip(shape).background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
                 contentAlignment = if (start) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
             }
-        }
-        Box(Modifier.graphicsLayer { translationX = if (dragged) chain.offset else follow }) {
-            HistoryRow(entry, segmentShapes(shape), onOpen)
-        }
+        },
+    ) {
+        HistoryRow(entry, segmentShapes(shape), onOpen)
     }
 }
 
@@ -226,6 +173,3 @@ private fun shortTime(timeMs: Long): String {
         else -> DateUtils.formatDateTime(context, timeMs, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH or DateUtils.FORMAT_NO_YEAR)
     }
 }
-
-/** How far a neighbour is held along by the swiped row, at most. */
-private val MAX_NEIGHBOUR_PULL = 10.dp

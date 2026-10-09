@@ -11,8 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
-import kotlin.math.max
 
 /**
  * Rows of a Material 3 Expressive segmented group: together they read as one rounded block,
@@ -24,18 +22,12 @@ object Segments {
     val Gap = 2.dp
 }
 
-/**
- * The shape of row [index] of [count]. Its own corners round as it comes loose ([loosen], 0..1,
- * while it is swiped); its neighbours round the corners that faced it ([roundTop], [roundBottom]).
- * Changes of position (a row deleted, the group closing up) move with the theme's spring.
- */
+/** The shape of row [index] of [count]; when rows come and go, the group's ends round again. */
 @Composable
-fun segmentShape(index: Int, count: Int, loosen: Float = 0f, roundTop: Float = 0f, roundBottom: Float = 0f): Shape {
+fun segmentShape(index: Int, count: Int): Shape {
     val spec = MaterialTheme.motionScheme.fastSpatialSpec<Dp>()
-    val baseTop by animateDpAsState(if (index == 0) Segments.Outer else Segments.Inner, spec, label = "top")
-    val baseBottom by animateDpAsState(if (index == count - 1) Segments.Outer else Segments.Inner, spec, label = "bottom")
-    val top = lerp(baseTop, Segments.Outer, max(loosen, roundTop).coerceIn(0f, 1f))
-    val bottom = lerp(baseBottom, Segments.Outer, max(loosen, roundBottom).coerceIn(0f, 1f))
+    val top by animateDpAsState(if (index == 0) Segments.Outer else Segments.Inner, spec, label = "top")
+    val bottom by animateDpAsState(if (index == count - 1) Segments.Outer else Segments.Inner, spec, label = "bottom")
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 

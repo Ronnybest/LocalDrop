@@ -6,7 +6,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import dev.localdrop.app.ui.Segments
-import dev.localdrop.app.ui.SwipeChain
 import java.util.Calendar
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -70,7 +69,6 @@ class HistoryViewModel(private val store: HistoryStore) : ViewModel() {
 fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)) {
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val chain = remember { SwipeChain() }
     BackHandler(onBack = onBack)
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -114,8 +112,6 @@ fun HistoryScreen(onBack: () -> Unit, viewModel: HistoryViewModel = viewModel(fa
                 }
                 historyGroup(
                     entries = dayEntries,
-                    group = "day$day",
-                    chain = chain,
                     onOpen = { HistoryActions.open(context, it) },
                     onDelete = { viewModel.remove(it) },
                 )
