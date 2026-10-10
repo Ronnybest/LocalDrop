@@ -32,19 +32,19 @@ for id in com.zepponapps.localdrop.mac dev.localdrop.mac; do
     osascript -e "tell application id \"$id\" to quit" 2>/dev/null || true
 done
 for _ in {1..20}; do
-    pgrep -f "/Contents/MacOS/LocalDrop$" >/dev/null || break
+    pgrep -f "/Contents/MacOS/(Dewlet|LocalDrop)$" >/dev/null || break
     sleep 0.5
 done
 
 # Installed under the name people see, "Dewlet"; copies under the old names go.
 installed="/Applications/Dewlet.app"
 rm -rf /Applications/LocalDrop.app "/Applications/Local Drop.app" "$installed"
-cp -R build/Build/Products/Release/LocalDrop.app "$installed"
+cp -R build/Build/Products/Release/Dewlet.app "$installed"
 
 # The Share extension must come from the installed copy: forget the ones in build products,
 # or macOS may run the extension (and start the app) from there.
 lsregister=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
-for product in build/Build/Products/*/LocalDrop.app; do
+for product in build/Build/Products/*/Dewlet.app build/Build/Products/*/LocalDrop.app; do
     pluginkit -r "$product/Contents/PlugIns/LocalDropShare.appex" 2>/dev/null || true
     "$lsregister" -u "$product" 2>/dev/null || true
 done

@@ -381,7 +381,8 @@
 				);
 				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = LocalDrop;
+				PRODUCT_NAME = Dewlet;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -413,7 +414,8 @@
 				);
 				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = LocalDrop;
+				PRODUCT_NAME = Dewlet;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -491,7 +493,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalDrop.app/Contents/MacOS/LocalDrop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dewlet.app/Contents/MacOS/Dewlet";
 			};
 			name = Debug;
 		};
@@ -509,7 +511,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocalDrop.app/Contents/MacOS/LocalDrop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dewlet.app/Contents/MacOS/Dewlet";
 			};
 			name = Release;
 		};

@@ -47,7 +47,7 @@ EOF
 xcodebuild -exportArchive -archivePath "$out/LocalDrop.xcarchive" -exportPath "$out/export" \
     -exportOptionsPlist "$out/ExportOptions.plist" -allowProvisioningUpdates -quiet
 
-app="$out/export/LocalDrop.app"
+app="$out/export/Dewlet.app"
 version=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$app/Contents/Info.plist")
 codesign --verify --deep --strict "$app"
 

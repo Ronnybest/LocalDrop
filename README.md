@@ -90,7 +90,7 @@ Over a router every packet crosses the air twice; the phone's hotspot is a direc
 cd macos
 xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Debug -derivedDataPath build \
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Development" DEVELOPMENT_TEAM=<your team ID> build
-open build/Build/Products/Debug/LocalDrop.app
+open build/Build/Products/Debug/Dewlet.app
 ```
 
 To build a Release copy, install it to `/Applications` and start it:

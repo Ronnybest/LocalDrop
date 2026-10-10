@@ -4,6 +4,10 @@
 <dict>
 	<key>LocalDropAppGroup</key>
 	<string>$(TeamIdentifierPrefix)com.zepponapps.localdrop</string>
+	<!-- Only standard encryption (CryptoKit's AES-GCM, ECDH, ECDSA) to protect the user's own
+	     transfers: exempt from US export documentation, so App Store Connect needn't ask. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSFileQuarantineEnabled</key>
 	<true/>
 	<key>NSBonjourServices</key>
