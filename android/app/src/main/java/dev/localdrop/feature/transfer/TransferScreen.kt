@@ -24,7 +24,9 @@ import androidx.compose.runtime.setValue
 import dev.localdrop.feature.devices.AvatarState
 import dev.localdrop.feature.devices.MacAvatar
 import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.NotificationAccess
 import dev.localdrop.feature.settings.rememberHaptics
+import dev.localdrop.feature.settings.rememberNotificationRequest
 import kotlinx.coroutines.delay
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -348,6 +350,25 @@ private fun PairedContent(state: TransferState.Paired, onDismiss: () -> Unit) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
     )
+    // Right after pairing is when notifications make sense: progress, and Accept for the Mac's files.
+    val context = LocalContext.current
+    val notificationsOff = remember { !NotificationAccess.enabled(context) }
+    val turnOn = rememberNotificationRequest { onDismiss() }
+    if (notificationsOff) {
+        Text(
+            stringResource(R.string.notifications_paired_body, state.peerName),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
     Spacer(Modifier.height(8.dp))
-    Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_done)) }
+    if (notificationsOff) {
+        Button(onClick = { haptic(Haptic.TICK); turnOn() }, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.action_turn_on_notifications))
+        }
+        OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_later)) }
+    } else {
+        Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_done)) }
+    }
 }

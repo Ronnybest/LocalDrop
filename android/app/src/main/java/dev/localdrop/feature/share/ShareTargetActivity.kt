@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
-import androidx.core.content.edit
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.lifecycle.lifecycleScope
 import dev.localdrop.R
@@ -32,6 +31,7 @@ import dev.localdrop.app.MainActivity
 import dev.localdrop.app.ui.LocalDropTheme
 import dev.localdrop.core.device.TrustedDevice
 import dev.localdrop.core.device.defaultDevice
+import dev.localdrop.feature.settings.NotificationAccess
 import dev.localdrop.feature.transfer.TransferService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -98,9 +98,8 @@ class ShareTargetActivity : ComponentActivity() {
     private fun needsNotificationPermission(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || pending != null) return false
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return false
-        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_ASKED_NOTIFICATIONS, false)) return false
-        prefs.edit { putBoolean(KEY_ASKED_NOTIFICATIONS, true) }
+        if (NotificationAccess.asked(this)) return false
+        NotificationAccess.markAsked(this)
         return true
     }
 
@@ -167,7 +166,5 @@ class ShareTargetActivity : ComponentActivity() {
 
     private companion object {
         const val TAG = "LD/share"
-        const val PREFS = "share"
-        const val KEY_ASKED_NOTIFICATIONS = "asked_notifications"
     }
 }

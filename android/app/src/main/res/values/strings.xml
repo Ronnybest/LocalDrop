@@ -263,4 +263,9 @@
     <string name="settings_version">Version</string>
     <string name="settings_crash_reports">Send crash reports</string>
     <string name="settings_crash_reports_body">If the app crashes, the developer gets a description of the error and the phone model</string>
+    <string name="notifications_paired_body">Turn on notifications to see progress and to accept files from %1$s when Local Drop isn\'t open.</string>
+    <string name="action_turn_on_notifications">Turn on notifications</string>
+    <string name="notifications_off_title">Notifications are off</string>
+    <string name="notifications_off_body">Without them you don\'t see progress, and files from a Mac can\'t be accepted while Local Drop is closed.</string>
+    <string name="action_turn_on">Turn on</string>
 </resources>

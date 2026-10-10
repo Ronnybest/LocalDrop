@@ -266,4 +266,9 @@
     <string name="settings_version">Версия</string>
     <string name="settings_crash_reports">Отправлять отчёты о сбоях</string>
     <string name="settings_crash_reports_body">Если приложение упадёт, разработчик получит описание ошибки и модель телефона</string>
+    <string name="notifications_paired_body">Включите уведомления, чтобы видеть ход передачи и принимать файлы с %1$s, когда Local Drop закрыт.</string>
+    <string name="action_turn_on_notifications">Включить уведомления</string>
+    <string name="notifications_off_title">Уведомления выключены</string>
+    <string name="notifications_off_body">Без них не видно хода передачи, а файлы с Mac не принять, пока Local Drop закрыт.</string>
+    <string name="action_turn_on">Включить</string>
 </resources>

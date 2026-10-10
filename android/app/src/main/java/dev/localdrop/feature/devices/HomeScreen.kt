@@ -29,7 +29,9 @@ import dev.localdrop.app.ui.segmentShape
 import dev.localdrop.app.ui.segmentShapes
 import androidx.compose.material3.SegmentedListItem
 import dev.localdrop.feature.settings.Haptic
+import dev.localdrop.feature.settings.NotificationAccess
 import dev.localdrop.feature.settings.rememberHaptics
+import dev.localdrop.feature.settings.rememberNotificationRequest
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ButtonGroup
@@ -206,6 +208,7 @@ class HomeViewModel(
 
 private const val TILE_PREFS = "tile"
 private const val LINK_PREFS = "companion_link"
+private const val NOTIFICATION_PREFS = "notifications"
 private const val KEY_LATER = "later"
 private const val KEY_TILE_ADDED = "added"
 private const val RECENT_COUNT = 5
@@ -734,11 +737,12 @@ private fun StatusPill(text: String, highlighted: Boolean) {
     }
 }
 
-private enum class HintKind { LINK, TILE, NONE }
+private enum class HintKind { NOTIFICATIONS, LINK, TILE, NONE }
 
 /**
- * One suggestion at a time: background receiving first, then the clipboard tile. Answering one
- * fades it out and the next one, if any, in; the space closes smoothly.
+ * One suggestion at a time: notifications while they are off, then background receiving, then
+ * the clipboard tile. Answering one fades it out and the next one, if any, in; the space closes
+ * smoothly. Notifications are re-checked on every return, from their settings too.
  */
 @Composable
 private fun Hint(linkFor: TrustedDevice?, onLink: (TrustedDevice) -> Unit, modifier: Modifier) {
@@ -747,7 +751,16 @@ private fun Hint(linkFor: TrustedDevice?, onLink: (TrustedDevice) -> Unit, modif
     val tilePrefs = remember { context.getSharedPreferences(TILE_PREFS, Context.MODE_PRIVATE) }
     var linkLater by remember { mutableStateOf(linkPrefs.getBoolean(KEY_LATER, false)) }
     var tileDone by remember { mutableStateOf(tilePrefs.getBoolean(KEY_TILE_ADDED, false) || tilePrefs.getBoolean(KEY_LATER, false)) }
+    val notificationPrefs = remember { context.getSharedPreferences(NOTIFICATION_PREFS, Context.MODE_PRIVATE) }
+    var notificationsOn by remember { mutableStateOf(NotificationAccess.enabled(context)) }
+    var notificationsLater by remember { mutableStateOf(notificationPrefs.getBoolean(KEY_LATER, false)) }
+    LifecycleResumeEffect(Unit) {
+        notificationsOn = NotificationAccess.enabled(context)
+        onPauseOrDispose {}
+    }
+    val turnOnNotifications = rememberNotificationRequest { notificationsOn = NotificationAccess.enabled(context) }
     val kind = when {
+        !notificationsOn && !notificationsLater -> HintKind.NOTIFICATIONS
         linkFor != null && !linkLater -> HintKind.LINK
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !tileDone -> HintKind.TILE
         else -> HintKind.NONE
@@ -761,6 +774,16 @@ private fun Hint(linkFor: TrustedDevice?, onLink: (TrustedDevice) -> Unit, modif
         label = "hint",
     ) { current ->
         when (current) {
+            HintKind.NOTIFICATIONS -> HintCard(
+                title = stringResource(R.string.notifications_off_title),
+                body = stringResource(R.string.notifications_off_body),
+                action = stringResource(R.string.action_turn_on),
+                onAction = turnOnNotifications,
+                onLater = {
+                    notificationsLater = true
+                    notificationPrefs.edit { putBoolean(KEY_LATER, true) }
+                },
+            )
             HintKind.LINK -> if (linkFor != null) HintCard(
                 title = stringResource(R.string.receiving_needs_link_title, linkFor.deviceName),
                 body = stringResource(R.string.receiving_needs_link_body),
