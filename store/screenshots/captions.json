@@ -1,0 +1,12 @@
+{
+  "1-home":         {"en": ["Your Mac, one tap away", "Files and clipboard straight from the app"],
+                     "ru": ["Ваш Mac в одно касание", "Файлы и буфер обмена прямо из приложения"]},
+  "2-share":        {"en": ["Right in the share sheet", "Share from any app and pick your Mac"],
+                     "ru": ["Прямо в меню «Поделиться»", "Делитесь из любого приложения"]},
+  "3-progress":     {"en": ["Gigabytes, no cloud", "Straight over your Wi-Fi, end-to-end encrypted"],
+                     "ru": ["Гигабайты без облака", "Напрямую по Wi-Fi, со сквозным шифрованием"]},
+  "4-notification": {"en": ["Progress at a glance", "Time left and Cancel in the notification"],
+                     "ru": ["Ход передачи на виду", "Время и отмена — в уведомлении"]},
+  "5-pairing":      {"en": ["Paired once, private for good", "The same code on both screens"],
+                     "ru": ["Привязка один раз", "Один код на обоих экранах — и только ваши устройства"]}
+}

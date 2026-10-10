@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- One store screenshot, 1080×1920: a caption over the phone. Filled in by render.py. -->
+<html><head><meta charset="utf-8"><style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    background: linear-gradient(160deg, #5EC2FA 0%, #2172F5 45%, #324FDC 100%);
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; color: #fff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .text { height: 430px; box-sizing: border-box; padding: 120px 70px 0; text-align: center; }
+  h1 { font-size: 80px; line-height: 1.08; font-weight: 800; letter-spacing: -1.5px; margin: 0 0 22px; }
+  p { font-size: 40px; line-height: 1.25; font-weight: 500; margin: 0; opacity: .9; }
+  .phone {
+    width: 640px; height: 1422px; box-sizing: border-box; padding: 14px;
+    background: #0b0b0d; border-radius: 76px;
+    box-shadow: 0 40px 90px rgba(10, 20, 80, .45), inset 0 0 0 2px rgba(255,255,255,.12);
+  }
+  .phone img { width: 100%; height: 100%; border-radius: 62px; display: block; }
+</style></head><body>
+  <div class="text"><h1>{{title}}</h1><p>{{subtitle}}</p></div>
+  <div class="phone"><img src="{{image}}"></div>
+</body></html>
