@@ -19,6 +19,22 @@ android {
         buildConfigField("boolean", "CRASH_REPORTS", "true")
     }
 
+    // The upload key for Google Play lives with its owner, never in the repository: its path and
+    // passwords come from ~/.gradle/gradle.properties (or -P / ORG_GRADLE_PROJECT_ variables).
+    // Without them a release build is unsigned, as before; Play re-signs uploads with its own key.
+    val upload = listOf("STORE_FILE", "STORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD")
+        .associateWith { providers.gradleProperty("LOCALDROP_UPLOAD_$it").orNull }
+    signingConfigs {
+        if (upload.values.all { it != null }) {
+            create("upload") {
+                storeFile = file(upload.getValue("STORE_FILE")!!)
+                storePassword = upload.getValue("STORE_PASSWORD")
+                keyAlias = upload.getValue("KEY_ALIAS")
+                keyPassword = upload.getValue("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Crashes while developing are seen in logcat; they would only drown real ones.
@@ -31,6 +47,7 @@ android {
             // The same switch the old way: the Crashlytics plugin reads only this one to inject
             // the mapping id and upload mapping.txt, without which crash reports stay obfuscated.
             isMinifyEnabled = true
+            signingConfig = signingConfigs.findByName("upload")
         }
         create("profile") {
             initWith(getByName("release"))

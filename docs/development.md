@@ -187,6 +187,29 @@ LOCALDROP_MAC_PORT=<порт из меню Mac> LOCALDROP_MAC_ID=<deviceId Mac> 
 
 minSdk 29 (Android 10), targetSdk 36. Установка: `./gradlew installDebug`.
 
+### Релиз для Google Play
+
+Сборка для Play — AAB, подписанный ключом загрузки. Ключ хранится у владельца, не в репозитории;
+Play переподписывает загрузки своим ключом (Play App Signing), так что потерянный ключ загрузки
+можно заменить через поддержку Play. Создать ключ один раз:
+
+```bash
+keytool -genkeypair -v -storetype PKCS12 -keystore ~/.android/localdrop-upload.p12 -alias upload -keyalg RSA -keysize 4096 -validity 10000
+```
+
+и прописать его в `~/.gradle/gradle.properties`:
+
+```properties
+LOCALDROP_UPLOAD_STORE_FILE=/Users/<you>/.android/localdrop-upload.p12
+LOCALDROP_UPLOAD_STORE_PASSWORD=…
+LOCALDROP_UPLOAD_KEY_ALIAS=upload
+LOCALDROP_UPLOAD_KEY_PASSWORD=…
+```
+
+Сборка: `./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`. Перед
+каждой загрузкой поднять `versionCode` в `app/build.gradle.kts`: Play не принимает повторный.
+Нужен `app/google-services.json` владельца — иначе в сборке не будет отчётов о сбоях.
+
 Плавность анимаций и прокрутки проверять на сборке `profile`: оптимизирована как релиз (R8,
 без отладки), подписана отладочным ключом, ставится поверх debug с сохранением данных —
 `./gradlew installProfile`. Отладочная сборка Compose заметно медленнее: на Pixel 8 прокрутка
