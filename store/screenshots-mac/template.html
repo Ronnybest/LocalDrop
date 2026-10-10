@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- One Mac App Store screenshot, 2880×1800: the caption on the left, the Mac's screen on the right. Filled in by render.py. -->
+<html><head><meta charset="utf-8"><style>
+  html, body { margin: 0; width: 2880px; height: 1800px; overflow: hidden; }
+  body {
+    background: linear-gradient(135deg, #5EC2FA 0%, #2172F5 45%, #324FDC 100%);
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; color: #fff;
+    display: flex; align-items: center; box-sizing: border-box; padding: 0 160px; gap: 120px;
+  }
+  .text { flex: 0 0 900px; }
+  h1 { font-size: 124px; line-height: 1.06; font-weight: 800; letter-spacing: -2.5px; margin: 0 0 40px; }
+  p { font-size: 58px; line-height: 1.25; font-weight: 500; margin: 0; opacity: .9; }
+  .shot { flex: 1; height: 1800px; display: flex; align-items: center; justify-content: center; }
+  .shot img {
+    border-radius: 40px; display: block;
+    box-shadow: 0 60px 140px rgba(10, 20, 80, .5), 0 0 0 3px rgba(255,255,255,.14);
+  }
+</style></head><body>
+  <div class="text"><h1>{{title}}</h1><p>{{subtitle}}</p></div>
+  <div class="shot"><img src="{{image}}" onload="fit(this)"></div>
+  <script>
+    // Grows or shrinks the screenshot to fill its side: menu bar crops are small.
+    function fit(img) {
+      const box = img.parentElement, scale = Math.min((box.clientWidth) / img.naturalWidth, 1400 / img.naturalHeight);
+      img.style.width = img.naturalWidth * scale + "px";
+    }
+  </script>
+</body></html>

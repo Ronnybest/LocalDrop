@@ -1,0 +1,10 @@
+{
+  "1-menu":     {"en": ["Your phone, one click away", "Dewlet lives in the menu bar"],
+                 "ru": ["Телефон в одно нажатие", "Dewlet живёт в строке меню"]},
+  "2-edge":     {"en": ["Drag to the edge, drop on your phone", "Your phones slide in while you drag"],
+                 "ru": ["Перетащите к краю — и на телефон", "Телефоны появляются, пока вы тянете файл"]},
+  "3-transfer": {"en": ["Gigabytes, straight over Wi-Fi", "No cloud, no cable, no account"],
+                 "ru": ["Гигабайты напрямую по Wi-Fi", "Без облака, кабеля и аккаунта"]},
+  "4-code":     {"en": ["Only your devices", "Paired once with a code, end-to-end encrypted"],
+                 "ru": ["Только ваши устройства", "Привязка по коду и сквозное шифрование"]}
+}
