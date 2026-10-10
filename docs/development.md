@@ -77,7 +77,7 @@ LocalDrop/
 | Фон | Foreground service (`dataSync`) | Menu bar app (`LSUIElement`) |
 | UI | Jetpack Compose, `ViewModel`, `StateFlow` | SwiftUI `MenuBarExtra`, AppKit где нужно |
 | Уведомления | `NotificationManager` | `UserNotifications` |
-| Логи | `android.util.Log` (теги `LD/*`) | `os.Logger` (subsystem `dev.localdrop.mac`) |
+| Логи | `android.util.Log` (теги `LD/*`) | `os.Logger` (subsystem `com.zepponapps.localdrop.mac`) |
 
 ## Локализация
 

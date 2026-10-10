@@ -27,7 +27,10 @@ xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Release
 
 # Quit any running copy first (including one started from Xcode), so the new one takes over
 # Bluetooth, the network port and the menu bar icon.
-osascript -e 'tell application id "dev.localdrop.mac" to quit' 2>/dev/null || true
+# Including a copy from before the bundle id changed (dev.localdrop.mac, until 0.1.1).
+for id in com.zepponapps.localdrop.mac dev.localdrop.mac; do
+    osascript -e "tell application id \"$id\" to quit" 2>/dev/null || true
+done
 for _ in {1..20}; do
     pgrep -f "/Contents/MacOS/LocalDrop$" >/dev/null || break
     sleep 0.5

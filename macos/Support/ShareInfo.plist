@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>LocalDropAppGroup</key>
-	<string>$(TeamIdentifierPrefix)dev.localdrop</string>
+	<string>$(TeamIdentifierPrefix)com.zepponapps.localdrop</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>

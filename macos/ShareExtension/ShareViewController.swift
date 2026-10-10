@@ -62,7 +62,7 @@ final class ShareModel {
     let kind: Kind
     private let items: [NSExtensionItem]
 
-    private static let log = Logger(subsystem: "dev.localdrop.mac", category: "share")
+    private static let log = Logger(subsystem: "com.zepponapps.localdrop.mac", category: "share")
 
     init(items: [NSExtensionItem]) {
         self.items = items
@@ -173,7 +173,7 @@ final class ShareModel {
 
     /// The share waits in the inbox either way; LocalDrop picks it up when it starts.
     private static func openAppIfNeeded() async {
-        guard NSRunningApplication.runningApplications(withBundleIdentifier: "dev.localdrop.mac").isEmpty else { return }
+        guard NSRunningApplication.runningApplications(withBundleIdentifier: "com.zepponapps.localdrop.mac").isEmpty else { return }
         // LocalDrop.app/Contents/PlugIns/LocalDropShare.appex
         let app = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let configuration = NSWorkspace.OpenConfiguration()

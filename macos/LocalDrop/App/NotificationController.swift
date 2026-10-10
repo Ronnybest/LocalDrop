@@ -18,7 +18,7 @@ final class NotificationController: NSObject {
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
 
     /// Opens LocalDrop's page in System Settings › Notifications.
-    static let settingsURL = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=dev.localdrop.mac")!
+    static let settingsURL = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.zepponapps.localdrop.mac")!
 
     private nonisolated enum Identifier {
         static let receivedCategory = "TRANSFER_RECEIVED"

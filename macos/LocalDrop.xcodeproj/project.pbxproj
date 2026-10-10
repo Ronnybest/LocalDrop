@@ -380,7 +380,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -412,7 +412,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -439,7 +439,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac.share;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -467,7 +467,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac.share;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -486,7 +486,7 @@
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -504,7 +504,7 @@
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.localdrop.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zepponapps.localdrop.mac.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

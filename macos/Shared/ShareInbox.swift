@@ -20,12 +20,12 @@ nonisolated enum ShareInbox {
         var text: String?
     }
 
-    private static let log = Logger(subsystem: "dev.localdrop.mac", category: "share")
+    private static let log = Logger(subsystem: "com.zepponapps.localdrop.mac", category: "share")
 
     /// Posted (Darwin notification) after a request is complete on disk.
     static let requestNotification = "dev.localdrop.share.request"
 
-    /// `$(TeamIdentifierPrefix)dev.localdrop`, from Info.plist (the same key in both bundles).
+    /// `$(TeamIdentifierPrefix)com.zepponapps.localdrop`, from Info.plist (the same key in both bundles).
     private static var groupID: String? { Bundle.main.object(forInfoDictionaryKey: "LocalDropAppGroup") as? String }
 
     static var container: URL? {
