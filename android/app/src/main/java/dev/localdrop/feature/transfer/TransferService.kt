@@ -130,6 +130,7 @@ class TransferService : Service() {
     /** Every send this service owns, oldest first, including the running one. */
     private val items = mutableListOf<OutgoingTransfer>()
     private var current: Batch? = null
+    private var currentDeviceId = ""
     private var currentDeviceName = ""
 
     /** Macs to take files from (Mac → phone, protocol.md §2.8), and the one being received from. */
@@ -311,6 +312,7 @@ class TransferService : Service() {
                 return
             }
             receiving = mac
+            currentDeviceId = mac.deviceId
             currentDeviceName = mac.deviceName
             acquireLocks()
             return
@@ -340,6 +342,7 @@ class TransferService : Service() {
             if (!manager.send(SendTarget.Trusted(device), source)) return
             batchItems.forEach { it.lastAttemptMs = now }
             current = Batch(next.deviceId, source, batchItems.toMutableList())
+            currentDeviceId = device.deviceId
             currentDeviceName = device.deviceName
             if (batchItems.size > 1) Log.i(TAG, "Sending ${batchItems.size} shares to ${next.deviceId} as one transfer")
             acquireLocks()
@@ -678,6 +681,7 @@ class TransferService : Service() {
                 val sourceUri = source.sourceUris.singleOrNull()?.takeIf { summary.fileCount == 1 }
                 history.add(
                     incoming = false,
+                    peerId = currentDeviceId,
                     peerName = name,
                     kind = HistoryEntry.Kind.FILES,
                     title = summary.firstFileName,
@@ -700,7 +704,7 @@ class TransferService : Service() {
                 )
             }
             is TransferState.TextCopied -> {
-                sentText?.let { history.add(incoming = false, peerName = name, kind = textKind(it), title = it.trim()) }
+                sentText?.let { history.add(incoming = false, peerId = currentDeviceId, peerName = name, kind = textKind(it), title = it.trim()) }
                 postResult(towards(name), getString(R.string.notification_copied), getString(R.string.text_copied_body))
             }
             is TransferState.Failed -> postResult(towards(name), getString(R.string.notification_not_sent), TransferText.error(this, state.error, name), failed = true)
@@ -760,13 +764,14 @@ class TransferService : Service() {
         val name = currentDeviceName
         when (state) {
             is TransferState.Received -> {
-                state.texts.forEach { history.add(incoming = true, peerName = name, kind = textKind(it), title = it.trim()) }
+                state.texts.forEach { history.add(incoming = true, peerId = currentDeviceId, peerName = name, kind = textKind(it), title = it.trim()) }
                 if (state.texts.isNotEmpty()) postTextReceived(state.texts.last(), name)
                 val files = state.files
                 if (files.isEmpty()) return
                 val first = files.first()
                 history.add(
                     incoming = true,
+                    peerId = currentDeviceId,
                     peerName = name,
                     kind = HistoryEntry.Kind.FILES,
                     title = first.name,

@@ -178,7 +178,12 @@ class HomeViewModel(
 
     fun makeDefault(deviceId: String) = save("default Mac") { store.setDefault(deviceId) }
 
-    fun forget(deviceId: String) = save("forget") { store.forget(deviceId) }
+    /** Its Recent entries go with it: they are about a Mac this phone no longer knows. */
+    fun forget(deviceId: String) = save("forget") {
+        val name = store.find(deviceId)?.deviceName
+        store.forget(deviceId)
+        if (name != null) historyStore.removePeer(deviceId, name)
+    }
 
     private fun save(what: String, action: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {

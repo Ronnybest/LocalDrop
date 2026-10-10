@@ -37,6 +37,8 @@ class HistoryEntry(
     val durationMs: Long? = null,
     /** The folder of the file on this phone, relative to its storage ("Download", "DCIM/Camera"); when known. */
     val folder: String? = null,
+    /** The Mac's deviceId, so forgetting it clears its entries; null in entries saved before. */
+    val peerId: String? = null,
 ) {
     enum class Kind { FILES, TEXT, LINK }
 }
@@ -78,6 +80,7 @@ class HistoryStore(
     @Synchronized
     fun add(
         incoming: Boolean,
+        peerId: String,
         peerName: String,
         kind: HistoryEntry.Kind,
         title: String,
@@ -90,7 +93,7 @@ class HistoryStore(
     ) {
         load()
         val stored = if (kind == HistoryEntry.Kind.TEXT) title.trim().take(TEXT_PREVIEW) else title
-        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType, bytes, durationMs, folder)
+        val entry = HistoryEntry(UUID.randomUUID().toString(), clock(), incoming, peerName, kind, stored, count, uri, mimeType, bytes, durationMs, folder, peerId)
         save(fresh(listOf(entry) + _entries.value))
     }
 
@@ -98,6 +101,13 @@ class HistoryStore(
     fun remove(id: String) {
         load()
         save(_entries.value.filterNot { it.id == id })
+    }
+
+    /** A forgotten Mac takes its entries along; older entries without its id go by its name. */
+    @Synchronized
+    fun removePeer(deviceId: String, name: String) {
+        load()
+        save(_entries.value.filterNot { it.peerId == deviceId || (it.peerId == null && it.peerName == name) })
     }
 
     /** Within [MAX_AGE_MS], and at most [MAX_ENTRIES] so the file stays small. */
@@ -145,6 +155,7 @@ class HistoryStore(
                                     put("time", CborValue.UInt(entry.timeMs))
                                     put("incoming", CborValue.Bool(entry.incoming))
                                     put("peer", CborValue.Text(entry.peerName))
+                                    entry.peerId?.let { put("peerId", CborValue.Text(it)) }
                                     put("kind", CborValue.Text(entry.kind.name))
                                     put("title", CborValue.Text(entry.title))
                                     put("count", CborValue.UInt(entry.count.toLong()))
@@ -181,6 +192,7 @@ class HistoryStore(
                     bytes = (entry.entries["bytes"] as? CborValue.UInt)?.value,
                     durationMs = (entry.entries["duration"] as? CborValue.UInt)?.value,
                     folder = (entry.entries["folder"] as? CborValue.Text)?.value,
+                    peerId = (entry.entries["peerId"] as? CborValue.Text)?.value,
                 )
             }
         }
