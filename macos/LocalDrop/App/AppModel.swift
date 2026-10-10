@@ -131,14 +131,9 @@ final class AppModel {
                 self.advertiser?.start()
             }
         }
-        // Belt and braces: the displays waking means someone is at the Mac.
-        workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard SystemSleep.isAsleep else { return }
-                SystemSleep.isAsleep = false
-                self?.refreshAddresses()
-            }
-        }
+        // Only did-wake ends sleep. The displays alone also light up for a notification in the
+        // middle of the night, and no will-sleep follows that: taken as a wake, it left the app
+        // reading the network in every dark wake until morning.
 
         notifications.onAction = { [weak self] action in self?.handle(action) }
         notifications.setUp()
