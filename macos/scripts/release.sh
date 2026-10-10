@@ -23,10 +23,12 @@ rm -rf "$out"
 mkdir -p "$out"
 
 # Archive, then export for Developer ID: Xcode signs the app and its Share extension with the
-# Developer ID certificate, with the hardened runtime notarization requires.
+# Developer ID certificate, with the hardened runtime notarization requires. The archive is
+# signed for development, the same identity for both targets whatever the project file says.
 xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Release \
     -archivePath "$out/LocalDrop.xcarchive" -destination "generic/platform=macOS" \
-    DEVELOPMENT_TEAM="$team" CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates -quiet archive
+    DEVELOPMENT_TEAM="$team" CODE_SIGN_STYLE=Automatic CODE_SIGN_IDENTITY="Apple Development" \
+    PROVISIONING_PROFILE_SPECIFIER= -allowProvisioningUpdates -quiet archive
 
 cat > "$out/ExportOptions.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
