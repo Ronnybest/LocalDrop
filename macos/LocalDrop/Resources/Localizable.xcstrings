@@ -722,6 +722,16 @@
         }
       }
     },
+    "It stays in the menu bar, ready to receive files from your phone." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение останется в строке меню и сможет принимать файлы с телефона."
+          }
+        }
+      }
+    },
     "Last seen %@" : {
       "localizations" : {
         "ru" : {
@@ -912,6 +922,16 @@
         }
       }
     },
+    "Not Now" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
     "Not paired — turn on “Visible to new devices” to pair" : {
       "localizations" : {
         "ru" : {
@@ -1019,6 +1039,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открывать при входе"
+          }
+        }
+      }
+    },
+    "Open Dewlet at login?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открывать Dewlet при входе?"
           }
         }
       }

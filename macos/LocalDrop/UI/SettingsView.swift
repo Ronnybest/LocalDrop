@@ -98,7 +98,11 @@ private struct GeneralSettings: View {
             Section("Startup") {
                 Toggle("Open at Login", isOn: Binding(
                     get: { model.loginItem.isEnabled },
-                    set: { model.loginItem.setEnabled($0) }
+                    set: {
+                        // Switched here: the menu's suggestion is answered too.
+                        model.loginItem.answer(enable: false)
+                        model.loginItem.setEnabled($0)
+                    }
                 ))
                 if model.loginItem.requiresApproval {
                     Text("Allow Dewlet in System Settings › General › Login Items.")

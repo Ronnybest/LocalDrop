@@ -143,7 +143,7 @@ final class AppModel {
                 Task { await self.notifications.refreshAuthorization() }
             }
         }
-        loginItem.configureOnFirstLaunch()
+        loginItem.refresh()
 
         do {
             let store = TrustedDeviceStore(fileURL: try TrustedDeviceStore.defaultLocation())

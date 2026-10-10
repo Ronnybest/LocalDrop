@@ -1,22 +1,26 @@
 import Foundation
 import ServiceManagement
 
-/// "Open at Login": LocalDrop is infrastructure and should be present without being launched.
+/// "Open at Login": Dewlet is most useful when it is always there to receive, but it opens at login
+/// only once the user has said so.
 @Observable
 final class LoginItem {
     private(set) var isEnabled = false
     /// macOS may require the user to allow the item in System Settings › General › Login Items.
     private(set) var requiresApproval = false
 
-    private static let configuredKey = "localdrop.loginItemConfigured"
+    /// Whether the user has answered the menu's "Open at login?" yet. Never turned on without
+    /// asking: the App Store doesn't allow launching at login without the user's consent.
+    private(set) var hasAnswered = UserDefaults.standard.bool(forKey: answeredKey)
+    private static let answeredKey = "localdrop.loginItemAnswered"
 
-    /// Enables launch at login on first run; afterwards the user's choice is kept.
-    func configureOnFirstLaunch() {
-        if !UserDefaults.standard.bool(forKey: Self.configuredKey) {
-            UserDefaults.standard.set(true, forKey: Self.configuredKey)
-            setEnabled(true)
-        }
-        refresh()
+    /// The menu asks once, until the user turns it on or says no; Settings has the switch.
+    var shouldSuggest: Bool { !hasAnswered && !isEnabled }
+
+    func answer(enable: Bool) {
+        UserDefaults.standard.set(true, forKey: Self.answeredKey)
+        hasAnswered = true
+        if enable { setEnabled(true) }
     }
 
     func setEnabled(_ enabled: Bool) {

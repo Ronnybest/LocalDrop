@@ -34,6 +34,13 @@ struct MenuBarView: View {
                         .glassCard(tint: .orange)
                 }
 
+                if model.startupState == .running, model.loginItem.shouldSuggest {
+                    loginItemSuggestRow
+                        .padding(12)
+                        .glassCard(tint: .accentColor)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
+
                 if model.startupState == .running, !model.shareMenu.isEnabled, model.deviceList.contains(where: \.canReceive) {
                     shareMenuOffRow
                         .glassCard(tint: .accentColor)
@@ -177,6 +184,29 @@ struct MenuBarView: View {
             Spacer(minLength: 0)
             Button("Turn On") { NSWorkspace.shared.open(NotificationController.settingsURL) }
                 .glassButton()
+        }
+    }
+
+    /// Asked once instead of turned on silently: opening at login needs the user's consent.
+    private var loginItemSuggestRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                IconBadge(symbol: "power", tint: .accentColor, size: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Open Dewlet at login?")
+                    Text("It stays in the menu bar, ready to receive files from your phone.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                Button("Not Now") { withAnimation(.smooth) { model.loginItem.answer(enable: false) } }
+                    .glassButton()
+                Button("Turn On") { withAnimation(.smooth) { model.loginItem.answer(enable: true) } }
+                    .glassButton()
+            }
         }
     }
 

@@ -33,7 +33,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 - **Text and links to the clipboard, both ways.** On the phone, share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. On the Mac, share a page from Safari or selected text with **Share › Dewlet**, or right-click your phone in the menu and choose **Send Clipboard**. Links open with one tap or click.
 - **As fast as your network.** Speed depends on how the devices are connected and on the network itself: a few MB/s on 2.4 GHz Wi-Fi, 100 MB/s and more over a fast 5 GHz link such as the phone's hotspot. Every file is checked with SHA-256 before it is saved.
 - **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers.
-- **A Mac app that stays out of the way.** A menu bar drop that fills up while files come and go, Liquid Glass on macOS 26, notifications with **Show in Finder**, starts at login.
+- **A Mac app that stays out of the way.** A menu bar drop that fills up while files come and go, Liquid Glass on macOS 26, notifications with **Show in Finder**, opens at login if you want it to.
 - **English and Russian** on both platforms.
 
 ## Requirements
