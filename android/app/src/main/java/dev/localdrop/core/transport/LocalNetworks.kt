@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class LocalNetworks(context: Context) {
 
+    private val connectivity = context.getSystemService(ConnectivityManager::class.java)
+
     class LanNetwork(val network: Network, val linkAddresses: List<LinkAddress>)
 
     private val networks = ConcurrentHashMap<Network, LanNetwork>()
@@ -52,8 +54,12 @@ class LocalNetworks(context: Context) {
             // A Wi-Fi without internet access is still a valid LAN for LocalDrop.
             .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
-        context.getSystemService(ConnectivityManager::class.java).registerNetworkCallback(request, callback)
+        connectivity.registerNetworkCallback(request, callback)
     }
+
+    /** A VPN is up: its tunnel may carry, or block, what would otherwise go over the Wi-Fi. */
+    fun vpnActive(): Boolean =
+        connectivity.getNetworkCapabilities(connectivity.activeNetwork)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
 
     fun current(): List<LanNetwork> = networks.values.toList()
 

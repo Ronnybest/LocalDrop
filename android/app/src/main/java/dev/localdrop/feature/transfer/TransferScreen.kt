@@ -50,6 +50,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.localdrop.R
+import androidx.compose.foundation.layout.PaddingValues
+import dev.localdrop.app.ui.CenteredColumn
 import dev.localdrop.core.transfer.TransferProgress
 import dev.localdrop.core.transfer.TransferState
 
@@ -75,14 +77,7 @@ fun TransferScreen(
         }
     }
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        ) {
+        CenteredColumn(Modifier.padding(padding), contentPadding = PaddingValues(24.dp), spacing = 16.dp) {
             when (state) {
                 TransferState.Idle -> Unit
                 is TransferState.Connecting -> Waiting(stringResource(R.string.transfer_connecting, state.peerName), onCancel)

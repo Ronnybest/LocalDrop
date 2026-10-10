@@ -10,6 +10,13 @@ sealed class ConnectionException(message: String, cause: Throwable? = null) : Ex
 
     class Refused(cause: Throwable) : ConnectionException("Connection refused", cause)
 
+    /**
+     * A VPN on this phone keeps the connection off the local network: an always-on VPN that blocks
+     * other connections forbids binding to the Wi-Fi, and a VPN without local network access
+     * sends LAN traffic into its tunnel.
+     */
+    class BlockedByVpn(cause: Throwable?) : ConnectionException("A VPN blocks the local network", cause)
+
     /** No address answered in time or a route was missing — typically different networks or client isolation. */
     class Unreachable(cause: Throwable?) : ConnectionException("Peer unreachable", cause)
 

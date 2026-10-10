@@ -55,12 +55,27 @@ class PeerConnector(private val localNetworks: LocalNetworks) {
         }
 
         var lastError: ConnectionException? = null
+        var vpnInTheWay = false
         for (candidate in candidates) {
             coroutineContext.ensureActive()
             val target = InetSocketAddress(candidate.address, endpoint.port)
-            val socket = when (val route = candidate.route) {
-                is Route.ViaNetwork -> route.lan.network.socketFactory.createSocket()
-                is Route.Direct -> Socket()
+            val socket = try {
+                when (val route = candidate.route) {
+                    is Route.ViaNetwork -> route.lan.network.socketFactory.createSocket()
+                    is Route.Direct -> Socket()
+                }
+            } catch (e: Exception) {
+                // An always-on VPN that blocks other connections forbids binding to the Wi-Fi: EPERM,
+                // as an IOException or a SecurityException depending on the Android version.
+                // Unbound, the socket still reaches a same-subnet Mac if the VPN leaves the local
+                // network out of its tunnel ("allow LAN"); otherwise it can't.
+                Log.w(TAG, "Can't bind to ${candidate.route}: ${e.message}")
+                vpnInTheWay = true
+                if (!candidate.sameSubnet) {
+                    lastError = ConnectionException.BlockedByVpn(e)
+                    continue
+                }
+                Socket()
             }
             try {
                 socket.tcpNoDelay = true
@@ -83,6 +98,10 @@ class PeerConnector(private val localNetworks: LocalNetworks) {
                 }
                 Log.w(TAG, "Connect to $target failed: ${e.javaClass.simpleName}: ${e.message}")
             }
+        }
+        // A Mac that answered nowhere while a VPN is up: most likely the VPN, and the message says so.
+        if (lastError !is ConnectionException.Refused && (vpnInTheWay || localNetworks.vpnActive())) {
+            throw ConnectionException.BlockedByVpn(lastError)
         }
         throw lastError ?: ConnectionException.Unreachable(null)
     }

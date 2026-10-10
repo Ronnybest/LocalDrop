@@ -321,6 +321,7 @@ class TransferManager(
                 } catch (e: ConnectionException) {
                     when (e) {
                         is ConnectionException.Refused, is ConnectionException.Unreachable, is ConnectionException.Timeout,
+                        is ConnectionException.BlockedByVpn,
                         is ConnectionException.ConnectionLost, is ConnectionException.AuthenticationFailed,
                         -> Log.i(TAG, "Remembered endpoint of ${device.deviceId} failed (${e.message}); discovering over Bluetooth")
                         else -> throw e

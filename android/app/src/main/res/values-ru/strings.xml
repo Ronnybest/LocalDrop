@@ -271,4 +271,5 @@
     <string name="notifications_off_title">Уведомления выключены</string>
     <string name="notifications_off_body">Без них не видно хода передачи, а файлы с Mac не принять, пока Dewlet закрыт.</string>
     <string name="action_turn_on">Включить</string>
+    <string name="error_vpn_blocks">VPN на телефоне не пускает к %1$s в локальной сети. Разрешите в приложении VPN доступ к локальной сети (часто — «Разрешить LAN») или выключите VPN на время передачи.</string>
 </resources>

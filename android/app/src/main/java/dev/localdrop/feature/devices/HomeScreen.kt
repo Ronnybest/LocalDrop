@@ -104,6 +104,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.localdrop.R
+import dev.localdrop.app.ui.CenteredColumn
 import dev.localdrop.app.LocalDropApplication
 import dev.localdrop.core.crypto.pairVerificationCode
 import dev.localdrop.core.device.TrustedDevice
@@ -599,11 +600,7 @@ fun HomeScreen(
 
 @Composable
 private fun EmptyHome(onAddMac: () -> Unit, modifier: Modifier) {
-    Column(
-        modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-    ) {
+    CenteredColumn(modifier, contentPadding = PaddingValues(32.dp), spacing = 16.dp) {
         RoundIcon(size = 96, tint = MaterialTheme.colorScheme.primaryContainer) {
             Icon(painterResource(R.drawable.ic_laptop), null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
         }

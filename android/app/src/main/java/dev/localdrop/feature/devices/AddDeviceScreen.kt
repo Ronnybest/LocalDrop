@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.localdrop.R
+import dev.localdrop.app.ui.CenteredColumn
 import dev.localdrop.core.discovery.DiscoveryState
 import dev.localdrop.core.discovery.EndpointFailure
 import dev.localdrop.core.discovery.EndpointState
@@ -119,11 +120,7 @@ fun AddDeviceScreen(
 
 @Composable
 private fun Searching() {
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
-    ) {
+    CenteredColumn(contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp), spacing = 20.dp) {
         LoadingIndicator(Modifier.size(120.dp))
         Text(stringResource(R.string.devices_searching), style = MaterialTheme.typography.titleLargeEmphasized, textAlign = TextAlign.Center)
         Card(

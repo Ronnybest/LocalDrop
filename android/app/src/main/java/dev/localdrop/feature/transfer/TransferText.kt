@@ -27,6 +27,7 @@ object TransferText {
         }
         is ConnectionException.Refused -> context.getString(R.string.error_refused, peer)
         is ConnectionException.Unreachable -> context.getString(R.string.error_unreachable, peer)
+        is ConnectionException.BlockedByVpn -> context.getString(R.string.error_vpn_blocks, peer)
         is ConnectionException.Timeout -> context.getString(R.string.error_timeout, peer)
         is ConnectionException.ConnectionLost -> context.getString(R.string.error_connection_lost, peer)
         is ConnectionException.ClosedByPeer -> context.getString(R.string.error_closed_by_peer, peer)

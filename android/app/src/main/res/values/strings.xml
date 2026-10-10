@@ -268,4 +268,5 @@
     <string name="notifications_off_title">Notifications are off</string>
     <string name="notifications_off_body">Without them you don\'t see progress, and files from a Mac can\'t be accepted while Dewlet is closed.</string>
     <string name="action_turn_on">Turn on</string>
+    <string name="error_vpn_blocks">A VPN on this phone keeps it from reaching %1$s on the local network. In the VPN app, allow local network access (often called “Allow LAN”), or turn the VPN off while sending.</string>
 </resources>
