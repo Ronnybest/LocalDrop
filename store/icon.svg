@@ -1,0 +1,16 @@
+<!-- The Android launcher icon (adaptive, 108 units) cropped to its visible 72: Play masks it itself. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72">
+  <defs>
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="18" y1="18" x2="90" y2="90">
+      <stop offset="0" stop-color="#5EC2FA"/>
+      <stop offset="0.5" stop-color="#2172F5"/>
+      <stop offset="1" stop-color="#324FDC"/>
+    </linearGradient>
+    <clipPath id="drop">
+      <path d="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="108" height="108" fill="url(#bg)"/>
+  <path clip-path="url(#drop)" fill="#fff" d="M30,57C38,62.5 46,62.5 54,57.5C61,53.5 67,53 78,57.5L78,86L30,86Z"/>
+  <path fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z"/>
+</svg>
