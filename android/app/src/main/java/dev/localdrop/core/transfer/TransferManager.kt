@@ -281,6 +281,14 @@ class TransferManager(
                         else -> TransferState.Failed(peerName, e)
                     }
                 }
+            } catch (e: IOException) {
+                // An I/O error nothing turned into a ConnectionException (like the VPN's EPERM on
+                // binding a socket once): a failed transfer, never a crash of the whole app.
+                Log.w(TAG, "Transfer to $peerName ended by ${e.javaClass.simpleName}: ${e.message}")
+                _state.update { state ->
+                    if (state is TransferState.Idle || state is TransferState.Cancelled) state
+                    else TransferState.Failed(peerName, ConnectionException.ConnectionLost(e))
+                }
             } finally {
                 synchronized(requestLock) { pendingRequest = null }
                 channel = null
