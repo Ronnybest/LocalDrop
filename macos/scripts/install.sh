@@ -33,9 +33,9 @@ for _ in {1..20}; do
     sleep 0.5
 done
 
-# Installed under the name people see, "Local Drop"; the copy under the old name goes.
-installed="/Applications/Local Drop.app"
-rm -rf /Applications/LocalDrop.app "$installed"
+# Installed under the name people see, "Dewlet"; copies under the old names go.
+installed="/Applications/Dewlet.app"
+rm -rf /Applications/LocalDrop.app "/Applications/Local Drop.app" "$installed"
 cp -R build/Build/Products/Release/LocalDrop.app "$installed"
 
 # The Share extension must come from the installed copy: forget the ones in build products,

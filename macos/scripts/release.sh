@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds LocalDrop for Mac for people outside development: signed with Developer ID, notarized
-# by Apple, in a DMG to drag into Applications. The result is build/release/LocalDrop-<version>.dmg.
+# by Apple, in a DMG to drag into Applications. The result is build/release/Dewlet-<version>.dmg.
 #
 #   DEVELOPMENT_TEAM=<your team ID> macos/scripts/release.sh
 #
@@ -59,12 +59,12 @@ xcrun stapler staple "$app"
 rm "$out/LocalDrop.zip"
 
 # The DMG: the app under the name people see, and a link to Applications to drag it onto.
-dmg="$out/LocalDrop-$version.dmg"
+dmg="$out/Dewlet-$version.dmg"
 stage="$out/dmg"
 mkdir -p "$stage"
-ditto "$app" "$stage/Local Drop.app"
+ditto "$app" "$stage/Dewlet.app"
 ln -s /Applications "$stage/Applications"
-hdiutil create -volname "Local Drop" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg" -quiet
+hdiutil create -volname "Dewlet" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg" -quiet
 rm -rf "$stage"
 identity=$(security find-identity -v -p codesigning | grep -o "\"Developer ID Application: [^\"]*($team)\"" | head -1 | tr -d '"')
 codesign --sign "$identity" --timestamp "$dmg"

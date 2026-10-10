@@ -1,18 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Send with Local Drop": {
+    "Send with Dewlet": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send with Local Drop"
+            "value": "Send with Dewlet"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отправить через Local Drop"
+            "value": "Отправить через Dewlet"
           }
         }
       }
@@ -69,34 +69,34 @@
         }
       }
     },
-    "No phone can receive yet. Pair an Android phone with Local Drop and open Local Drop on it once.": {
+    "No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No phone can receive yet. Pair an Android phone with Local Drop and open Local Drop on it once."
+            "value": "No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока нет телефона, который может принимать. Привяжите Android-телефон к Local Drop и один раз откройте на нём Local Drop."
+            "value": "Пока нет телефона, который может принимать. Привяжите Android-телефон к Dewlet и один раз откройте на нём Dewlet."
           }
         }
       }
     },
-    "The phone gets the files as soon as it's nearby, even if Local Drop isn't open on it.": {
+    "The phone gets the files as soon as it's nearby, even if Dewlet isn't open on it.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The phone gets the files as soon as it's nearby, even if Local Drop isn't open on it."
+            "value": "The phone gets the files as soon as it's nearby, even if Dewlet isn't open on it."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Телефон получит файлы, как только окажется рядом, даже если Local Drop на нём не открыт."
+            "value": "Телефон получит файлы, как только окажется рядом, даже если Dewlet на нём не открыт."
           }
         }
       }

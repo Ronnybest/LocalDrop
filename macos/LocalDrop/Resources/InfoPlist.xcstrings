@@ -8,13 +8,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Local Drop"
+            "value" : "Dewlet"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Local Drop"
+            "value" : "Dewlet"
           }
         }
       }
@@ -26,13 +26,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Local Drop"
+            "value" : "Dewlet"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Local Drop"
+            "value" : "Dewlet"
           }
         }
       }
@@ -44,13 +44,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Local Drop uses Bluetooth so that your Android devices can find this Mac nearby."
+            "value" : "Dewlet uses Bluetooth so that your Android devices can find this Mac nearby."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Local Drop использует Bluetooth, чтобы ваши Android-устройства находили этот Mac рядом."
+            "value" : "Dewlet использует Bluetooth, чтобы ваши Android-устройства находили этот Mac рядом."
           }
         }
       }
@@ -62,13 +62,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Local Drop receives files directly from your devices over the local network."
+            "value" : "Dewlet receives files directly from your devices over the local network."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Local Drop получает файлы напрямую с ваших устройств по локальной сети."
+            "value" : "Dewlet получает файлы напрямую с ваших устройств по локальной сети."
           }
         }
       }

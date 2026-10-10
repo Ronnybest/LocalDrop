@@ -8,7 +8,7 @@ enum MenuBarIcon {
     private static func menuIcon(_ symbol: String, color: NSColor? = nil) -> NSImage {
         var config = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
         if let color { config = config.applying(.init(hierarchicalColor: color)) }
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Local Drop")?
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Dewlet")?
             .withSymbolConfiguration(config) ?? NSImage()
         image.isTemplate = color == nil
         return image
@@ -75,17 +75,17 @@ enum MenuBarIcon {
     /// sending, green while new devices can find this Mac.
     static func current(_ model: AppModel) -> (image: NSImage, label: String) {
         if let transfer = model.incomingTransfer, transfer.phase == .receiving {
-            return (progressIcon(transfer.fraction), String(localized: "Local Drop — receiving"))
+            return (progressIcon(transfer.fraction), String(localized: "Dewlet — receiving"))
         }
         if let delivery = model.deliveries.first(where: { $0.phase == .sending }) {
-            return (progressIcon(delivery.fraction), String(localized: "Local Drop — sending"))
+            return (progressIcon(delivery.fraction), String(localized: "Dewlet — sending"))
         }
         if let packing = model.packings.first {
-            return (progressIcon(packing.fraction ?? 0), String(localized: "Local Drop — packing a folder"))
+            return (progressIcon(packing.fraction ?? 0), String(localized: "Dewlet — packing a folder"))
         }
         if model.isPairingModeActive {
-            return (visibleIcon, String(localized: "Local Drop — visible to new devices"))
+            return (visibleIcon, String(localized: "Dewlet — visible to new devices"))
         }
-        return (idleIcon, "Local Drop")
+        return (idleIcon, "Dewlet")
     }
 }

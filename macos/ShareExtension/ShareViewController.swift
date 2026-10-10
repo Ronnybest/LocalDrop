@@ -3,7 +3,7 @@ import os
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// "Share → Local Drop" in Finder, Photos and other apps: pick a paired phone, and the files go
+/// "Share → Dewlet" in Finder, Photos and other apps: pick a paired phone, and the files go
 /// to it through the LocalDrop app (ShareInbox).
 final class ShareViewController: NSViewController {
     override var nibName: NSNib.Name? { nil }
@@ -214,7 +214,7 @@ private struct ShareView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Send with Local Drop")
+                Text("Send with Dewlet")
                     .font(.headline)
                 Group {
                     switch model.kind {
@@ -228,7 +228,7 @@ private struct ShareView: View {
             switch model.phase {
             case .choosing:
                 if model.phones.isEmpty {
-                    Text("No phone can receive yet. Pair an Android phone with Local Drop and open Local Drop on it once.")
+                    Text("No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once.")
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
@@ -237,7 +237,7 @@ private struct ShareView: View {
                             PhoneRow(phone: phone) { model.send(to: phone) }
                         }
                     }
-                    Text("The phone gets the files as soon as it's nearby, even if Local Drop isn't open on it.")
+                    Text("The phone gets the files as soon as it's nearby, even if Dewlet isn't open on it.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

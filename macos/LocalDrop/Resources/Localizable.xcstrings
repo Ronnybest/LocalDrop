@@ -272,22 +272,22 @@
         }
       }
     },
-    "Allow Local Drop in System Settings › General › Login Items." : {
+    "Allow Dewlet in System Settings › General › Login Items." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Разрешите Local Drop в Системных настройках › Основные › Объекты входа."
+            "value" : "Разрешите Dewlet в Системных настройках › Основные › Объекты входа."
           }
         }
       }
     },
-    "Allow Local Drop in System Settings › Privacy & Security › Bluetooth." : {
+    "Allow Dewlet in System Settings › Privacy & Security › Bluetooth." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Разрешите Local Drop в Системных настройках › Конфиденциальность и безопасность › Bluetooth."
+            "value" : "Разрешите Dewlet в Системных настройках › Конфиденциальность и безопасность › Bluetooth."
           }
         }
       }
@@ -602,12 +602,12 @@
         }
       }
     },
-    "Files received with Local Drop will be saved in this folder." : {
+    "Files received with Dewlet will be saved in this folder." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Файлы, полученные через Local Drop, будут сохраняться в эту папку."
+            "value" : "Файлы, полученные через Dewlet, будут сохраняться в эту папку."
           }
         }
       }
@@ -702,22 +702,22 @@
         }
       }
     },
-    "If macOS asks, allow Local Drop to use its device key (Always Allow)." : {
+    "If macOS asks, allow Dewlet to use its device key (Always Allow)." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Если macOS спросит, разрешите Local Drop использовать ключ устройства («Разрешать всегда»)."
+            "value" : "Если macOS спросит, разрешите Dewlet использовать ключ устройства («Разрешать всегда»)."
           }
         }
       }
     },
-    "Incompatible Local Drop version — update Local Drop on both devices" : {
+    "Incompatible Dewlet version — update Dewlet on both devices" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Несовместимая версия Local Drop — обновите Local Drop на обоих устройствах"
+            "value" : "Несовместимая версия Dewlet — обновите Dewlet на обоих устройствах"
           }
         }
       }
@@ -752,52 +752,52 @@
         }
       }
     },
-    "Local Drop" : {
+    "Dewlet" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop"
+            "value" : "Dewlet"
           }
         }
       }
     },
-    "Local Drop — receiving" : {
+    "Dewlet — receiving" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop — идёт приём"
+            "value" : "Dewlet — идёт приём"
           }
         }
       }
     },
-    "Local Drop — sending" : {
+    "Dewlet — sending" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop — идёт отправка"
+            "value" : "Dewlet — идёт отправка"
           }
         }
       }
     },
-    "Local Drop — visible to new devices" : {
+    "Dewlet — visible to new devices" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop — виден новым устройствам"
+            "value" : "Dewlet — виден новым устройствам"
           }
         }
       }
     },
-    "Local Drop can't start" : {
+    "Dewlet can't start" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop не удаётся запустить"
+            "value" : "Dewlet не удаётся запустить"
           }
         }
       }
@@ -983,12 +983,12 @@
         }
       }
     },
-    "On your phone, open Local Drop and tap “Add a Mac”." : {
+    "On your phone, open Dewlet and tap “Add a Mac”." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "На телефоне откройте Local Drop и нажмите «Добавить Mac»."
+            "value" : "На телефоне откройте Dewlet и нажмите «Добавить Mac»."
           }
         }
       }
@@ -1413,12 +1413,12 @@
         }
       }
     },
-    "The security key of %@ has changed. This happens after reinstalling Local Drop — or if another device is impersonating it. Continue only if the device is in front of you." : {
+    "The security key of %@ has changed. This happens after reinstalling Dewlet — or if another device is impersonating it. Continue only if the device is in front of you." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ключ безопасности %@ изменился. Так бывает после переустановки Local Drop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
+            "value" : "Ключ безопасности %@ изменился. Так бывает после переустановки Dewlet — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
           }
         }
       }
@@ -1625,12 +1625,12 @@
         }
       }
     },
-    "Add Local Drop to Share" : {
+    "Add Dewlet to Share" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Добавьте Local Drop в «Поделиться»"
+            "value" : "Добавьте Dewlet в «Поделиться»"
           }
         }
       }
@@ -1645,32 +1645,32 @@
         }
       }
     },
-    "Opens System Settings: turn on Local Drop in the list" : {
+    "Opens System Settings: turn on Dewlet in the list" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Откроются Системные настройки: включите Local Drop в списке"
+            "value" : "Откроются Системные настройки: включите Dewlet в списке"
           }
         }
       }
     },
-    "Quit Local Drop" : {
+    "Quit Dewlet" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завершить Local Drop"
+            "value" : "Завершить Dewlet"
           }
         }
       }
     },
-    "Send files from Finder, Photos and other apps with Share › Local Drop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one." : {
+    "Send files from Finder, Photos and other apps with Share › Dewlet. While you drag files, your phones also appear at the right edge of the screen: drop the files on one." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › Local Drop. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
+            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › Dewlet. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
           }
         }
       }
@@ -1685,12 +1685,12 @@
         }
       }
     },
-    "Send with Local Drop" : {
+    "Send with Dewlet" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправить через Local Drop"
+            "value" : "Отправить через Dewlet"
           }
         }
       }
@@ -1825,12 +1825,12 @@
         }
       }
     },
-    "macOS doesn't let Local Drop read them: %@" : {
+    "macOS doesn't let Dewlet read them: %@" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS не даёт Local Drop их прочитать: %@"
+            "value" : "macOS не даёт Dewlet их прочитать: %@"
           }
         }
       }
@@ -1889,12 +1889,12 @@
         }
       }
     },
-    "Local Drop — packing a folder" : {
+    "Dewlet — packing a folder" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop — упаковка папки"
+            "value" : "Dewlet — упаковка папки"
           }
         }
       }
@@ -1909,22 +1909,22 @@
         }
       }
     },
-    "Local Drop couldn't pack the folder." : {
+    "Dewlet couldn't pack the folder." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop не смог упаковать папку."
+            "value" : "Dewlet не смог упаковать папку."
           }
         }
       }
     },
-    "Local Drop on %@ shows the same code. If it ever differs, forget the device and pair again." : {
+    "Dewlet on %@ shows the same code. If it ever differs, forget the device and pair again." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local Drop на «%@» показывает такой же код. Если он отличается — забудьте устройство и привяжите заново."
+            "value" : "Dewlet на «%@» показывает такой же код. Если он отличается — забудьте устройство и привяжите заново."
           }
         }
       }

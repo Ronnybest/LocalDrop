@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Local Drop</string>
+    <string name="app_name" translatable="false">Dewlet</string>
 
     <string name="devices_searching">Looking for Macs nearby…</string>
 
     <string name="device_status_connecting">Connecting…</string>
     <string name="device_status_unreachable">Not reachable — move closer</string>
     <string name="device_status_invalid">Sent invalid device information</string>
-    <string name="device_status_incompatible">Incompatible Local Drop version — update the app</string>
+    <string name="device_status_incompatible">Incompatible Dewlet version — update the app</string>
 
     <string name="discovery_failed_title">Bluetooth scan failed</string>
 
     <string name="blocker_unsupported_title">Bluetooth LE not available</string>
-    <string name="blocker_unsupported_body">This device doesn\'t support Bluetooth Low Energy, which Local Drop needs to find nearby devices.</string>
+    <string name="blocker_unsupported_body">This device doesn\'t support Bluetooth Low Energy, which Dewlet needs to find nearby devices.</string>
     <string name="blocker_permissions_title">Allow access to nearby devices</string>
-    <string name="blocker_permissions_body_nearby">Local Drop uses Bluetooth to find your Mac and other devices nearby. It doesn\'t use your location.</string>
-    <string name="blocker_permissions_body_location">On Android 11, the system requires location permission to scan for Bluetooth devices. Local Drop only uses it to find nearby devices and never reads or stores your location.</string>
+    <string name="blocker_permissions_body_nearby">Dewlet uses Bluetooth to find your Mac and other devices nearby. It doesn\'t use your location.</string>
+    <string name="blocker_permissions_body_location">On Android 11, the system requires location permission to scan for Bluetooth devices. Dewlet only uses it to find nearby devices and never reads or stores your location.</string>
     <string name="blocker_permissions_denied_hint">The permission was denied. Turn it on in the app settings.</string>
     <string name="blocker_bluetooth_off_title">Bluetooth is off</string>
     <string name="blocker_bluetooth_off_body">Turn on Bluetooth to find nearby devices.</string>
     <string name="blocker_location_off_title">Location is off</string>
-    <string name="blocker_location_off_body">On Android 11, Bluetooth scanning only works while location is turned on. Local Drop doesn\'t use your location.</string>
+    <string name="blocker_location_off_body">On Android 11, Bluetooth scanning only works while location is turned on. Dewlet doesn\'t use your location.</string>
 
     <string name="action_allow">Allow</string>
     <string name="action_open_app_settings">Open settings</string>
@@ -42,7 +42,7 @@
     <string name="action_discard">Discard</string>
     <string name="error_rejected_asleep">%1$s is asleep. Wake it up and try again.</string>
     <string name="queue_spooling">Keeping a copy to send later…</string>
-    <string name="queue_parked_text">%1$s wasn’t available for an hour. Kept on this phone for 7 days — tap Try again when it’s nearby, or just open Local Drop.</string>
+    <string name="queue_parked_text">%1$s wasn’t available for an hour. Kept on this phone for 7 days — tap Try again when it’s nearby, or just open Dewlet.</string>
     <string name="queue_not_kept">%1$s wasn’t available, and there wasn’t room on this phone to keep a copy for later.</string>
     <plurals name="home_waiting">
         <item quantity="one">%d item waiting to be sent</item>
@@ -53,7 +53,7 @@
 
     <string name="pairing_title">Pair with %1$s?</string>
     <string name="pairing_compare">Make sure %1$s shows the same code:</string>
-    <string name="pairing_key_changed">The security key of %1$s has changed. This happens after reinstalling Local Drop — or if another device is impersonating it. Continue only if the device is in front of you.</string>
+    <string name="pairing_key_changed">The security key of %1$s has changed. This happens after reinstalling Dewlet — or if another device is impersonating it. Continue only if the device is in front of you.</string>
     <string name="pairing_waiting">Waiting for confirmation on %1$s…</string>
 
     <string name="trusted_last_seen">Last seen %1$s</string>
@@ -63,7 +63,7 @@
     <string name="share_pick_title">Send to</string>
     <string name="share_not_accessible">The app you shared from didn\'t allow access to these files. Share them from Files or Gallery.</string>
     <string name="share_no_devices_title">Add your Mac first</string>
-    <string name="share_no_devices_body">Pair your Mac once in Local Drop. After that it appears right here when you share.</string>
+    <string name="share_no_devices_body">Pair your Mac once in Dewlet. After that it appears right here when you share.</string>
     <string name="action_add_mac">Add a Mac</string>
     <string name="shortcut_send_to">Send to %1$s</string>
 
@@ -75,7 +75,7 @@
     <string name="notification_pairing_text">Compare the code on both devices.</string>
     <string name="notification_pairing_code">Pairing code %1$s</string>
     <string name="notification_unknown_device">your Mac</string>
-    <string name="error_not_paired">This Mac is no longer paired. Open Local Drop to add it again.</string>
+    <string name="error_not_paired">This Mac is no longer paired. Open Dewlet to add it again.</string>
 
     <string name="test_data_body">Send generated data to a paired Mac to measure speed. Integrity is checked with SHA-256. Progress appears in the notification.</string>
     <string name="diagnostics_title">Diagnostics</string>
@@ -83,7 +83,7 @@
     <string name="diagnostics_send_to">Send %1$s of test data</string>
 
     <string name="home_empty_title">Send files to your Mac from any app</string>
-    <string name="home_empty_body">Pair your Mac once. After that, share a photo or file from any app and pick your Mac — Local Drop doesn\'t need to be open.</string>
+    <string name="home_empty_body">Pair your Mac once. After that, share a photo or file from any app and pick your Mac — Dewlet doesn\'t need to be open.</string>
     <string name="add_mac_title">Add a Mac</string>
     <string name="presence_nearby_ready">Nearby · ready</string>
     <string name="presence_nearby_other_network">Nearby · not on the same network</string>
@@ -115,9 +115,9 @@
 
     <string name="error_not_nearby">%1$s isn\'t nearby or is asleep. Wake it up and keep it close to this phone.</string>
     <string name="error_nearby_unresponsive">%1$s is nearby but didn\'t respond. Make sure both devices are on the same Wi-Fi, then try again.</string>
-    <string name="error_pairing_unavailable">%1$s isn\'t paired with this phone. On the Mac, open Local Drop in the menu bar, turn on “Visible to new devices”, then try again.</string>
+    <string name="error_pairing_unavailable">%1$s isn\'t paired with this phone. On the Mac, open Dewlet in the menu bar, turn on “Visible to new devices”, then try again.</string>
     <string name="error_bluetooth_off">Bluetooth is off. Turn it on to find your Mac.</string>
-    <string name="error_bluetooth_permission">Local Drop needs access to nearby devices. Open Local Drop to allow it.</string>
+    <string name="error_bluetooth_permission">Dewlet needs access to nearby devices. Open Dewlet to allow it.</string>
     <string name="error_bluetooth_failed">Bluetooth couldn\'t search for your Mac. Try again.</string>
     <string name="error_source_unavailable">%1$s can no longer be read. It may have been moved or deleted.</string>
     <string name="error_rejected_declined">%1$s declined the transfer.</string>
@@ -128,12 +128,12 @@
     <string name="error_checksum">%1$s was damaged in transit (checksum mismatch) and wasn\'t saved. Try again.</string>
     <string name="error_write_failed">%1$s couldn\'t save the file.</string>
 
-    <string name="error_no_wifi">Connect to Wi-Fi, or turn on this phone\'s hotspot and connect the Mac to it. Local Drop sends files directly over the local network and never uses mobile data.</string>
-    <string name="error_refused">%1$s refused the connection. Make sure Local Drop is running on it.</string>
+    <string name="error_no_wifi">Connect to Wi-Fi, or turn on this phone\'s hotspot and connect the Mac to it. Dewlet sends files directly over the local network and never uses mobile data.</string>
+    <string name="error_refused">%1$s refused the connection. Make sure Dewlet is running on it.</string>
     <string name="error_unreachable">Can\'t reach %1$s. Make sure both devices are on the same Wi-Fi network. Some public and guest networks block connections between devices.</string>
     <string name="error_timeout">%1$s stopped responding.</string>
     <string name="error_connection_lost">The connection to %1$s was lost.</string>
-    <string name="error_incompatible">%1$s uses an incompatible version of Local Drop. Update the app on both devices.</string>
+    <string name="error_incompatible">%1$s uses an incompatible version of Dewlet. Update the app on both devices.</string>
     <string name="error_auth_failed">Couldn\'t verify the identity of %1$s. The connection was closed to keep your data safe.</string>
     <string name="error_decryption">Data from %1$s failed decryption. The connection was closed to keep your data safe.</string>
     <string name="error_protocol">%1$s sent an unexpected response.</string>
@@ -174,8 +174,8 @@
     <string name="notification_incoming_tap_text">Tap to receive them.</string>
     <string name="action_receive_automatically">Accept files without asking</string>
     <string name="receiving_needs_link_title">Receive files from %1$s in the background</string>
-    <string name="receiving_needs_link_body">Android asks once whether Local Drop may be linked to this Mac. Then files from the Mac arrive even when Local Drop is closed.</string>
-    <string name="receiving_link_scope">Android shows its general text about syncing, such as a caller\'s name. Local Drop does none of that: the link only lets it start receiving files in the background, with no access to contacts, calls, photos, files, messages or location. Without it, files from the Mac arrive when you tap the notification. Turn it off any time in the Mac\'s menu below.</string>
+    <string name="receiving_needs_link_body">Android asks once whether Dewlet may be linked to this Mac. Then files from the Mac arrive even when Dewlet is closed.</string>
+    <string name="receiving_link_scope">Android shows its general text about syncing, such as a caller\'s name. Dewlet does none of that: the link only lets it start receiving files in the background, with no access to contacts, calls, photos, files, messages or location. Without it, files from the Mac arrive when you tap the notification. Turn it off any time in the Mac\'s menu below.</string>
     <string name="action_later">Later</string>
     <string name="action_receive_in_background">Receive in the background</string>
 
@@ -224,7 +224,7 @@
     <string name="sheet_main_mac">Main Mac</string>
     <string name="time_just_now">just now</string>
     <string name="sheet_verification_code">Verification code</string>
-    <string name="sheet_verification_hint">The Mac shows the same code: Local Drop › Settings › Devices, the shield next to this phone. If it differs, forget the Mac and pair again.</string>
+    <string name="sheet_verification_hint">The Mac shows the same code: Dewlet › Settings › Devices, the shield next to this phone. If it differs, forget the Mac and pair again.</string>
     <string name="history_received">Received</string>
     <string name="history_sent">Sent</string>
     <string name="history_empty">Nothing in the last 30 days</string>
@@ -232,7 +232,7 @@
     <string name="card_left">left</string>
     <string name="card_finished" translatable="false">%1$s · %2$s</string>
     <string name="card_finished_in">%1$s · %2$s in %3$s</string>
-    <string name="add_mac_step_menu">On the Mac, click the Local Drop drop in the menu bar</string>
+    <string name="add_mac_step_menu">On the Mac, click the Dewlet drop in the menu bar</string>
     <string name="add_mac_step_visible">Turn on “Visible to new devices”</string>
     <string name="add_mac_step_nearby">Keep the Mac close to this phone</string>
     <string name="add_mac_still_searching">Still looking</string>
@@ -247,10 +247,10 @@
     <string name="history_yesterday">Yesterday</string>
     <string name="sheet_main_mac_body">First in Share and on the home screen</string>
     <string name="sheet_auto_body">Files from this Mac are saved right away</string>
-    <string name="sheet_background_body">Even when Local Drop is closed</string>
+    <string name="sheet_background_body">Even when Dewlet is closed</string>
     <string name="trusted_forget_button">Forget this Mac</string>
     <string name="settings_general">General</string>
-    <string name="history_no_access">Local Drop can no longer open this file</string>
+    <string name="history_no_access">Dewlet can no longer open this file</string>
     <string name="settings_hide_thumbnails">Hide thumbnails</string>
     <string name="settings_hide_thumbnails_body">Recent shows photos and videos as icons</string>
     <string name="history_from">From %1$s</string>
@@ -263,9 +263,9 @@
     <string name="settings_version">Version</string>
     <string name="settings_crash_reports">Send crash reports</string>
     <string name="settings_crash_reports_body">If the app crashes, the developer gets a description of the error and the phone model</string>
-    <string name="notifications_paired_body">Turn on notifications to see progress and to accept files from %1$s when Local Drop isn\'t open.</string>
+    <string name="notifications_paired_body">Turn on notifications to see progress and to accept files from %1$s when Dewlet isn\'t open.</string>
     <string name="action_turn_on_notifications">Turn on notifications</string>
     <string name="notifications_off_title">Notifications are off</string>
-    <string name="notifications_off_body">Without them you don\'t see progress, and files from a Mac can\'t be accepted while Local Drop is closed.</string>
+    <string name="notifications_off_body">Without them you don\'t see progress, and files from a Mac can\'t be accepted while Dewlet is closed.</string>
     <string name="action_turn_on">Turn on</string>
 </resources>

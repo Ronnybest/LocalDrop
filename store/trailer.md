@@ -22,12 +22,12 @@ shows it before the screenshots, muted until tapped: it has to work without soun
 | 15–20 s | Phone: Accept in the notification, wavy progress, Saved in Downloads | Accept on the phone |
 | 20–25 s | Copy a link on the phone, tap Clipboard, paste on the Mac | Text and links, both ways |
 | 25–30 s | Pairing: the same code on both screens | Paired once. Only your devices. |
-| 30–35 s | Icon and name on the gradient, "Free for Mac at github.com/Ronnybest/LocalDrop" | Local Drop: Android ⇄ Mac |
+| 30–35 s | Icon and name on the gradient, "Free for Mac at github.com/Ronnybest/LocalDrop" | Dewlet: Android ⇄ Mac |
 
 ## Recording
 
 - Phone without a frame: `scrcpy --record phone.mp4 --no-audio --max-fps 60` (lossless enough, no
   touch circles: `--show-touches` off for the trailer).
 - Mac: Cmd+Shift+5, a selected area at 1920×1080, menu bar visible; a clean desktop, Do Not Disturb
-  on, Local Drop notifications allowed.
+  on, Dewlet notifications allowed.
 - Each shot separately, a few takes each; cut and caption in iMovie or Final Cut, or with ffmpeg.

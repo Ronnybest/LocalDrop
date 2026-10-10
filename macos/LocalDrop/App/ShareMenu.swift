@@ -1,6 +1,6 @@
 import AppKit
 
-/// Whether "Share › Local Drop" is on in Finder and other apps. macOS has the user turn share
+/// Whether "Share › Dewlet" is on in Finder and other apps. macOS has the user turn share
 /// extensions on themselves; the app can only check and open the right place in System Settings.
 @Observable
 final class ShareMenu {
@@ -16,7 +16,7 @@ final class ShareMenu {
             try? Data().write(to: probe)
         }
         let lookup: any SharingServiceLookup = SystemSharingServices()
-        let enabled = lookup.services(for: [probe]).contains { $0.title == "Local Drop" }
+        let enabled = lookup.services(for: [probe]).contains { $0.title == "Dewlet" }
         if enabled != isEnabled {
             Log.app.info("Share menu extension \(enabled ? "on" : "off", privacy: .public)")
             isEnabled = enabled

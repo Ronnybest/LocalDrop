@@ -18,7 +18,7 @@ extension AppModel {
         case .starting: ("antenna.radiowaves.left.and.right", .secondary, String(localized: "Starting…"), false)
         case .advertising: ("antenna.radiowaves.left.and.right", .green, String(localized: "Your devices can find this Mac nearby"), false)
         case .poweredOff: ("antenna.radiowaves.left.and.right.slash", .orange, String(localized: "Bluetooth is turned off. Phones can't find this Mac."), true)
-        case .unauthorized: ("lock.fill", .orange, String(localized: "Allow Local Drop in System Settings › Privacy & Security › Bluetooth."), true)
+        case .unauthorized: ("lock.fill", .orange, String(localized: "Allow Dewlet in System Settings › Privacy & Security › Bluetooth."), true)
         case .unsupported: ("xmark.octagon.fill", .red, String(localized: "This Mac doesn't support Bluetooth LE advertising."), true)
         case .failed(let reason): ("exclamationmark.triangle.fill", .red, reason, true)
         }
@@ -76,7 +76,7 @@ struct VisibilityRow: View {
         if model.trustStore?.devices.isEmpty ?? true {
             StatusRow(status: StatusDescription(
                 symbol: "plus.circle.fill", tint: .accentColor, title: String(localized: "Ready to pair"),
-                detail: String(localized: "On your phone, open Local Drop and tap “Add a Mac”."), needsAttention: true
+                detail: String(localized: "On your phone, open Dewlet and tap “Add a Mac”."), needsAttention: true
             ))
         } else {
             // The switch is pinned to the trailing edge; a Toggle with a label would follow the
