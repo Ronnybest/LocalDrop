@@ -29,12 +29,14 @@ xcodebuild -project LocalDrop.xcodeproj -scheme LocalDrop -configuration Release
 # Bluetooth, the network port and the menu bar icon.
 osascript -e 'tell application id "dev.localdrop.mac" to quit' 2>/dev/null || true
 for _ in {1..20}; do
-    pgrep -f "LocalDrop.app/Contents/MacOS/LocalDrop" >/dev/null || break
+    pgrep -f "/Contents/MacOS/LocalDrop$" >/dev/null || break
     sleep 0.5
 done
 
-rm -rf /Applications/LocalDrop.app
-cp -R build/Build/Products/Release/LocalDrop.app /Applications/
+# Installed under the name people see, "Local Drop"; the copy under the old name goes.
+installed="/Applications/Local Drop.app"
+rm -rf /Applications/LocalDrop.app "$installed"
+cp -R build/Build/Products/Release/LocalDrop.app "$installed"
 
 # The Share extension must come from the installed copy: forget the ones in build products,
 # or macOS may run the extension (and start the app) from there.
@@ -43,9 +45,9 @@ for product in build/Build/Products/*/LocalDrop.app; do
     pluginkit -r "$product/Contents/PlugIns/LocalDropShare.appex" 2>/dev/null || true
     "$lsregister" -u "$product" 2>/dev/null || true
 done
-"$lsregister" -f /Applications/LocalDrop.app
-pluginkit -a /Applications/LocalDrop.app/Contents/PlugIns/LocalDropShare.appex
+"$lsregister" -f "$installed"
+pluginkit -a "$installed/Contents/PlugIns/LocalDropShare.appex"
 pkill -x LocalDropShare 2>/dev/null || true
 
-open /Applications/LocalDrop.app
-echo "Installed /Applications/LocalDrop.app"
+open "$installed"
+echo "Installed $installed"

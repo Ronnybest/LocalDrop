@@ -8,13 +8,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "LocalDrop"
+            "value" : "Local Drop"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "LocalDrop"
+            "value" : "Local Drop"
           }
         }
       }
@@ -26,13 +26,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "LocalDrop"
+            "value" : "Local Drop"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "LocalDrop"
+            "value" : "Local Drop"
           }
         }
       }
@@ -44,13 +44,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "LocalDrop uses Bluetooth so that your Android devices can find this Mac nearby."
+            "value" : "Local Drop uses Bluetooth so that your Android devices can find this Mac nearby."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "LocalDrop использует Bluetooth, чтобы ваши Android-устройства находили этот Mac рядом."
+            "value" : "Local Drop использует Bluetooth, чтобы ваши Android-устройства находили этот Mac рядом."
           }
         }
       }
@@ -62,13 +62,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "LocalDrop receives files directly from your devices over the local network."
+            "value" : "Local Drop receives files directly from your devices over the local network."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "LocalDrop получает файлы напрямую с ваших устройств по локальной сети."
+            "value" : "Local Drop получает файлы напрямую с ваших устройств по локальной сети."
           }
         }
       }

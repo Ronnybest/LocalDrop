@@ -1,18 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Send with LocalDrop": {
+    "Send with Local Drop": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send with LocalDrop"
+            "value": "Send with Local Drop"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отправить через LocalDrop"
+            "value": "Отправить через Local Drop"
           }
         }
       }
@@ -69,34 +69,34 @@
         }
       }
     },
-    "No phone can receive yet. Pair an Android phone with LocalDrop and open LocalDrop on it once.": {
+    "No phone can receive yet. Pair an Android phone with Local Drop and open Local Drop on it once.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No phone can receive yet. Pair an Android phone with LocalDrop and open LocalDrop on it once."
+            "value": "No phone can receive yet. Pair an Android phone with Local Drop and open Local Drop on it once."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока нет телефона, который может принимать. Привяжите Android-телефон к LocalDrop и один раз откройте на нём LocalDrop."
+            "value": "Пока нет телефона, который может принимать. Привяжите Android-телефон к Local Drop и один раз откройте на нём Local Drop."
           }
         }
       }
     },
-    "The phone gets the files as soon as it's nearby, even if LocalDrop isn't open on it.": {
+    "The phone gets the files as soon as it's nearby, even if Local Drop isn't open on it.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The phone gets the files as soon as it's nearby, even if LocalDrop isn't open on it."
+            "value": "The phone gets the files as soon as it's nearby, even if Local Drop isn't open on it."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Телефон получит файлы, как только окажется рядом, даже если LocalDrop на нём не открыт."
+            "value": "Телефон получит файлы, как только окажется рядом, даже если Local Drop на нём не открыт."
           }
         }
       }

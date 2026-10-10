@@ -56,7 +56,7 @@ nonisolated enum SessionError: Error, Equatable, CustomStringConvertible {
         case .connectionClosed: String(localized: "Connection closed by the other device")
         case .transport: String(localized: "Network error")
         case .protocolViolation: String(localized: "The other device sent unexpected data")
-        case .versionUnsupported: String(localized: "Incompatible LocalDrop version — update LocalDrop on both devices")
+        case .versionUnsupported: String(localized: "Incompatible Local Drop version — update Local Drop on both devices")
         case .authFailed: String(localized: "Device identity check failed")
         case .decryptFailed: String(localized: "Decryption failed")
         case .peerError: String(localized: "Closed by the other device")
@@ -81,7 +81,7 @@ nonisolated enum SessionError: Error, Equatable, CustomStringConvertible {
         case .connectionClosed: "Connection closed by the other device"
         case .transport(let message): "Network error: \(message)"
         case .protocolViolation(let message): "Unexpected data: \(message)"
-        case .versionUnsupported(let min, let max): "Incompatible LocalDrop version (device supports v\(min)–v\(max))"
+        case .versionUnsupported(let min, let max): "Incompatible Local Drop version (device supports v\(min)–v\(max))"
         case .authFailed(let message): "Device identity check failed: \(message)"
         case .decryptFailed: "Decryption failed"
         case .peerError(let code, _): "Closed by the other device (\(code))"

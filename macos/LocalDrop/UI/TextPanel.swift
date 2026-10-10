@@ -16,7 +16,7 @@ final class TextPanelController {
             peerName: peerName,
             dismiss: { [weak self] in self?.close() }
         )
-        panel.show(title: "LocalDrop", style: .banner, content: view) { [weak self] in self?.autoClose?.cancel() }
+        panel.show(title: "Local Drop", style: .banner, content: view) { [weak self] in self?.autoClose?.cancel() }
         autoClose = Task { [weak self] in
             try? await Task.sleep(for: Self.lifetime)
             guard !Task.isCancelled else { return }

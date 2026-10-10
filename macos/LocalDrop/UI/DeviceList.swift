@@ -322,7 +322,7 @@ private struct VerificationPopover: View {
             Text(code)
                 .font(.title2.monospacedDigit())
                 .textSelection(.enabled)
-            Text("LocalDrop on \(name) shows the same code. If it ever differs, forget the device and pair again.")
+            Text("Local Drop on \(name) shows the same code. If it ever differs, forget the device and pair again.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -76,7 +76,7 @@ final class TransferPanelController {
     func show(_ transfer: IncomingTransfer, decide: @escaping (Bool) -> Void, cancel: @escaping () -> Void, dismiss: @escaping () -> Void) {
         autoClose?.cancel()
         let view = TransferView(transfer: transfer, decide: decide, cancel: cancel, dismiss: dismiss)
-        panel.show(title: "LocalDrop", style: .banner, content: view) {
+        panel.show(title: "Local Drop", style: .banner, content: view) {
             switch transfer.phase {
             case .awaitingDecision: decide(false)
             case .receiving: cancel()

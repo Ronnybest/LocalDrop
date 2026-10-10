@@ -56,13 +56,13 @@ xcrun notarytool submit "$out/LocalDrop.zip" --keychain-profile "$profile" --wai
 xcrun stapler staple "$app"
 rm "$out/LocalDrop.zip"
 
-# The DMG: the app and a link to Applications to drag it onto.
+# The DMG: the app under the name people see, and a link to Applications to drag it onto.
 dmg="$out/LocalDrop-$version.dmg"
 stage="$out/dmg"
 mkdir -p "$stage"
-ditto "$app" "$stage/LocalDrop.app"
+ditto "$app" "$stage/Local Drop.app"
 ln -s /Applications "$stage/Applications"
-hdiutil create -volname "LocalDrop" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg" -quiet
+hdiutil create -volname "Local Drop" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg" -quiet
 rm -rf "$stage"
 identity=$(security find-identity -v -p codesigning | grep -o "\"Developer ID Application: [^\"]*($team)\"" | head -1 | tr -d '"')
 codesign --sign "$identity" --timestamp "$dmg"

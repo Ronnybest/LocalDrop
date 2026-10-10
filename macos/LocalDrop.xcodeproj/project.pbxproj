@@ -370,11 +370,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Support/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Local Drop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LocalDrop uses Bluetooth so that your Android devices can find this Mac nearby.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "LocalDrop receives files directly from your devices over the local network.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Local Drop uses Bluetooth so that your Android devices can find this Mac nearby.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Local Drop receives files directly from your devices over the local network.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -402,11 +402,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Support/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Local Drop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LocalDrop uses Bluetooth so that your Android devices can find this Mac nearby.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "LocalDrop receives files directly from your devices over the local network.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Local Drop uses Bluetooth so that your Android devices can find this Mac nearby.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Local Drop receives files directly from your devices over the local network.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -432,7 +432,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Support/ShareInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Local Drop";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -460,7 +460,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Support/ShareInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LocalDrop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Local Drop";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

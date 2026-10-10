@@ -73,7 +73,7 @@ private struct PairingView: View {
                 .multilineTextAlignment(.center)
 
             if prompt.keyChanged {
-                Text("The security key of \(prompt.peerName) has changed. This happens after reinstalling LocalDrop — or if another device is impersonating it. Continue only if the device is in front of you.")
+                Text("The security key of \(prompt.peerName) has changed. This happens after reinstalling Local Drop — or if another device is impersonating it. Continue only if the device is in front of you.")
                     .font(.callout)
                     .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)

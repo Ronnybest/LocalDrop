@@ -153,7 +153,7 @@ private struct DropZoneView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("Send with LocalDrop")
+            Text("Send with Local Drop")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

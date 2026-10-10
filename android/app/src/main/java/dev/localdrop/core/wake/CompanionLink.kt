@@ -89,10 +89,10 @@ object CompanionLink {
 
     /**
      * This Mac's private names for the current token slot and its neighbours (protocol.md §2.2),
-     * while it is available (status "L"), shown as "LocalDrop · MacBook Pro": the system dialog
+     * while it is available (status "L"), shown as "Local Drop · MacBook Pro": the system dialog
      * and the stored association would otherwise show the rotating token ("LGMcfSwA"). A rename
      * must keep at least one character of the Bluetooth name — the status "L" begins
-     * "LocalDrop" — and its prefix is limited to 10 characters, so the Mac's name goes after.
+     * "Local Drop" — and its prefix is limited to 10 characters, so the Mac's name goes after.
      */
     private fun filter(mac: TrustedDevice, scanFilter: ScanFilter): BluetoothLeDeviceFilter {
         val builder = BluetoothLeDeviceFilter.Builder().setScanFilter(scanFilter)
@@ -101,7 +101,7 @@ object CompanionLink {
             val tokens = (slot - 1..slot + 1).joinToString("|") { Regex.escape(PresenceCrypto.encodeToken(PresenceCrypto.token(key, it))) }
             builder.setNamePattern(java.util.regex.Pattern.compile("^L(?:$tokens)$"))
             try {
-                builder.setRenameFromName("", "ocalDrop · ${mac.deviceName}", 0, 1)
+                builder.setRenameFromName("", "ocal Drop · ${mac.deviceName}", 0, 1)
             } catch (e: IllegalArgumentException) {
                 // The dialog then shows the Bluetooth name; linking works the same.
                 Log.w(TAG, "Can't show the Mac's name in the system dialog: ${e.message}")

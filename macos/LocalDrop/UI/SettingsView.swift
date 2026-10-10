@@ -91,7 +91,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Sending")
             } footer: {
-                Text("Send files from Finder, Photos and other apps with Share › LocalDrop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one.")
+                Text("Send files from Finder, Photos and other apps with Share › Local Drop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one.")
                     .foregroundStyle(.secondary)
             }
 
@@ -101,7 +101,7 @@ private struct GeneralSettings: View {
                     set: { model.loginItem.setEnabled($0) }
                 ))
                 if model.loginItem.requiresApproval {
-                    Text("Allow LocalDrop in System Settings › General › Login Items.")
+                    Text("Allow Local Drop in System Settings › General › Login Items.")
                         .foregroundStyle(.secondary)
                 }
             }

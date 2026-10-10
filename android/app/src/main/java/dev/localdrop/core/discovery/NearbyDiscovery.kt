@@ -32,7 +32,7 @@ data class NearbyDevice(
         get() = when (endpoint) {
             is EndpointState.Resolved -> endpoint.info.deviceName
             is EndpointState.AlreadyPaired -> endpoint.name
-            else -> "LocalDrop device"
+            else -> "Local Drop device"
         }
 }
 

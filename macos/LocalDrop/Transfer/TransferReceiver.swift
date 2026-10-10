@@ -320,7 +320,7 @@ nonisolated final class TransferReceiver {
             let fileStarted = ContinuousClock.now
             let writer: IncomingFileWriter
             do {
-                writer = try IncomingFileWriter(directory: directory, info: file, origin: "\(peer.name) (LocalDrop)")
+                writer = try IncomingFileWriter(directory: directory, info: file, origin: "\(peer.name) (Local Drop)")
             } catch {
                 try await reportFailure(error, transferId: transferId, fileId: file.fileId)
                 throw error

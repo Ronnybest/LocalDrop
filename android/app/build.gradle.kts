@@ -10,7 +10,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.localdrop"
+        // The store's id, fixed with the first upload; the code keeps its own package.
+        applicationId = "com.zepponapps.localdrop"
         minSdk = 29
         targetSdk = 36
         versionCode = 1

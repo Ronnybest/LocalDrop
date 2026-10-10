@@ -272,22 +272,22 @@
         }
       }
     },
-    "Allow LocalDrop in System Settings › General › Login Items." : {
+    "Allow Local Drop in System Settings › General › Login Items." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Разрешите LocalDrop в Системных настройках › Основные › Объекты входа."
+            "value" : "Разрешите Local Drop в Системных настройках › Основные › Объекты входа."
           }
         }
       }
     },
-    "Allow LocalDrop in System Settings › Privacy & Security › Bluetooth." : {
+    "Allow Local Drop in System Settings › Privacy & Security › Bluetooth." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Разрешите LocalDrop в Системных настройках › Конфиденциальность и безопасность › Bluetooth."
+            "value" : "Разрешите Local Drop в Системных настройках › Конфиденциальность и безопасность › Bluetooth."
           }
         }
       }
@@ -602,12 +602,12 @@
         }
       }
     },
-    "Files received with LocalDrop will be saved in this folder." : {
+    "Files received with Local Drop will be saved in this folder." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Файлы, полученные через LocalDrop, будут сохраняться в эту папку."
+            "value" : "Файлы, полученные через Local Drop, будут сохраняться в эту папку."
           }
         }
       }
@@ -702,22 +702,22 @@
         }
       }
     },
-    "If macOS asks, allow LocalDrop to use its device key (Always Allow)." : {
+    "If macOS asks, allow Local Drop to use its device key (Always Allow)." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Если macOS спросит, разрешите LocalDrop использовать ключ устройства («Разрешать всегда»)."
+            "value" : "Если macOS спросит, разрешите Local Drop использовать ключ устройства («Разрешать всегда»)."
           }
         }
       }
     },
-    "Incompatible LocalDrop version — update LocalDrop on both devices" : {
+    "Incompatible Local Drop version — update Local Drop on both devices" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Несовместимая версия LocalDrop — обновите LocalDrop на обоих устройствах"
+            "value" : "Несовместимая версия Local Drop — обновите Local Drop на обоих устройствах"
           }
         }
       }
@@ -752,52 +752,52 @@
         }
       }
     },
-    "LocalDrop" : {
+    "Local Drop" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop"
+            "value" : "Local Drop"
           }
         }
       }
     },
-    "LocalDrop — receiving" : {
+    "Local Drop — receiving" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop — идёт приём"
+            "value" : "Local Drop — идёт приём"
           }
         }
       }
     },
-    "LocalDrop — sending" : {
+    "Local Drop — sending" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop — идёт отправка"
+            "value" : "Local Drop — идёт отправка"
           }
         }
       }
     },
-    "LocalDrop — visible to new devices" : {
+    "Local Drop — visible to new devices" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop — виден новым устройствам"
+            "value" : "Local Drop — виден новым устройствам"
           }
         }
       }
     },
-    "LocalDrop can't start" : {
+    "Local Drop can't start" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop не удаётся запустить"
+            "value" : "Local Drop не удаётся запустить"
           }
         }
       }
@@ -983,12 +983,12 @@
         }
       }
     },
-    "On your phone, open LocalDrop and tap “Add a Mac”." : {
+    "On your phone, open Local Drop and tap “Add a Mac”." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "На телефоне откройте LocalDrop и нажмите «Добавить Mac»."
+            "value" : "На телефоне откройте Local Drop и нажмите «Добавить Mac»."
           }
         }
       }
@@ -1413,12 +1413,12 @@
         }
       }
     },
-    "The security key of %@ has changed. This happens after reinstalling LocalDrop — or if another device is impersonating it. Continue only if the device is in front of you." : {
+    "The security key of %@ has changed. This happens after reinstalling Local Drop — or if another device is impersonating it. Continue only if the device is in front of you." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ключ безопасности %@ изменился. Так бывает после переустановки LocalDrop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
+            "value" : "Ключ безопасности %@ изменился. Так бывает после переустановки Local Drop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
           }
         }
       }
@@ -1625,12 +1625,12 @@
         }
       }
     },
-    "Add LocalDrop to Share" : {
+    "Add Local Drop to Share" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Добавьте LocalDrop в «Поделиться»"
+            "value" : "Добавьте Local Drop в «Поделиться»"
           }
         }
       }
@@ -1645,32 +1645,32 @@
         }
       }
     },
-    "Opens System Settings: turn on LocalDrop in the list" : {
+    "Opens System Settings: turn on Local Drop in the list" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Откроются Системные настройки: включите LocalDrop в списке"
+            "value" : "Откроются Системные настройки: включите Local Drop в списке"
           }
         }
       }
     },
-    "Quit LocalDrop" : {
+    "Quit Local Drop" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завершить LocalDrop"
+            "value" : "Завершить Local Drop"
           }
         }
       }
     },
-    "Send files from Finder, Photos and other apps with Share › LocalDrop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one." : {
+    "Send files from Finder, Photos and other apps with Share › Local Drop. While you drag files, your phones also appear at the right edge of the screen: drop the files on one." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › LocalDrop. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
+            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › Local Drop. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
           }
         }
       }
@@ -1685,12 +1685,12 @@
         }
       }
     },
-    "Send with LocalDrop" : {
+    "Send with Local Drop" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отправить через LocalDrop"
+            "value" : "Отправить через Local Drop"
           }
         }
       }
@@ -1825,12 +1825,12 @@
         }
       }
     },
-    "macOS doesn't let LocalDrop read them: %@" : {
+    "macOS doesn't let Local Drop read them: %@" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS не даёт LocalDrop их прочитать: %@"
+            "value" : "macOS не даёт Local Drop их прочитать: %@"
           }
         }
       }
@@ -1889,12 +1889,12 @@
         }
       }
     },
-    "LocalDrop — packing a folder" : {
+    "Local Drop — packing a folder" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop — упаковка папки"
+            "value" : "Local Drop — упаковка папки"
           }
         }
       }
@@ -1909,22 +1909,22 @@
         }
       }
     },
-    "LocalDrop couldn't pack the folder." : {
+    "Local Drop couldn't pack the folder." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop не смог упаковать папку."
+            "value" : "Local Drop не смог упаковать папку."
           }
         }
       }
     },
-    "LocalDrop on %@ shows the same code. If it ever differs, forget the device and pair again." : {
+    "Local Drop on %@ shows the same code. If it ever differs, forget the device and pair again." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocalDrop на «%@» показывает такой же код. Если он отличается — забудьте устройство и привяжите заново."
+            "value" : "Local Drop на «%@» показывает такой же код. Если он отличается — забудьте устройство и привяжите заново."
           }
         }
       }

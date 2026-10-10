@@ -93,7 +93,7 @@ struct MenuBarView: View {
                     .glassButton()
                     .buttonBorderShape(.circle)
                     .keyboardShortcut("q")
-                    .help(String(localized: "Quit LocalDrop"))
+                    .help(String(localized: "Quit Local Drop"))
                 }
                 .controlSize(.large)
                 .padding(.top, 2)
@@ -150,9 +150,9 @@ struct MenuBarView: View {
         switch model.startupState {
         case .loadingIdentity:
             return [StatusDescription(symbol: "key.fill", tint: .orange, title: String(localized: "Waiting for Keychain access…"),
-                                      detail: String(localized: "If macOS asks, allow LocalDrop to use its device key (Always Allow)."), needsAttention: true)]
+                                      detail: String(localized: "If macOS asks, allow Local Drop to use its device key (Always Allow)."), needsAttention: true)]
         case .failed(let reason):
-            return [StatusDescription(symbol: "exclamationmark.triangle.fill", tint: .red, title: String(localized: "LocalDrop can't start"),
+            return [StatusDescription(symbol: "exclamationmark.triangle.fill", tint: .red, title: String(localized: "Local Drop can't start"),
                                       detail: reason, needsAttention: true)]
         case .running:
             var list = [model.bluetoothStatus, model.networkStatus].filter(\.needsAttention)
@@ -187,7 +187,7 @@ struct MenuBarView: View {
             HStack(spacing: 10) {
                 IconBadge(symbol: "square.and.arrow.up", tint: .accentColor, size: 28)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Add LocalDrop to Share")
+                    Text("Add Local Drop to Share")
                     Text("Send to your phone from Finder, Photos and other apps.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -203,7 +203,7 @@ struct MenuBarView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(String(localized: "Opens System Settings: turn on LocalDrop in the list"))
+        .help(String(localized: "Opens System Settings: turn on Local Drop in the list"))
     }
 
     private func showSettings(_ tab: SettingsTab) {

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="macos/LocalDrop/Assets.xcassets/AppIcon.appiconset/icon_256.png" alt="LocalDrop icon" width="128">
+<img src="macos/LocalDrop/Assets.xcassets/AppIcon.appiconset/icon_256.png" alt="Local Drop icon" width="128">
 
-# LocalDrop
+# Local Drop
 
 **Send photos, files and text between Android and your Mac — straight from the share sheet, the way AirDrop does it.**
 
@@ -18,19 +18,19 @@ Gallery → Share → MacBook Pro → Done
 
 ## Why
 
-Getting a photo from an Android phone onto a Mac usually means a cable, a cloud drive or a messenger chat with yourself. LocalDrop makes the Mac a target in the Android share sheet. Pick a photo, tap your MacBook, and the file is in Downloads a moment later — without opening an app, an account or the internet.
+Getting a photo from an Android phone onto a Mac usually means a cable, a cloud drive or a messenger chat with yourself. Local Drop makes the Mac a target in the Android share sheet. Pick a photo, tap your MacBook, and the file is in Downloads a moment later — without opening an app, an account or the internet.
 
 ## Features
 
-- **And back.** Start dragging files anywhere on the Mac and your phones slide in at the edge of the screen: drop the files on one. Or use **Share › LocalDrop** in Finder, Photos and other apps, or ✈ next to the phone in the menu. The phone wakes up for them by itself — LocalDrop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
+- **And back.** Start dragging files anywhere on the Mac and your phones slide in at the edge of the screen: drop the files on one. Or use **Share › Local Drop** in Finder, Photos and other apps, or ✈ next to the phone in the menu. The phone wakes up for them by itself — Local Drop doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
 - **Progress in sight.** On Android 16 and later a transfer is a Live Update: a chip with the percentage in the status bar and on the lock screen, like the drop filling up in the Mac's menu bar.
-- **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **LocalDrop** target sends to your default Mac in one tap.
+- **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **Local Drop** target sends to your default Mac in one tap.
 - **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
 - **Knows when your Mac is around.** The Mac advertises a private Bluetooth token that only your phones can recognize. The app shows **Nearby · ready**, **busy**, **on another network** or **not nearby**; strangers don't see the Mac at all.
 - **Send later.** Mac asleep, lid closed or out of range? The transfer waits instead of failing and goes through as soon as the Mac wakes up nearby — without waking it up for nothing in the meantime. The same the other way: files for a phone that isn't around wait on the Mac for up to a week, also across restarts.
 - **One request for everything.** Shares to the same Mac go as one transfer, and files shared while the Mac is asking are added to the request on screen.
 - **Accept automatically, per device.** On the Mac, choose what each phone may save without asking: photos and videos, files under 100 MB, everything — or nothing at all.
-- **Text and links to the clipboard, both ways.** On the phone, share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. On the Mac, share a page from Safari or selected text with **Share › LocalDrop**, or right-click your phone in the menu and choose **Send Clipboard**. Links open with one tap or click.
+- **Text and links to the clipboard, both ways.** On the phone, share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. On the Mac, share a page from Safari or selected text with **Share › Local Drop**, or right-click your phone in the menu and choose **Send Clipboard**. Links open with one tap or click.
 - **As fast as your network.** Speed depends on how the devices are connected and on the network itself: a few MB/s on 2.4 GHz Wi-Fi, 100 MB/s and more over a fast 5 GHz link such as the phone's hotspot. Every file is checked with SHA-256 before it is saved.
 - **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers.
 - **A Mac app that stays out of the way.** A menu bar drop that fills up while files come and go, Liquid Glass on macOS 26, notifications with **Show in Finder**, starts at login.
@@ -47,7 +47,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 ## Quick start
 
 1. Build and run the Mac app (see [Building from source](#building-from-source)). A drop appears in the menu bar.
-2. Build and install the Android app, open **LocalDrop** and tap **Add a Mac**.
+2. Build and install the Android app, open **Local Drop** and tap **Add a Mac**.
 3. On the Mac, open the menu and turn on **Visible to new devices**. Tap your Mac on the phone and check that both screens show the same code.
 4. That is it: share any photo or file, pick your Mac in the share sheet, and it lands in Downloads.
 
@@ -64,7 +64,7 @@ The full wire protocol is in [`protocol/`](protocol/protocol.md); design decisio
 
 ## Speed
 
-LocalDrop adds no limit of its own: the connection and the network decide. Examples measured during development:
+Local Drop adds no limit of its own: the connection and the network decide. Examples measured during development:
 
 | Connection | Measured |
 | --- | --- |
@@ -76,10 +76,10 @@ Over a router every packet crosses the air twice; the phone's hotspot is a direc
 
 ## Limitations
 
-- **Mac → phone needs one Android approval.** To receive in the background, Android asks once to let LocalDrop connect to the Mac (Companion Device Manager). With the screen off, the phone notices a Mac with files within about a minute; with the screen on, within seconds.
+- **Mac → phone needs one Android approval.** To receive in the background, Android asks once to let Local Drop connect to the Mac (Companion Device Manager). With the screen off, the phone notices a Mac with files within about a minute; with the screen on, within seconds.
 - **No automatic clipboard sync.** Android 10+ lets only the app on screen read the clipboard, so copied text goes to the Mac with the Quick Settings tile or **Send to Mac** in the selection menu. Apps with their own selection menu, such as Telegram, don't show **Send to Mac**.
-- **Waiting is limited to an hour in the background.** Android doesn't let a background app restart a foreground service, so after an hour a waiting transfer is kept for 7 days and sent when you tap **Try again** or open LocalDrop.
-- **Share › LocalDrop has to be turned on once.** macOS lets only the user enable a share extension. Until it's on, the Mac's menu offers a shortcut to the switch in System Settings.
+- **Waiting is limited to an hour in the background.** Android doesn't let a background app restart a foreground service, so after an hour a waiting transfer is kept for 7 days and sent when you tap **Try again** or open Local Drop.
+- **Share › Local Drop has to be turned on once.** macOS lets only the user enable a share extension. Until it's on, the Mac's menu offers a shortcut to the switch in System Settings.
 - **Some guest and public networks** block connections between devices. Use the phone's hotspot there.
 
 ## Building from source
@@ -135,4 +135,4 @@ Keep placeholders such as `%1$s` and `%@` in place.
 
 [MIT](LICENSE.txt).
 
-LocalDrop is an independent project and is not affiliated with or endorsed by Apple or Google. AirDrop is a trademark of Apple Inc.
+Local Drop is an independent project and is not affiliated with or endorsed by Apple or Google. AirDrop is a trademark of Apple Inc.

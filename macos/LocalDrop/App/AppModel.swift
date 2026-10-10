@@ -284,14 +284,14 @@ final class AppModel {
                     let names = skipped.prefix(3).joined(separator: ", ") + (skipped.count > 3 ? "…" : "")
                     self.notifications.postMessage(
                         title: String(localized: "\(skipped.count) files left out of the archive"),
-                        body: String(localized: "macOS doesn't let LocalDrop read them: \(names)")
+                        body: String(localized: "macOS doesn't let Local Drop read them: \(names)")
                     )
                 }
                 if archives.isEmpty {
                     try? FileManager.default.removeItem(at: directory)
                     self.notifications.postMessage(
                         title: String(localized: "Couldn't send \(packing.title)"),
-                        body: String(localized: "LocalDrop couldn't pack the folder.")
+                        body: String(localized: "Local Drop couldn't pack the folder.")
                     )
                 } else {
                     self.sendStaged(archives, in: directory, to: deviceId)

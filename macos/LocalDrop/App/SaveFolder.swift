@@ -48,7 +48,7 @@ final class SaveFolder {
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = String(localized: "Choose")
-        panel.message = String(localized: "Files received with LocalDrop will be saved in this folder.")
+        panel.message = String(localized: "Files received with Local Drop will be saved in this folder.")
         panel.directoryURL = current
         NSApp.activate()
         panel.begin { [weak self] response in

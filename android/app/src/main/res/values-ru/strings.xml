@@ -5,20 +5,20 @@
     <string name="device_status_connecting">Подключение…</string>
     <string name="device_status_unreachable">Не отвечает — поднесите ближе</string>
     <string name="device_status_invalid">Прислал некорректные данные устройства</string>
-    <string name="device_status_incompatible">Несовместимая версия LocalDrop — обновите приложение</string>
+    <string name="device_status_incompatible">Несовместимая версия Local Drop — обновите приложение</string>
 
     <string name="discovery_failed_title">Ошибка поиска по Bluetooth</string>
 
     <string name="blocker_unsupported_title">Bluetooth LE недоступен</string>
-    <string name="blocker_unsupported_body">Это устройство не поддерживает Bluetooth Low Energy, без которого LocalDrop не может находить устройства рядом.</string>
+    <string name="blocker_unsupported_body">Это устройство не поддерживает Bluetooth Low Energy, без которого Local Drop не может находить устройства рядом.</string>
     <string name="blocker_permissions_title">Разрешите доступ к устройствам поблизости</string>
-    <string name="blocker_permissions_body_nearby">LocalDrop использует Bluetooth, чтобы находить ваш Mac и другие устройства рядом. Ваше местоположение не используется.</string>
-    <string name="blocker_permissions_body_location">На Android 11 система требует доступ к местоположению для поиска Bluetooth-устройств. LocalDrop использует его только для поиска устройств рядом и никогда не читает и не сохраняет ваше местоположение.</string>
+    <string name="blocker_permissions_body_nearby">Local Drop использует Bluetooth, чтобы находить ваш Mac и другие устройства рядом. Ваше местоположение не используется.</string>
+    <string name="blocker_permissions_body_location">На Android 11 система требует доступ к местоположению для поиска Bluetooth-устройств. Local Drop использует его только для поиска устройств рядом и никогда не читает и не сохраняет ваше местоположение.</string>
     <string name="blocker_permissions_denied_hint">Разрешение отклонено. Включите его в настройках приложения.</string>
     <string name="blocker_bluetooth_off_title">Bluetooth выключен</string>
     <string name="blocker_bluetooth_off_body">Включите Bluetooth, чтобы находить устройства рядом.</string>
     <string name="blocker_location_off_title">Геолокация выключена</string>
-    <string name="blocker_location_off_body">На Android 11 поиск Bluetooth работает только при включённой геолокации. LocalDrop не использует ваше местоположение.</string>
+    <string name="blocker_location_off_body">На Android 11 поиск Bluetooth работает только при включённой геолокации. Local Drop не использует ваше местоположение.</string>
 
     <string name="action_allow">Разрешить</string>
     <string name="action_open_app_settings">Открыть настройки</string>
@@ -40,7 +40,7 @@
     <string name="action_discard">Удалить</string>
     <string name="error_rejected_asleep">%1$s спит. Разбудите его и попробуйте снова.</string>
     <string name="queue_spooling">Сохраняю копию, чтобы отправить позже…</string>
-    <string name="queue_parked_text">%1$s был недоступен целый час. Копия хранится на телефоне 7 дней — нажмите «Повторить», когда он будет рядом, или просто откройте LocalDrop.</string>
+    <string name="queue_parked_text">%1$s был недоступен целый час. Копия хранится на телефоне 7 дней — нажмите «Повторить», когда он будет рядом, или просто откройте Local Drop.</string>
     <string name="queue_not_kept">%1$s был недоступен, а на телефоне не хватило места, чтобы сохранить копию на потом.</string>
     <plurals name="home_waiting">
         <item quantity="one">%d объект ждёт отправки</item>
@@ -53,7 +53,7 @@
 
     <string name="pairing_title">Привязать %1$s?</string>
     <string name="pairing_compare">Убедитесь, что %1$s показывает тот же код:</string>
-    <string name="pairing_key_changed">Ключ безопасности %1$s изменился. Так бывает после переустановки LocalDrop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами.</string>
+    <string name="pairing_key_changed">Ключ безопасности %1$s изменился. Так бывает после переустановки Local Drop — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами.</string>
     <string name="pairing_waiting">Ожидание подтверждения на %1$s…</string>
 
     <string name="trusted_last_seen">Был в сети %1$s</string>
@@ -63,7 +63,7 @@
     <string name="share_not_accessible">Приложение, из которого вы делитесь, не дало доступ к этим файлам. Поделитесь ими из «Файлов» или «Галереи».</string>
     <string name="share_pick_title">Отправить на</string>
     <string name="share_no_devices_title">Сначала добавьте Mac</string>
-    <string name="share_no_devices_body">Привяжите Mac в LocalDrop один раз. После этого он будет появляться прямо здесь, когда вы делитесь файлами.</string>
+    <string name="share_no_devices_body">Привяжите Mac в Local Drop один раз. После этого он будет появляться прямо здесь, когда вы делитесь файлами.</string>
     <string name="action_add_mac">Добавить Mac</string>
     <string name="shortcut_send_to">Отправить на %1$s</string>
 
@@ -75,7 +75,7 @@
     <string name="notification_pairing_text">Сравните код на обоих устройствах.</string>
     <string name="notification_pairing_code">Код привязки %1$s</string>
     <string name="notification_unknown_device">ваш Mac</string>
-    <string name="error_not_paired">Этот Mac больше не привязан. Откройте LocalDrop, чтобы добавить его снова.</string>
+    <string name="error_not_paired">Этот Mac больше не привязан. Откройте Local Drop, чтобы добавить его снова.</string>
 
     <string name="test_data_body">Отправьте сгенерированные данные на привязанный Mac, чтобы измерить скорость. Целостность проверяется по SHA-256. Прогресс показывается в уведомлении.</string>
     <string name="diagnostics_title">Диагностика</string>
@@ -83,7 +83,7 @@
     <string name="diagnostics_send_to">Отправить %1$s тестовых данных</string>
 
     <string name="home_empty_title">Отправляйте файлы на Mac из любого приложения</string>
-    <string name="home_empty_body">Привяжите Mac один раз. Дальше делитесь фото или файлом из любого приложения и выбирайте свой Mac — открывать LocalDrop не нужно.</string>
+    <string name="home_empty_body">Привяжите Mac один раз. Дальше делитесь фото или файлом из любого приложения и выбирайте свой Mac — открывать Local Drop не нужно.</string>
     <string name="add_mac_title">Добавить Mac</string>
     <string name="presence_nearby_ready">Рядом · готов</string>
     <string name="presence_nearby_other_network">Рядом · в другой сети</string>
@@ -115,9 +115,9 @@
 
     <string name="error_not_nearby">%1$s не рядом или спит. Разбудите его и держите рядом с телефоном.</string>
     <string name="error_nearby_unresponsive">%1$s рядом, но не ответил. Проверьте, что оба устройства в одной сети Wi-Fi, и попробуйте снова.</string>
-    <string name="error_pairing_unavailable">%1$s не привязан к этому телефону. На Mac откройте LocalDrop в строке меню, включите видимость для новых устройств и попробуйте снова.</string>
+    <string name="error_pairing_unavailable">%1$s не привязан к этому телефону. На Mac откройте Local Drop в строке меню, включите видимость для новых устройств и попробуйте снова.</string>
     <string name="error_bluetooth_off">Bluetooth выключен. Включите его, чтобы найти Mac.</string>
-    <string name="error_bluetooth_permission">LocalDrop нужен доступ к устройствам поблизости. Откройте LocalDrop, чтобы разрешить его.</string>
+    <string name="error_bluetooth_permission">Local Drop нужен доступ к устройствам поблизости. Откройте Local Drop, чтобы разрешить его.</string>
     <string name="error_bluetooth_failed">Не удалось найти Mac по Bluetooth. Попробуйте снова.</string>
     <string name="error_source_unavailable">Не удаётся прочитать %1$s. Возможно, файл перемещён или удалён.</string>
     <string name="error_rejected_declined">%1$s отклонил передачу.</string>
@@ -128,12 +128,12 @@
     <string name="error_checksum">%1$s повреждён при передаче (не совпала контрольная сумма) и не сохранён. Попробуйте снова.</string>
     <string name="error_write_failed">%1$s не смог сохранить файл.</string>
 
-    <string name="error_no_wifi">Подключитесь к Wi-Fi или включите точку доступа на телефоне и подключите к ней Mac. LocalDrop передаёт файлы напрямую по локальной сети и никогда не использует мобильный интернет.</string>
-    <string name="error_refused">%1$s отклонил подключение. Проверьте, что на нём запущен LocalDrop.</string>
+    <string name="error_no_wifi">Подключитесь к Wi-Fi или включите точку доступа на телефоне и подключите к ней Mac. Local Drop передаёт файлы напрямую по локальной сети и никогда не использует мобильный интернет.</string>
+    <string name="error_refused">%1$s отклонил подключение. Проверьте, что на нём запущен Local Drop.</string>
     <string name="error_unreachable">Не удаётся связаться с %1$s. Проверьте, что оба устройства в одной сети Wi-Fi. Некоторые публичные и гостевые сети блокируют соединения между устройствами.</string>
     <string name="error_timeout">%1$s перестал отвечать.</string>
     <string name="error_connection_lost">Соединение с %1$s прервалось.</string>
-    <string name="error_incompatible">На %1$s несовместимая версия LocalDrop. Обновите приложение на обоих устройствах.</string>
+    <string name="error_incompatible">На %1$s несовместимая версия Local Drop. Обновите приложение на обоих устройствах.</string>
     <string name="error_auth_failed">Не удалось подтвердить подлинность %1$s. Соединение закрыто, чтобы защитить ваши данные.</string>
     <string name="error_decryption">Не удалось расшифровать данные от %1$s. Соединение закрыто, чтобы защитить ваши данные.</string>
     <string name="error_protocol">%1$s прислал неожиданный ответ.</string>
@@ -177,11 +177,11 @@
     <string name="notification_incoming_tap">У %1$s есть файлы для вас</string>
     <string name="notification_incoming_tap_text">Нажмите, чтобы получить.</string>
     <string name="action_receive_automatically">Принимать файлы без вопроса</string>
-    <string name="receiving_link_scope">Android покажет общий текст о синхронизации, например имени звонящего. LocalDrop этого не делает: связь только разрешает начать приём файлов в фоне, без доступа к контактам, звонкам, фото, файлам, сообщениям и геолокации. Без неё файлы с Mac придут по нажатию на уведомление. Отключить можно в любой момент в меню Mac ниже.</string>
+    <string name="receiving_link_scope">Android покажет общий текст о синхронизации, например имени звонящего. Local Drop этого не делает: связь только разрешает начать приём файлов в фоне, без доступа к контактам, звонкам, фото, файлам, сообщениям и геолокации. Без неё файлы с Mac придут по нажатию на уведомление. Отключить можно в любой момент в меню Mac ниже.</string>
     <string name="action_later">Позже</string>
     <string name="action_receive_in_background">Принимать в фоне</string>
     <string name="receiving_needs_link_title">Принимать файлы с %1$s в фоне</string>
-    <string name="receiving_needs_link_body">Android один раз спросит, можно ли связать LocalDrop с этим Mac. Тогда файлы с Mac придут, даже когда LocalDrop закрыт.</string>
+    <string name="receiving_needs_link_body">Android один раз спросит, можно ли связать Local Drop с этим Mac. Тогда файлы с Mac придут, даже когда Local Drop закрыт.</string>
 
     <!-- Уведомления о передаче: в шапке куда, в заголовке что, одна строка — что сейчас. -->
     <string name="notification_connecting">Подключение…</string>
@@ -228,14 +228,14 @@
     <string name="sheet_main_mac">Основной Mac</string>
     <string name="time_just_now">только что</string>
     <string name="sheet_verification_code">Код проверки</string>
-    <string name="sheet_verification_hint">Такой же код показывает Mac: LocalDrop › Настройки › Устройства, щит рядом с этим телефоном. Если код другой — забудьте Mac и привяжите заново.</string>
+    <string name="sheet_verification_hint">Такой же код показывает Mac: Local Drop › Настройки › Устройства, щит рядом с этим телефоном. Если код другой — забудьте Mac и привяжите заново.</string>
     <string name="history_received">Получено</string>
     <string name="history_sent">Отправлено</string>
     <string name="history_empty">За 30 дней ничего не было</string>
     <string name="action_show_all">Показать все</string>
     <string name="card_left">осталось</string>
     <string name="card_finished_in">%1$s · %2$s за %3$s</string>
-    <string name="add_mac_step_menu">На Mac нажмите на каплю LocalDrop в строке меню</string>
+    <string name="add_mac_step_menu">На Mac нажмите на каплю Local Drop в строке меню</string>
     <string name="add_mac_step_visible">Включите «Виден новым устройствам»</string>
     <string name="add_mac_step_nearby">Держите Mac рядом с телефоном</string>
     <string name="add_mac_still_searching">Продолжаем искать</string>
@@ -250,10 +250,10 @@
     <string name="history_yesterday">Вчера</string>
     <string name="sheet_main_mac_body">Первый в «Поделиться» и на главном экране</string>
     <string name="sheet_auto_body">Файлы с этого Mac сохраняются сразу</string>
-    <string name="sheet_background_body">Даже когда LocalDrop закрыт</string>
+    <string name="sheet_background_body">Даже когда Local Drop закрыт</string>
     <string name="trusted_forget_button">Забыть этот Mac</string>
     <string name="settings_general">Общие</string>
-    <string name="history_no_access">LocalDrop больше не может открыть этот файл</string>
+    <string name="history_no_access">Local Drop больше не может открыть этот файл</string>
     <string name="settings_hide_thumbnails">Скрывать миниатюры</string>
     <string name="settings_hide_thumbnails_body">В «Недавних» фото и видео — значками, без превью</string>
     <string name="history_from">От %1$s</string>
