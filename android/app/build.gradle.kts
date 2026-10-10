@@ -28,6 +28,9 @@ android {
             optimization {
                 enable = true
             }
+            // The same switch the old way: the Crashlytics plugin reads only this one to inject
+            // the mapping id and upload mapping.txt, without which crash reports stay obfuscated.
+            isMinifyEnabled = true
         }
         create("profile") {
             initWith(getByName("release"))
