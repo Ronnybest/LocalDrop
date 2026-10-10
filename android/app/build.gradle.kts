@@ -16,9 +16,14 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        buildConfigField("boolean", "CRASH_REPORTS", "true")
     }
 
     buildTypes {
+        debug {
+            // Crashes while developing are seen in logcat; they would only drown real ones.
+            buildConfigField("boolean", "CRASH_REPORTS", "false")
+        }
         release {
             optimization {
                 enable = true
@@ -28,6 +33,7 @@ android {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
+            buildConfigField("boolean", "CRASH_REPORTS", "false")
         }
     }
     compileOptions {
@@ -36,11 +42,19 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     testOptions {
         // core/* logs through android.util.Log; JVM tests run that code without a device.
         unitTests.isReturnDefaultValues = true
     }
+}
+
+// Crash reports go to the owner's Firebase project. Its google-services.json isn't in the
+// repository, so other builds have no Firebase configuration and send nothing.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+    apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
 }
 
 kotlin {
@@ -73,6 +87,9 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.androidx.fragment)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
 }

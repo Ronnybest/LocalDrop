@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Drop — Privacy Policy</title>
+<meta name="description" content="Local Drop sends files directly between your own devices. It has no servers, no accounts, no ads and no analytics; the only thing it sends to the developer is a crash report, which you can turn off.">
+<style>
+  :root {
+    --bg: #fbfaf8; --fg: #1d1b1a; --muted: #5f5b57; --accent: #2f6fd0; --card: #f1efec; --rule: #e2dfdb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151413; --fg: #ece9e5; --muted: #a8a39d; --accent: #8db6ff; --card: #211f1e; --rule: #34312f; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+  nav { display: flex; gap: 8px; margin-bottom: 32px; }
+  nav a {
+    padding: 6px 14px; border-radius: 999px; background: var(--card); color: var(--fg);
+    text-decoration: none; font-size: 15px;
+  }
+  h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 21px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  a { color: var(--accent); }
+  .date { color: var(--muted); margin-bottom: 24px; }
+  .summary { background: var(--card); border-radius: 20px; padding: 18px 22px; }
+  .summary p:last-child { margin-bottom: 0; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 56px 0; }
+</style>
+</head>
+<body>
+<main>
+<nav><a href="#en">English</a><a href="#ru">Русский</a></nav>
+
+<section id="en" lang="en">
+<h1>Local Drop Privacy Policy</h1>
+<p class="date">Effective 10 October 2026</p>
+
+<div class="summary">
+<p>Local Drop sends files, text and links directly between your own devices over your local network. It has no servers, no accounts, no ads and no analytics. The developer never receives what you send. The only thing the Android app sends to the developer is a crash report if it crashes, and you can turn that off.</p>
+</div>
+
+<p>This policy covers the Local Drop apps for Android and macOS, published by Zeppon.</p>
+
+<h2>What the app handles, and where it stays</h2>
+<ul>
+<li><strong>Files, text and links you send.</strong> They go straight from one of your devices to the paired device you choose, over Wi-Fi or a phone hotspot, encrypted end to end (AES-256-GCM with keys agreed for each session; devices prove who they are with keys exchanged when you pair them). They never pass through a server. Received files are saved to Downloads on Android and to the folder you choose on the Mac. If a Mac is out of reach, the phone keeps a copy of what is waiting for up to 7 days, then deletes it.</li>
+<li><strong>Clipboard.</strong> Read only when you ask to send it: the Clipboard button, the Quick Settings tile, or Send Clipboard on the Mac. It goes only to the device you picked.</li>
+<li><strong>Recent transfers.</strong> The list of recent transfers — file names, sizes, sent and received text and links, and the device involved — is kept only on the device, for 30 days or until you swipe an entry away.</li>
+<li><strong>Your devices.</strong> When you pair two devices, they exchange their names (such as “Pixel 8” or “MacBook Pro”) and public keys. Each device keeps its list of paired devices locally. Private keys stay in Android Keystore and the macOS Keychain and never leave the device.</li>
+<li><strong>Bluetooth.</strong> Used to notice your paired devices nearby. What a device broadcasts is a code that changes regularly, so people around you can’t track it. While a Mac is visible to new devices, its name can be seen by Local Drop apps nearby.</li>
+<li><strong>Location.</strong> On Android 10 and 11 the system requires location permission to scan for Bluetooth devices. Local Drop uses it only for that scan and never reads, stores or sends your location. Android 12 and later don’t ask for it.</li>
+<li><strong>Background link with your Mac.</strong> If you allow it, Android links Local Drop with your Mac so files from it can arrive in the background. This gives no access to contacts, calls, photos, messages or location.</li>
+<li><strong>Logs.</strong> Diagnostic messages go to the system log of the device and stay there unless you share them yourself. They don’t contain the contents of files, text or the clipboard.</li>
+</ul>
+
+<h2>Crash reports</h2>
+<p>If the Android app crashes, it sends a crash report to the developer through Firebase Crashlytics, a service of Google. A report contains the error and where in the app it happened, the phone model, the Android and app versions, the time, and a random identifier of this installation that isn’t linked to you or your other apps. It doesn’t contain your files, the text or links you send, or the clipboard. Google processes reports on the developer’s behalf and keeps them for 90 days; see <a href="https://firebase.google.com/support/privacy">Privacy and Security in Firebase</a>. To stop sending them, turn off <strong>Send crash reports</strong> in the app’s Settings; reports not yet sent are then deleted. The Mac app sends no crash reports.</p>
+
+<h2>What the app doesn’t do</h2>
+<ul>
+<li>What you send goes only to your own paired devices, never to the developer or anyone else.</li>
+<li>No accounts, advertising, analytics or tracking.</li>
+<li>Transfers use only your local network, never the internet; only crash reports go over the internet. Android lists the network permission as “full network access” because local connections need it too.</li>
+<li>No data is sold or used for any purpose other than transferring what you choose.</li>
+</ul>
+
+<h2>Deleting your data</h2>
+<p>Apart from crash reports, everything lives on your devices. Swipe an entry in Recent to remove it; entries older than 30 days are removed automatically. Forget a device to remove its pairing. Uninstalling the Android app deletes all of its data. On the Mac, delete the app, the folder <code>~/Library/Application Support/LocalDrop</code> and the “LocalDrop” items in Keychain Access. Received files stay where they were saved until you delete them.</p>
+
+<h2>Children</h2>
+<p>Local Drop is not directed at children under 13.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the new version is published on this page with a new date.</p>
+
+<h2>Contact</h2>
+<p>Questions about privacy: <a href="mailto:zeppon.apps@gmail.com">zeppon.apps@gmail.com</a>, or <a href="https://github.com/Ronnybest/LocalDrop/issues">open an issue on GitHub</a>.</p>
+</section>
+
+<hr>
+
+<section id="ru" lang="ru">
+<h1>Политика конфиденциальности Local Drop</h1>
+<p class="date">Действует с 10 октября 2026 года</p>
+
+<div class="summary">
+<p>Local Drop передаёт файлы, текст и ссылки напрямую между вашими устройствами по локальной сети. У приложения нет серверов, аккаунтов, рекламы и аналитики. Разработчик не получает того, что вы отправляете. Единственное, что приложение для Android отправляет разработчику, — отчёт о сбое, если оно упадёт, и это можно выключить.</p>
+</div>
+
+<p>Эта политика относится к приложениям Local Drop для Android и macOS, разработчик — Zeppon.</p>
+
+<h2>С чем работает приложение и где это хранится</h2>
+<ul>
+<li><strong>Файлы, текст и ссылки, которые вы отправляете.</strong> Передаются напрямую с вашего устройства на выбранное привязанное устройство по Wi-Fi или точке доступа телефона, со сквозным шифрованием (AES-256-GCM с ключами, согласованными для каждого сеанса; устройства подтверждают подлинность ключами, которыми обменялись при привязке). Через серверы ничего не проходит. Полученные файлы сохраняются в «Загрузки» на Android и в выбранную вами папку на Mac. Если Mac недоступен, телефон хранит копию ожидающей отправки не дольше 7 дней, затем удаляет её.</li>
+<li><strong>Буфер обмена.</strong> Читается, только когда вы сами отправляете его: кнопкой «Буфер», плиткой в быстрых настройках или командой «Отправить буфер обмена» на Mac. Уходит только на выбранное устройство.</li>
+<li><strong>Недавние передачи.</strong> Список недавних передач — имена и размеры файлов, отправленный и полученный текст и ссылки, устройство — хранится только на самом устройстве, 30 дней или пока вы не смахнёте запись.</li>
+<li><strong>Ваши устройства.</strong> При привязке устройства обмениваются именами (например, «Pixel 8» или «MacBook Pro») и открытыми ключами. Список привязанных устройств хранится на каждом устройстве. Закрытые ключи остаются в Android Keystore и Связке ключей macOS и никогда не покидают устройство.</li>
+<li><strong>Bluetooth.</strong> Нужен, чтобы замечать привязанные устройства рядом. Устройство передаёт в эфир регулярно меняющийся код, поэтому окружающие не могут его отслеживать. Пока Mac виден новым устройствам, его имя видно приложениям Local Drop поблизости.</li>
+<li><strong>Местоположение.</strong> На Android 10 и 11 система требует доступ к местоположению для поиска Bluetooth-устройств. Local Drop использует его только для этого поиска и никогда не читает, не хранит и не передаёт ваше местоположение. Android 12 и новее его не запрашивают.</li>
+<li><strong>Фоновая связь с Mac.</strong> Если вы разрешите, Android свяжет Local Drop с вашим Mac, чтобы файлы с него приходили в фоне. Это не даёт доступа к контактам, звонкам, фото, сообщениям и местоположению.</li>
+<li><strong>Журналы.</strong> Диагностические сообщения пишутся в системный журнал устройства и остаются там, если вы сами их не передадите. Содержимого файлов, текста и буфера обмена в них нет.</li>
+</ul>
+
+<h2>Отчёты о сбоях</h2>
+<p>Если приложение для Android упадёт, оно отправит разработчику отчёт о сбое через Firebase Crashlytics — сервис Google. В отчёте — ошибка и место в приложении, где она произошла, модель телефона, версии Android и приложения, время и случайный идентификатор этой установки, не связанный с вами и другими приложениями. Ваших файлов, отправленного текста и ссылок и буфера обмена в нём нет. Google обрабатывает отчёты по поручению разработчика и хранит их 90 дней; подробнее — <a href="https://firebase.google.com/support/privacy">Privacy and Security in Firebase</a>. Чтобы не отправлять отчёты, выключите <strong>«Отправлять отчёты о сбоях»</strong> в настройках приложения; ещё не отправленные отчёты при этом удаляются. Приложение для Mac отчётов о сбоях не отправляет.</p>
+
+<h2>Чего приложение не делает</h2>
+<ul>
+<li>То, что вы отправляете, уходит только на ваши привязанные устройства — не разработчику и никому другому.</li>
+<li>Не использует аккаунты, рекламу, аналитику и отслеживание.</li>
+<li>Передача идёт только по локальной сети, не через интернет; через интернет уходят лишь отчёты о сбоях. Android называет разрешение на сеть «полный доступ к сети», потому что оно нужно и для локальных подключений.</li>
+<li>Не продаёт данные и не использует их ни для чего, кроме передачи того, что вы выбрали.</li>
+</ul>
+
+<h2>Удаление данных</h2>
+<p>Кроме отчётов о сбоях, всё хранится на ваших устройствах. Смахните запись в «Недавних», чтобы удалить её; записи старше 30 дней удаляются сами. Забудьте устройство, чтобы удалить привязку. При удалении приложения на Android удаляются все его данные. На Mac удалите приложение, папку <code>~/Library/Application Support/LocalDrop</code> и записи «LocalDrop» в «Связке ключей». Полученные файлы остаются там, куда были сохранены, пока вы их не удалите.</p>
+
+<h2>Дети</h2>
+<p>Local Drop не предназначен для детей младше 13 лет.</p>
+
+<h2>Изменения</h2>
+<p>Если политика изменится, новая версия будет опубликована на этой странице с новой датой.</p>
+
+<h2>Контакты</h2>
+<p>Вопросы о конфиденциальности: <a href="mailto:zeppon.apps@gmail.com">zeppon.apps@gmail.com</a> или <a href="https://github.com/Ronnybest/LocalDrop/issues">задача на GitHub</a>.</p>
+</section>
+</main>
+</body>
+</html>

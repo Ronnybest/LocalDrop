@@ -257,4 +257,10 @@
     <string name="history_to">To %1$s</string>
     <string name="history_filter_all">All</string>
     <string name="history_filter_empty">Nothing here in the last 30 days</string>
+    <string name="settings_about">About</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_privacy_body">No servers, ads or analytics</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_crash_reports">Send crash reports</string>
+    <string name="settings_crash_reports_body">If the app crashes, the developer gets a description of the error and the phone model</string>
 </resources>

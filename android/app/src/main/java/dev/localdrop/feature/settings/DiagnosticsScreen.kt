@@ -24,9 +24,12 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,8 +45,8 @@ import dev.localdrop.feature.devices.HomeViewModel
 import dev.localdrop.feature.devices.MacAvatar
 
 /**
- * Settings: haptics on or off; and diagnostics — generated-data transfers to a paired Mac, for
- * measuring speed and checking integrity.
+ * Settings: haptics, thumbnails and crash reports; diagnostics — generated-data transfers to a paired Mac, for
+ * measuring speed and checking integrity; and the privacy policy with the app's version.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +61,12 @@ fun DiagnosticsScreen(
     val context = LocalContext.current
     val hapticsOn by Haptics.enabled(context).collectAsStateWithLifecycle()
     val thumbnailsHidden by ThumbnailSetting.hidden(context).collectAsStateWithLifecycle()
+    val crashReportsOn by CrashReports.enabled(context).collectAsStateWithLifecycle()
+    val crashReportsAvailable = remember { CrashReports.available(context) }
+    val general = if (crashReportsAvailable) 3 else 2
     val haptic = rememberHaptics()
+    val uriHandler = LocalUriHandler.current
+    val version = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -88,7 +96,7 @@ fun DiagnosticsScreen(
                         // Felt only when turning it on: off means off.
                         if (!on) haptic(Haptic.TOGGLE_ON)
                     },
-                    shapes = segmentShapes(segmentShape(0, 2)),
+                    shapes = segmentShapes(segmentShape(0, general)),
                     colors = segmentColors(),
                     supportingContent = { Text(stringResource(R.string.settings_haptics_body)) },
                     trailingContent = { Switch(checked = on, onCheckedChange = null) },
@@ -102,12 +110,28 @@ fun DiagnosticsScreen(
                         haptic(if (hide) Haptic.TOGGLE_OFF else Haptic.TOGGLE_ON)
                         ThumbnailSetting.setHidden(context, !hide)
                     },
-                    shapes = segmentShapes(segmentShape(1, 2)),
+                    shapes = segmentShapes(segmentShape(1, general)),
                     colors = segmentColors(),
                     supportingContent = { Text(stringResource(R.string.settings_hide_thumbnails_body)) },
                     trailingContent = { Switch(checked = hide, onCheckedChange = null) },
                     content = { Text(stringResource(R.string.settings_hide_thumbnails)) },
                 )
+            }
+            if (crashReportsAvailable) {
+                item(key = "crash_reports") {
+                    val on = crashReportsOn != false
+                    SegmentedListItem(
+                        onClick = {
+                            haptic(if (on) Haptic.TOGGLE_OFF else Haptic.TOGGLE_ON)
+                            CrashReports.setEnabled(context, !on)
+                        },
+                        shapes = segmentShapes(segmentShape(2, general)),
+                        colors = segmentColors(),
+                        supportingContent = { Text(stringResource(R.string.settings_crash_reports_body)) },
+                        trailingContent = { Switch(checked = on, onCheckedChange = null) },
+                        content = { Text(stringResource(R.string.settings_crash_reports)) },
+                    )
+                }
             }
 
             item(key = "diagnostics") { Section(stringResource(R.string.diagnostics_title)) }
@@ -162,9 +186,35 @@ fun DiagnosticsScreen(
                     content = { Text(device.deviceName) },
                 )
             }
+
+            item(key = "about_section") { Section(stringResource(R.string.settings_about)) }
+            item(key = "privacy") {
+                SegmentedListItem(
+                    onClick = {
+                        haptic(Haptic.TICK)
+                        uriHandler.openUri(PRIVACY_POLICY_URL)
+                    },
+                    shapes = segmentShapes(segmentShape(0, 2)),
+                    colors = segmentColors(),
+                    supportingContent = { Text(stringResource(R.string.settings_privacy_body)) },
+                    trailingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
+                    content = { Text(stringResource(R.string.settings_privacy)) },
+                )
+            }
+            item(key = "version") {
+                SegmentedListItem(
+                    shapes = segmentShapes(segmentShape(1, 2)),
+                    colors = segmentColors(),
+                    supportingContent = { Text(version) },
+                    content = { Text(stringResource(R.string.settings_version)) },
+                )
+            }
         }
     }
 }
+
+/** Published from `site/privacy` by the Pages workflow; the same link is on the Play listing. */
+private const val PRIVACY_POLICY_URL = "https://ronnybest.github.io/LocalDrop/privacy/"
 
 @Composable
 private fun Section(text: String) {

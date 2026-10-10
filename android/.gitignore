@@ -5,3 +5,5 @@ local.properties
 .kotlin/
 *.iml
 captures/
+# The owner's Firebase project (crash reports); see app/build.gradle.kts.
+app/google-services.json

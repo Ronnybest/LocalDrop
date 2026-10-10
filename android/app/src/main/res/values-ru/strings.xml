@@ -260,4 +260,10 @@
     <string name="history_to">На %1$s</string>
     <string name="history_filter_all">Все</string>
     <string name="history_filter_empty">За 30 дней здесь ничего нет</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_privacy">Политика конфиденциальности</string>
+    <string name="settings_privacy_body">Без серверов, рекламы и аналитики</string>
+    <string name="settings_version">Версия</string>
+    <string name="settings_crash_reports">Отправлять отчёты о сбоях</string>
+    <string name="settings_crash_reports_body">Если приложение упадёт, разработчик получит описание ошибки и модель телефона</string>
 </resources>
