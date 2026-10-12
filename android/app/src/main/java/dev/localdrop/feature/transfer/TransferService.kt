@@ -47,6 +47,7 @@ import dev.localdrop.core.transfer.TransferSource
 import dev.localdrop.core.transfer.TransferState
 import dev.localdrop.core.transfer.isFinal
 import dev.localdrop.core.transport.ConnectionException
+import dev.localdrop.core.wake.MacWakeScan
 import dev.localdrop.feature.devices.HomeVisibility
 import java.io.IOException
 import java.util.UUID
@@ -145,6 +146,8 @@ class TransferService : Service() {
     private var resultNotificationId = RESULT_NOTIFICATION_BASE
     private var lastProgressNotificationMs = 0L
     private var wakeLock: PowerManager.WakeLock? = null
+    /** The background wake scan is stopped while this service transfers (MacWakeScan.pause). */
+    private var wakeScanPaused = false
     private var wifiLock: WifiManager.WifiLock? = null
 
     private val container get() = (application as LocalDropApplication).container
@@ -964,6 +967,10 @@ class TransferService : Service() {
 
     /** Keeps the CPU and Wi-Fi awake while data flows with the screen off. Released on finish. */
     private fun acquireLocks() {
+        if (!wakeScanPaused) {
+            MacWakeScan.pause(this, container.bluetoothEnvironment)
+            wakeScanPaused = true
+        }
         if (wakeLock == null) {
             wakeLock = getSystemService(PowerManager::class.java)
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LocalDrop:transfer")
@@ -978,6 +985,10 @@ class TransferService : Service() {
     }
 
     private fun releaseLocks() {
+        if (wakeScanPaused) {
+            MacWakeScan.register(this, container.bluetoothEnvironment)
+            wakeScanPaused = false
+        }
         wakeLock?.takeIf { it.isHeld }?.release()
         wakeLock = null
         wifiLock?.takeIf { it.isHeld }?.release()

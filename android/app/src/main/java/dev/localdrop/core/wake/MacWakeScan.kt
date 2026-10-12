@@ -59,7 +59,10 @@ object MacWakeScan {
         // controller, so nothing is reported while no Mac has files; the receiver drops repeats.
         val settings = ScanSettings.Builder()
             // Low power: Wi-Fi and Bluetooth share the radio, and a low-latency scan running while
-            // LocalDrop was open cut receiving from 29 to 10 MB/s. A wake-up needs no hurry.
+            // LocalDrop was open cut receiving from 29 to 10 MB/s; TransferService also pauses this
+            // scan while it transfers (see pause). A Mac with files is noticed after 2 to 9 s
+            // either way: balanced (twice the listening) measured the same, so the wait is in how
+            // Android reports background matches, not in the scan's duty cycle.
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
@@ -72,6 +75,23 @@ object MacWakeScan {
             Log.w(TAG, "Wake scan not allowed: ${e.message}")
         } catch (e: IllegalStateException) {
             Log.w(TAG, "Wake scan unavailable (Bluetooth turning off?): ${e.message}")
+        }
+    }
+
+    /**
+     * While a transfer runs: the phone is already talking to the Mac, and the scan would take
+     * radio time from the Wi-Fi carrying the files. [register] resumes it.
+     */
+    @SuppressLint("MissingPermission") // A stop needs no more than the start had.
+    fun pause(context: Context, environment: BluetoothEnvironment) {
+        val scanner = environment.adapter?.bluetoothLeScanner ?: return
+        try {
+            scanner.stopScan(pendingIntent(context))
+            Log.i(TAG, "Wake scan paused for a transfer")
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Wake scan pause not allowed: ${e.message}")
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Wake scan pause unavailable: ${e.message}")
         }
     }
 
