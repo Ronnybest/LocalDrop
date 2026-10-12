@@ -208,10 +208,14 @@ LOCALDROP_UPLOAD_KEY_PASSWORD=…
 
 Сборка: `./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`. Перед
 каждой загрузкой поднять `versionCode` в `app/build.gradle.kts`: Play не принимает повторный.
-Нужен `app/google-services.json` владельца — иначе в сборке не будет отчётов о сбоях.
+Нужен `app/src/release/google-services.json` владельца — иначе в сборке не будет отчётов о сбоях.
+Он только для релиза: отладочная и профильная сборки — отдельное приложение
+`com.zepponapps.localdrop.debug` («Dewlet Debug», значок с плашкой DEBUG), ставятся рядом с версией
+из Google Play и Firebase не используют.
 
 Плавность анимаций и прокрутки проверять на сборке `profile`: оптимизирована как релиз (R8,
-без отладки), подписана отладочным ключом, ставится поверх debug с сохранением данных —
+без отладки), подписана отладочным ключом, тот же идентификатор `.debug` — ставится поверх debug
+с сохранением данных —
 `./gradlew installProfile`. Отладочная сборка Compose заметно медленнее: на Pixel 8 прокрутка
 главного экрана в debug — 4 % опоздавших кадров (99-й перцентиль 34 мс), в profile — 0 % (13 мс).
 

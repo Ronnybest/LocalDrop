@@ -6,4 +6,4 @@ local.properties
 *.iml
 captures/
 # The owner's Firebase project (crash reports); see app/build.gradle.kts.
-app/google-services.json
+app/src/release/google-services.json

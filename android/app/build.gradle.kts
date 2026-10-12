@@ -1,3 +1,6 @@
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
+import com.google.gms.googleservices.GoogleServicesPlugin
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -37,6 +40,9 @@ android {
 
     buildTypes {
         debug {
+            // A separate app, installed next to the one from Google Play (its signature differs).
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
             // Crashes while developing are seen in logcat; they would only drown real ones.
             buildConfigField("boolean", "CRASH_REPORTS", "false")
         }
@@ -53,6 +59,9 @@ android {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
+            // Installed over the debug app, with its data: same id, same signature.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-profile"
             buildConfigField("boolean", "CRASH_REPORTS", "false")
         }
     }
@@ -71,10 +80,24 @@ android {
 }
 
 // Crash reports go to the owner's Firebase project. Its google-services.json isn't in the
-// repository, so other builds have no Firebase configuration and send nothing.
-if (file("google-services.json").exists()) {
+// repository, so other builds have no Firebase configuration and send nothing. It sits in
+// src/release: the file knows only the store's application id, so debug and profile builds
+// (".debug") go without Firebase, as they send no crash reports anyway.
+if (file("src/release/google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
     apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+    configure<GoogleServicesPlugin.GoogleServicesPluginConfig> {
+        missingGoogleServicesStrategy = GoogleServicesPlugin.MissingGoogleServicesStrategy.IGNORE
+    }
+    // Without a config file the task's cache key matches a run from when it had one: the build
+    // cache would hand debug builds the store app's Firebase values. Those builds aren't cached.
+    tasks.matching { it.name.endsWith("GoogleServices") && !it.name.contains("Release") }.configureEach {
+        outputs.doNotCacheIf("no google-services.json for this build type") { true }
+    }
+    // Profile builds are minified like release but have no Firebase app to upload a mapping to.
+    (android.buildTypes.getByName("profile") as ExtensionAware).extensions.configure<CrashlyticsExtension> {
+        mappingFileUploadEnabled = false
+    }
 }
 
 kotlin {

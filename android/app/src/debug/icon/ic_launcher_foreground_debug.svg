@@ -1,0 +1,12 @@
+<!-- The launcher drop of the debug app, with a DEBUG badge. 108 units like an adaptive icon; the
+     badge stays inside the 66-unit safe circle, so round masks don't cut it. render.sh makes the
+     PNGs in res/drawable-*dpi. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 108 108">
+  <clipPath id="drop">
+    <path d="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z"/>
+  </clipPath>
+  <path clip-path="url(#drop)" fill="#fff" d="M30,57C38,62.5 46,62.5 54,57.5C61,53.5 67,53 78,57.5L78,86L30,86Z"/>
+  <path fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="M54,27.5C58.5,33.5 73,47.5 73,61.5A19,19 0,0 1,35 61.5C35,47.5 49.5,33.5 54,27.5Z"/>
+  <rect x="33" y="64" width="42" height="13" rx="6.5" fill="#FF8A00" stroke="#fff" stroke-width="1.5"/>
+  <text x="54" y="73.6" text-anchor="middle" fill="#fff" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="8.4" font-weight="800" letter-spacing="0.6">DEBUG</text>
+</svg>
