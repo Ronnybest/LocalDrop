@@ -47,6 +47,7 @@ import dev.localdrop.core.transfer.TransferSource
 import dev.localdrop.core.transfer.TransferState
 import dev.localdrop.core.transfer.isFinal
 import dev.localdrop.core.transport.ConnectionException
+import dev.localdrop.feature.devices.HomeVisibility
 import java.io.IOException
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -157,6 +158,16 @@ class TransferService : Service() {
         super.onCreate()
         createChannels(this)
         scope.launch { manager.state.collect(::onState) }
+        // A request shown quietly on the home screen alerts once the user leaves it unanswered.
+        scope.launch {
+            HomeVisibility.cardMac.collect { cardMac ->
+                val state = manager.state.value
+                val mac = receiving
+                if (mac != null && cardMac != mac.deviceId && state is TransferState.AwaitingLocalDecision && !incomingAlerted) {
+                    showIncoming(state)
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -516,7 +527,8 @@ class TransferService : Service() {
                 stopIfIdle()
                 // The ongoing notification still shows the request (see showIncoming) if it was
                 // declined: it must not stay on screen while queued sends keep the service up.
-                if (incomingAlerted && inForeground) updateOngoing(TransferState.Preparing(currentDeviceName))
+                if (incomingShown && inForeground) updateOngoing(TransferState.Preparing(currentDeviceName))
+                incomingShown = false
                 incomingAlerted = false
             }
             state.isFinal() -> {
@@ -526,6 +538,7 @@ class TransferService : Service() {
             }
             state is TransferState.AwaitingLocalDecision -> showIncoming(state)
             else -> {
+                incomingShown = false
                 incomingAlerted = false
                 notifications.cancel(INCOMING_NOTIFICATION_ID)
                 updateOngoing(state)
@@ -720,9 +733,13 @@ class TransferService : Service() {
      * It takes the place of the service's ongoing notification, so the request isn't shown twice;
      * once answered, that notification goes back to showing progress.
      */
+    private var incomingShown = false
+    /** It has sounded and popped up for this request; later updates stay quiet. */
     private var incomingAlerted = false
 
     private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
+        // The home screen asks already: in the shade, but no sound or pop-up over it.
+        val quiet = receiving?.deviceId?.let { it == HomeVisibility.cardMac.value } == true
         val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
             .setSubText(from(state.peerName))
@@ -735,6 +752,7 @@ class TransferService : Service() {
             // alert once" would keep it quiet: it sounds and pops up for a new request only, not
             // when files are added to the one on screen.
             .setOnlyAlertOnce(incomingAlerted)
+            .setSilent(quiet)
             // In a group of its own (see incomingGroupSummary), alerting itself.
             .setGroup(INCOMING_GROUP)
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
@@ -744,7 +762,8 @@ class TransferService : Service() {
             .build()
         notifyIfAllowed(INCOMING_SUMMARY_ID, incomingGroupSummary())
         notifyIfAllowed(ONGOING_NOTIFICATION_ID, notification)
-        incomingAlerted = true
+        incomingShown = true
+        if (!quiet) incomingAlerted = true
     }
 
     /**

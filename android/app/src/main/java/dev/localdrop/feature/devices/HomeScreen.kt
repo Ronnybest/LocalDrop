@@ -384,6 +384,11 @@ fun HomeScreen(
     // A session under way belongs to the Mac it is with; pairing has its own screen.
     val active = transfer.takeIf { it !is TransferState.Idle && !it.isFinal() && it !is TransferState.Pairing }
     val main = devices.defaultDevice() ?: devices.maxByOrNull { it.lastSeenMs }
+    // On screen and in front: a request from this Mac shows in its card, not as a pop-up too.
+    LifecycleResumeEffect(main?.deviceId) {
+        HomeVisibility.set(main?.deviceId)
+        onPauseOrDispose { HomeVisibility.set(null) }
+    }
     val activeDeviceId = active?.let { state -> devices.firstOrNull { it.deviceName == state.peerName() }?.deviceId ?: main?.deviceId }
 
     clipboardSend?.let { send ->
