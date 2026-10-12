@@ -17,10 +17,14 @@ final class DropZoneController {
     private var monitors: [Any] = []
     private var panel: NSPanel?
     private var hideTask: Task<Void, Never>?
-    /// The drag pasteboard's change count when the last drag was looked at: one look per drag.
+    /// The drag pasteboard's change count once the last drag was settled: one decision per drag.
     private var seenDrag = NSPasteboard(name: .drag).changeCount
+    /// When the current drag's pasteboard change was first noticed.
+    private var dragNoticed: (changeCount: Int, at: ContinuousClock.Instant)?
 
     private static let margin: CGFloat = 16
+    /// How long a drag pasteboard may stay without files before the drag counts as something else.
+    private static let settleTime: Duration = .milliseconds(500)
     /// How long "Sending" stays on screen after a drop.
     private static let confirmation: Duration = .milliseconds(1200)
 
@@ -52,12 +56,29 @@ final class DropZoneController {
         let pasteboard = NSPasteboard(name: .drag)
         // Until the dragging app writes the pasteboard, this is a plain mouse drag (selecting
         // text, moving a window): look again on the next event.
-        guard pasteboard.changeCount != seenDrag else { return }
-        seenDrag = pasteboard.changeCount
-        guard Self.isEnabled,
-              Self.carriesFiles(pasteboard),
-              model.deviceList.contains(where: \.canReceive) else { return }
-        show()
+        let changeCount = pasteboard.changeCount
+        guard changeCount != seenDrag else { return }
+        guard Self.isEnabled, model.deviceList.contains(where: \.canReceive) else {
+            seenDrag = changeCount
+            return
+        }
+        if Self.carriesFiles(pasteboard) {
+            seenDrag = changeCount
+            dragNoticed = nil
+            show()
+            return
+        }
+        // Apps fill the drag pasteboard in steps: right after it changes it can still be empty,
+        // and a file drag taken for something else never showed the panel. Look again on the
+        // next events for a moment before deciding.
+        let now = ContinuousClock.now
+        if dragNoticed?.changeCount != changeCount { dragNoticed = (changeCount, now) }
+        if let noticed = dragNoticed, now - noticed.at >= Self.settleTime {
+            seenDrag = changeCount
+            dragNoticed = nil
+            let types = (pasteboard.types ?? []).map(\.rawValue).joined(separator: ", ")
+            Log.app.info("Drag without files: \(types, privacy: .public)")
+        }
     }
 
     /// Files or folders, or files an app writes only once dropped (photos from Photos).
