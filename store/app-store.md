@@ -144,3 +144,23 @@ Dewlet соединяет ваш Mac и Android-телефон. Фото, вид
 2880×1800 (16:10), 1–10 per language. Still to take: the menu with a paired phone, the edge panel
 while dragging, an incoming transfer, Settings › Devices with the verification code, Share ›
 Dewlet in Finder.
+
+## App Review: answer to "2.1 Information Needed" (12 October 2026)
+
+Apple asks new accounts for a recording that starts with launching the app, the app's purpose
+and audience, setup instructions, external services, regional differences and regulated content.
+Sent with a recording on a Mac with the phone mirrored (scrcpy), and kept in the Notes field:
+
+> 1. Screen recording — on a Mac running the latest macOS, starting with launching Dewlet: pairing
+>    a phone, a photo from the phone to the Mac, a file from the Mac to the phone, copied text.
+>    No accounts, no user-generated content shared with others, no paid content.
+> 2. Purpose and audience — moves files, photos and copied text between a person's own Android
+>    phone and their Mac over the local network, end-to-end encrypted; for Mac users with an
+>    Android phone who otherwise use a cable, a cloud drive or message themselves.
+> 3. Setup — Dewlet for Android (closed testing: join the Google group, then the Play testing
+>    link), same Wi-Fi and Bluetooth on both, "Visible to new devices" on the Mac, "Add a Mac" on
+>    the phone, matching codes; then share to the Mac, drag to the screen edge, Clipboard.
+> 4. External services — none: no servers, accounts, analytics, crash reporting, payments or AI;
+>    only Bluetooth and the local network (Bonjour, direct TCP) to the user's own phone.
+> 5. Regional differences — none; no internet connection needed.
+> 6. Regulated industries or third-party material — not applicable.
