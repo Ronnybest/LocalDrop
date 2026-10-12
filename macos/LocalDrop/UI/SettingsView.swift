@@ -24,11 +24,14 @@ struct SettingsView: View {
 }
 
 private extension View {
-    /// macOS 15+ shows the toolbar's background on hover and when content is under it; the tab
-    /// bar here sits on the window background like the rest of the page.
+    /// macOS 15 shows the toolbar's background on hover and when content is under it; the tab
+    /// bar here sits on the window background like the rest of the page. From macOS 26 the
+    /// toolbar keeps its own background: scrolled content fades out under it.
     @ViewBuilder
     func hiddenToolbarBackground() -> some View {
-        if #available(macOS 15, *) {
+        if #available(macOS 26, *) {
+            self
+        } else if #available(macOS 15, *) {
             toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         } else {
             self
@@ -38,6 +41,13 @@ private extension View {
 
 private struct GeneralSettings: View {
     let model: AppModel
+    private static let privacyPolicy = URL(string: "https://ronnybest.github.io/LocalDrop/privacy/")!
+    private static let version: String = {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(short) (\(build))"
+    }()
     @AppStorage(DropZoneController.enabledKey) private var showsDropZone = true
     @AppStorage(ReceivedClipboard.enabledKey) private var copiesReceived = true
 
@@ -91,7 +101,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Sending")
             } footer: {
-                Text("Send files from Finder, Photos and other apps with Share › Dewlet. While you drag files, your phones also appear at the right edge of the screen: drop the files on one.")
+                Text("Send files from Finder, Photos and other apps with Share › Dewlet. While you drag files, a tab appears at the right edge of the screen: drag the files onto it and drop them on a phone.")
                     .foregroundStyle(.secondary)
             }
 
@@ -108,6 +118,11 @@ private struct GeneralSettings: View {
                     Text("Allow Dewlet in System Settings › General › Login Items.")
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            Section("About") {
+                LabeledContent("Version", value: Self.version)
+                Link("Privacy Policy", destination: Self.privacyPolicy)
             }
         }
         .formStyle(.grouped)

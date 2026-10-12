@@ -1695,16 +1695,6 @@
         }
       }
     },
-    "Send files from Finder, Photos and other apps with Share › Dewlet. While you drag files, your phones also appear at the right edge of the screen: drop the files on one." : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › Dewlet. А пока вы перетаскиваете файлы, телефоны появляются у правого края экрана — бросьте файлы на нужный."
-          }
-        }
-      }
-    },
     "Drop zone while dragging files" : {
       "localizations" : {
         "ru" : {
@@ -1975,6 +1965,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Код проверки"
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности"
+          }
+        }
+      }
+    },
+    "Send files from Finder, Photos and other apps with Share › Dewlet. While you drag files, a tab appears at the right edge of the screen: drag the files onto it and drop them on a phone." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляйте файлы из Finder, «Фото» и других приложений через «Поделиться» › Dewlet. А пока вы перетаскиваете файлы, у правого края экрана появляется язычок — наведите на него файлы и бросьте их на нужный телефон."
+          }
+        }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
           }
         }
       }
