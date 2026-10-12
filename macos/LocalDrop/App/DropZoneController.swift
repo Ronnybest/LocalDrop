@@ -15,14 +15,23 @@ final class DropZoneController {
     private let model: AppModel
     private let state = DropZoneState()
     private var monitors: [Any] = []
+    /// The tab, or the phones once a drag reached the tab.
     private var panel: NSPanel?
+    private var expanded = false
+    /// The screen the drag started on.
+    private weak var screen: NSScreen?
     private var hideTask: Task<Void, Never>?
+    /// While the phones are out: folds them back into the tab once the drag moves away.
+    private var leaveTask: Task<Void, Never>?
     /// The drag pasteboard's change count once the last drag was settled: one decision per drag.
     private var seenDrag = NSPasteboard(name: .drag).changeCount
     /// When the current drag's pasteboard change was first noticed.
     private var dragNoticed: (changeCount: Int, at: ContinuousClock.Instant)?
 
     private static let margin: CGFloat = 16
+    /// How far past the phones' panel a drag may wander, and for how long, before it folds back.
+    private static let leaveSlop: CGFloat = 32
+    private static let leaveTime: Duration = .milliseconds(300)
     /// How long a drag pasteboard may stay without files before the drag counts as something else.
     private static let settleTime: Duration = .milliseconds(500)
     /// How long "Sending" stays on screen after a drop.
@@ -99,38 +108,109 @@ final class DropZoneController {
         }
     }
 
+    /// First only a tab at the screen's edge, so a drag elsewhere isn't covered by the phones;
+    /// dragging onto the tab slides the phones out.
     private func show() {
         hideTask?.cancel()
         state.sentTo = nil
+        let mouse = NSEvent.mouseLocation
+        screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
+        showTab()
+    }
+
+    private func showTab() {
+        let visible = screen?.visibleFrame ?? .zero
+        let tab = DropZoneTab { [weak self] in self?.expand() }
+        let size = NSHostingView(rootView: tab).fittingSize
+        // Against the edge, so a drag pushed to the edge lands on it.
+        let origin = NSPoint(x: visible.maxX - size.width, y: visible.midY - size.height / 2)
+        present(tab, size: size, at: origin)
+    }
+
+    private func expand() {
+        guard let tab = panel, !expanded else { return }
+        expanded = true
+        slideAway(tab)
         let view = DropZoneView(model: model, state: state) { [weak self] deviceId in
             self?.dropped(on: deviceId)
         }
-        let hosting = NSHostingView(rootView: view)
-        let size = hosting.fittingSize
+        let size = NSHostingView(rootView: view).fittingSize
+        // On the screen the drag is on, at its right edge, vertically centered.
+        let visible = screen?.visibleFrame ?? NSRect(origin: .zero, size: size)
+        let origin = NSPoint(x: visible.maxX - size.width - Self.margin, y: visible.midY - size.height / 2)
+        present(view, size: size, at: origin)
+        watchForLeaving()
+    }
 
-        let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
-                            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        panel.contentView = hosting
+    /// The mouse position rather than drag events: a drag between other apps reaches this app
+    /// only over its own windows.
+    private func watchForLeaving() {
+        leaveTask?.cancel()
+        leaveTask = Task { [weak self] in
+            var outsideSince: ContinuousClock.Instant?
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(50))
+                guard let self, self.expanded, let panel = self.panel else { return }
+                // Files just dropped: the panel stays for its confirmation.
+                guard self.state.sentTo == nil else { return }
+                let area = panel.frame.insetBy(dx: -Self.leaveSlop, dy: -Self.leaveSlop)
+                if area.contains(NSEvent.mouseLocation) {
+                    outsideSince = nil
+                } else if let since = outsideSince {
+                    if ContinuousClock.now - since >= Self.leaveTime {
+                        self.collapse()
+                        return
+                    }
+                } else {
+                    outsideSince = .now
+                }
+            }
+        }
+    }
+
+    private func collapse() {
+        guard expanded, let panel else { return }
+        expanded = false
+        slideAway(panel)
+        showTab()
+    }
+
+    /// Slides a panel's content out from the screen's right edge. The content moves, not the
+    /// window: a window's frame animation stopped short or jumped while another app dragged.
+    private func present(_ view: some View, size: NSSize, at origin: NSPoint) {
+        // The window reaches the screen's edge, so the content comes out from behind it.
+        let edge = screen?.visibleFrame.maxX ?? origin.x + size.width
+        let width = max(size.width, edge - origin.x)
+        let panel = EdgePanel(contentRect: NSRect(x: origin.x, y: origin.y, width: width, height: size.height),
+                              styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: size.height))
+        container.wantsLayer = true
+        container.clipsToBounds = true
+        let content = NSHostingView(rootView: view)
+        content.sizingOptions = []
+        content.frame = NSRect(x: width, y: 0, width: size.width, height: size.height)
+        container.addSubview(content)
+        panel.contentView = container
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        // The window's shadow doesn't follow moving content: on once it settles.
+        panel.hasShadow = false
         panel.level = .popUpMenu
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
-
-        // On the screen the drag is on, at its right edge, vertically centered.
-        let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
-        let visible = screen?.visibleFrame ?? NSRect(origin: .zero, size: size)
-        let origin = NSPoint(x: visible.maxX - size.width - Self.margin, y: visible.midY - size.height / 2)
-        panel.setFrameOrigin(NSPoint(x: origin.x + 24, y: origin.y))
-        panel.alphaValue = 0
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.18
-            panel.animator().alphaValue = 1
-            panel.animator().setFrameOrigin(origin)
+            context.duration = 0.3
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
+            content.animator().setFrameOrigin(.zero)
+        } completionHandler: {
+            // AppKit runs animation completions on the main thread.
+            MainActor.assumeIsolated {
+                guard !panel.isLeaving else { return }
+                panel.hasShadow = true
+                panel.invalidateShadow()
+            }
         }
         self.panel = panel
     }
@@ -148,22 +228,96 @@ final class DropZoneController {
     private func hide() {
         hideTask?.cancel()
         hideTask = nil
+        leaveTask?.cancel()
+        leaveTask = nil
+        expanded = false
         guard let panel else { return }
         self.panel = nil
+        slideAway(panel)
+    }
+
+    /// Slides the content back behind the screen's edge.
+    private func slideAway(_ panel: NSPanel) {
+        guard let panel = panel as? EdgePanel, let content = panel.contentView?.subviews.first else {
+            panel.orderOut(nil)
+            return
+        }
+        panel.isLeaving = true
+        panel.hasShadow = false
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
-            panel.animator().alphaValue = 0
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            content.animator().setFrameOrigin(NSPoint(x: panel.frame.width, y: 0))
         } completionHandler: {
-            // AppKit runs animation completions on the main thread.
             MainActor.assumeIsolated { panel.orderOut(nil) }
         }
     }
+}
+
+private final class EdgePanel: NSPanel {
+    /// Sliding away: the shadow stays off.
+    var isLeaving = false
 }
 
 @Observable
 final class DropZoneState {
     /// The phone files were just dropped on.
     var sentTo: String?
+}
+
+/// The tab at the screen's edge: a drag that reaches it brings out the phones.
+private struct DropZoneTab: View {
+    let reached: () -> Void
+    @State private var isTargeted = false
+
+    var body: some View {
+        Image(systemName: "chevron.compact.left")
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(Color.accentColor)
+            .frame(width: 24, height: 96)
+            .background(EdgeGlassBackground(cornerRadius: 12))
+            .contentShape(Rectangle())
+            .accessibilityLabel(Text("Send with Dewlet"))
+            // Only to notice the drag: files go to the phones that slide out.
+            .onDrop(of: [.fileURL, .image, .movie], isTargeted: $isTargeted) { _ in false }
+            .onChange(of: isTargeted) { _, targeted in
+                if targeted { reached() }
+            }
+    }
+}
+
+/// Panel glass rounded only on the left: the right side lies against the screen's edge.
+private struct EdgeGlassBackground: NSViewRepresentable {
+    var cornerRadius: CGFloat
+    private static let overhang: CGFloat = 40
+
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+        container.layer?.cornerRadius = cornerRadius
+        container.layer?.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+        container.layer?.masksToBounds = true
+        let glass: NSView
+        if #available(macOS 26, *) {
+            let effect = NSGlassEffectView()
+            effect.cornerRadius = cornerRadius
+            glass = effect
+        } else {
+            let blur = NSVisualEffectView()
+            blur.material = .popover
+            blur.blendingMode = .behindWindow
+            blur.state = .active
+            glass = blur
+        }
+        // Wider than the tab: the glass's own right edge and corners lie past the screen's edge
+        // and are cut off, so the tab sits flush against it.
+        glass.frame = NSRect(x: 0, y: 0, width: container.bounds.width + Self.overhang, height: container.bounds.height)
+        glass.autoresizingMask = [.width, .height]
+        container.addSubview(glass)
+        return container
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {}
 }
 
 /// The phones as drop targets, one tile each.
