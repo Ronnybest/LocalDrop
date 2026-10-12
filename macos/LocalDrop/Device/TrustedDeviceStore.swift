@@ -15,6 +15,9 @@ nonisolated struct TrustedDevice: Codable, Equatable, Identifiable, Sendable {
     var lastSeen: Date
     /// Absent until the user changes it: ask.
     var acceptPolicy: AcceptPolicy?
+    /// Id of the presence key this device was last given (PresenceKey.id). Absent in older
+    /// records and before the first trusted session.
+    var presenceKeyID: Data?
 
     var id: String { deviceId }
     var effectiveAcceptPolicy: AcceptPolicy { acceptPolicy ?? .ask }
@@ -106,6 +109,19 @@ final class TrustedDeviceStore {
             devices = updated
         } catch {
             Log.app.error("Could not update lastSeen: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// The device was just given the presence key with this id.
+    func notePresenceKey(_ id: Data, deviceId: String) {
+        guard let index = devices.firstIndex(where: { $0.deviceId == deviceId }), devices[index].presenceKeyID != id else { return }
+        var updated = devices
+        updated[index].presenceKeyID = id
+        do {
+            try save(updated)
+            devices = updated
+        } catch {
+            Log.app.error("Could not note the presence key given: \(String(describing: error), privacy: .public)")
         }
     }
 

@@ -29,8 +29,9 @@ protocol SessionCoordinator: AnyObject, Sendable {
 
     /// Pairing is accepted only in pairing mode (protocol.md §2.2).
     func isPairingAllowed() -> Bool
-    /// Given to trusted devices so they recognize this Mac over BLE (security.md §6a).
-    func currentPresenceKey() -> Data?
+    /// Given to a trusted device so it recognizes this Mac over BLE (security.md §6a); the Mac
+    /// notes which key that device now knows.
+    func presenceKey(givenTo deviceId: String) -> Data?
 
     /// The user's choice for this trusted device (ask when unknown).
     func acceptPolicy(for peer: PeerInfo) -> AcceptPolicy
@@ -135,7 +136,8 @@ nonisolated final class ServerSession {
                 throw SessionError.pairingUnavailable
             }
             await coordinator.sessionAuthenticated(entryId, peer: handshake.peer, status: status)
-            try await handshake.channel.send(status.message(presenceKey: await coordinator.currentPresenceKey()))
+            let presenceKey = status == .trusted ? await coordinator.presenceKey(givenTo: handshake.peer.deviceId) : nil
+            try await handshake.channel.send(status.message(presenceKey: presenceKey))
 
             var pending: Task<Message, any Error>?
             if status != .trusted {
@@ -314,7 +316,7 @@ nonisolated final class ServerSession {
         } catch {
             throw SessionError.storage(String(describing: error))
         }
-        try await channel.send(PairingMessages.result(accepted: true, presenceKey: await coordinator.currentPresenceKey()))
+        try await channel.send(PairingMessages.result(accepted: true, presenceKey: await coordinator.presenceKey(givenTo: peer.deviceId)))
         Log.handshake.info("Paired with \(peer.deviceId, privacy: .public)")
         return peerRead
     }

@@ -6,12 +6,18 @@ import Foundation
 nonisolated struct PresenceKey: Sendable {
     static let size = 32
     private static let item = KeychainBlob(service: "dev.localdrop.presence", account: "presence-key-v1", label: "LocalDrop presence key")
+    /// Keys before the last rotations, newest first, end to end.
+    private static let history = KeychainBlob(service: "dev.localdrop.presence", account: "presence-key-history-v1", label: "LocalDrop previous presence keys")
+    private static let historyLimit = 4
     private static let slotSeconds: Double = 900
     private static let tokenLabel = Data("localdrop/v1/presence".utf8)
     private static let endpointInfo = Data("localdrop/v1/endpoint".utf8)
     private static let pendingLabel = Data("localdrop/v1/pending".utf8)
 
     let raw: Data
+
+    /// A short id of the key, remembered per device: which key that device was last given.
+    var id: Data { Data(SHA256.hash(data: raw).prefix(8)) }
 
     static func loadOrCreate() throws(IdentityStoreError) -> PresenceKey {
         if let raw = try item.read(), raw.count == size { return PresenceKey(raw: raw) }
@@ -21,12 +27,28 @@ nonisolated struct PresenceKey: Sendable {
         return key
     }
 
-    /// New key after a device is forgotten: it can no longer recognize this Mac.
-    static func rotate() throws(IdentityStoreError) -> PresenceKey {
+    /// New key after a device is forgotten: it can no longer recognize this Mac. The old one is
+    /// kept a while for the other phones: one that hasn't connected since only knows that one,
+    /// and files waiting for it must be announced in a way it recognizes (protocol.md §2.8).
+    static func rotate(from old: PresenceKey?) throws(IdentityStoreError) -> PresenceKey {
         let key = PresenceKey(raw: Self.random())
         try item.replace(with: key.raw)
+        if let old {
+            let kept = ([old] + previous()).prefix(historyLimit)
+            do {
+                try history.replace(with: Data(kept.flatMap { $0.raw }))
+            } catch {
+                Log.crypto.error("Could not keep the previous presence key: \(error.description, privacy: .public)")
+            }
+        }
         Log.crypto.info("Rotated presence key")
         return key
+    }
+
+    /// Keys before the last rotations, newest first; empty if none were kept.
+    static func previous() -> [PresenceKey] {
+        guard let blob = try? history.read(), blob.count % size == 0 else { return [] }
+        return stride(from: 0, to: blob.count, by: size).map { PresenceKey(raw: blob.subdata(in: $0 ..< $0 + size)) }
     }
 
     static func slot(at date: Date) -> UInt64 {

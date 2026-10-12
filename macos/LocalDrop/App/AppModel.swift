@@ -31,6 +31,8 @@ final class AppModel {
 
     private var identity: Identity?
     private var presenceKey: PresenceKey?
+    /// Keys before the last rotations: phones that haven't connected since still know one.
+    private var previousPresenceKeys: [PresenceKey] = []
     private let pathMonitor = NWPathMonitor()
 
     /// While set and in the future, new devices can find and pair with this Mac.
@@ -188,7 +190,8 @@ final class AppModel {
             sessionHandles[entry.id]?.terminate(.trustRevoked)
         }
         do {
-            presenceKey = try PresenceKey.rotate()
+            presenceKey = try PresenceKey.rotate(from: presenceKey)
+            previousPresenceKeys = PresenceKey.previous()
         } catch {
             Log.crypto.error("Could not rotate presence key: \(error.description, privacy: .public)")
         }
@@ -197,15 +200,26 @@ final class AppModel {
 
     // MARK: - Sending to phones
 
-    /// One pending-delivery UUID per phone with files waiting, addressed to it (protocol.md §2.8).
+    /// One pending-delivery UUID per phone with files waiting, addressed to it (protocol.md §2.8),
+    /// tagged with the presence key that phone knows: after another device was forgotten, a phone
+    /// that hasn't connected since still has the previous key, and the delivery itself brings it
+    /// the current one.
     private func pendingDeliveryUUIDs() -> [CBUUID] {
-        guard let presenceKey else { return [] }
         let slot = PresenceKey.slot(at: Date())
         var phones: [String] = []
         for delivery in deliveries where delivery.phase == .waiting && !phones.contains(delivery.deviceId) {
             phones.append(delivery.deviceId)
         }
-        return phones.map { ProtocolConstants.pendingDeliveryUUID(tag: presenceKey.pendingTag(deviceId: $0, slot: slot)) }
+        return phones.compactMap { phone in
+            presenceKey(knownBy: phone).map { ProtocolConstants.pendingDeliveryUUID(tag: $0.pendingTag(deviceId: phone, slot: slot)) }
+        }
+    }
+
+    /// The presence key [deviceId] was last given: the current one unless it hasn't connected since a rotation.
+    private func presenceKey(knownBy deviceId: String) -> PresenceKey? {
+        guard let current = presenceKey else { return nil }
+        guard let id = trustStore?.devices.first(where: { $0.deviceId == deviceId })?.presenceKeyID, id != current.id else { return current }
+        return previousPresenceKeys.first { $0.id == id } ?? current
     }
 
     func delivery(for deviceId: String) -> OutgoingDelivery? {
@@ -617,6 +631,7 @@ final class AppModel {
         case .success(let (identity, presenceKey)):
             self.identity = identity
             self.presenceKey = presenceKey
+            previousPresenceKeys = PresenceKey.previous()
             fingerprint = identity.fingerprint
             identityPublicKey = identity.publicKeyX963
             startupState = .running
@@ -1090,7 +1105,11 @@ extension AppModel: SessionCoordinator {
         deliveries.removeAll { $0.id == id }
     }
 
-    func currentPresenceKey() -> Data? { presenceKey?.raw }
+    func presenceKey(givenTo deviceId: String) -> Data? {
+        guard let presenceKey else { return nil }
+        trustStore?.notePresenceKey(presenceKey.id, deviceId: deviceId)
+        return presenceKey.raw
+    }
 
     func sessionEnded(_ entryId: UUID, peer: PeerInfo?, error: SessionError?) {
         sessionHandles[entryId] = nil
