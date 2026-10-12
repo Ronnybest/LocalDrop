@@ -740,6 +740,7 @@ class TransferService : Service() {
     private fun showIncoming(state: TransferState.AwaitingLocalDecision) {
         // The home screen asks already: in the shade, but no sound or pop-up over it.
         val quiet = receiving?.deviceId?.let { it == HomeVisibility.cardMac.value } == true
+        Log.i(TAG, "Request from ${receiving?.deviceId}; card on screen: ${HomeVisibility.cardMac.value}; quiet: $quiet")
         val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(R.drawable.ic_stat_localdrop)
             .setSubText(from(state.peerName))

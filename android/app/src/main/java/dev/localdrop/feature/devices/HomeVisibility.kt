@@ -16,5 +16,6 @@ object HomeVisibility {
 
     internal fun set(deviceId: String?) {
         _cardMac.value = deviceId
+        android.util.Log.i("LD/home", "Card on screen: $deviceId")
     }
 }
