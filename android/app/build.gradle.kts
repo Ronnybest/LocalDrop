@@ -65,6 +65,9 @@ android {
             buildConfigField("boolean", "CRASH_REPORTS", "false")
         }
     }
+    // Profile builds replace the debug app on the phone: the same name and DEBUG icon.
+    sourceSets.getByName("profile").res.directories.add("src/debug/res")
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
