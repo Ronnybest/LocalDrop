@@ -233,6 +233,7 @@ class TransferManager(
 
         job = scope.launch(Dispatchers.IO) {
             var socket: Socket? = null
+            var peerReached: PeerIdentity? = null
             try {
                 val established = establish(target)
                 socket = established.socket
@@ -240,6 +241,7 @@ class TransferManager(
                 ensureActive()
                 channel = session.channel
                 val peer = session.peer
+                peerReached = peer
 
                 val newlyPaired = when (session.status) {
                     SessionStatus.Trusted -> {
@@ -290,6 +292,9 @@ class TransferManager(
                     else TransferState.Failed(peerName, ConnectionException.ConnectionLost(e))
                 }
             } finally {
+                // The session ending is the latest proof the Mac is near: Home shows it nearby at once,
+                // before its Bluetooth advertising is heard again.
+                peerReached?.let { peer -> if (trustStore.find(peer.deviceId) != null) trustStore.markSeen(peer.deviceId, peer.name) }
                 synchronized(requestLock) { pendingRequest = null }
                 channel = null
                 activeTransferId = null

@@ -47,9 +47,12 @@ data class DevicePresence(
 
 /**
  * Presence of trusted Macs, computed while collected (the app's home screen is visible) — never
- * as a permanent background scan. "Nearby" comes only from a fresh private BLE token; network
- * reachability only from the Mac's current addresses, read over BLE when it is nearby. Nothing
- * is inferred from remembered addresses, which say nothing about whether the Mac is on.
+ * as a permanent background scan. "Nearby" comes from a fresh private BLE token, or from a
+ * session with the Mac that just ended: right after pairing or a transfer its advertising is
+ * often missed (Wi-Fi traffic crowds out Bluetooth, the Mac restarts advertising), though that
+ * session proved it close and on our network. Network reachability otherwise comes only from the
+ * Mac's current addresses, read over BLE when it is nearby; nothing is inferred from remembered
+ * addresses, which say nothing about whether the Mac is on.
  */
 class PresenceMonitor(
     private val environment: BluetoothEnvironment,
@@ -110,16 +113,20 @@ class PresenceMonitor(
         }
         while (true) {
             val now = SystemClock.elapsedRealtime()
+            val wallNow = System.currentTimeMillis()
             send(
                 trustStore.devices.value.associate { device ->
                     val seen = lastSeen[device.deviceId]?.takeIf { now - it.atElapsedMs <= STALE_MS }
                     val info = snapshots[device.deviceId]?.info?.takeIf { seen?.status == AdvertisedStatus.Available }
+                    // A session with it a moment ago: connected over our network, so near and reachable.
+                    val justConnected = wallNow - device.lastSeenMs in 0..SESSION_GRACE_MS
                     device.deviceId to DevicePresence(
-                        nearby = seen != null,
+                        nearby = seen != null || justConnected,
                         reachable = when (seen?.status) {
                             AdvertisedStatus.NoNetwork -> false
-                            AdvertisedStatus.Available -> info?.let(::isOnOurNetwork)
-                            AdvertisedStatus.Busy, null -> null
+                            AdvertisedStatus.Available -> info?.let(::isOnOurNetwork) ?: true.takeIf { justConnected }
+                            AdvertisedStatus.Busy -> null
+                            null -> true.takeIf { justConnected }
                         },
                         // The advertised letter is fresher than a snapshot that may predate the transfer.
                         busy = seen?.status == AdvertisedStatus.Busy,
@@ -152,5 +159,6 @@ class PresenceMonitor(
         const val SNAPSHOT_MAX_AGE_MS = 30_000L
         const val FAILED_READ_RETRY_MS = 3_000L
         const val STALE_MS = ProtocolConstants.DEVICE_STALE_TIMEOUT_MS
+        const val SESSION_GRACE_MS = 30_000L
     }
 }
