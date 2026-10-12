@@ -60,9 +60,7 @@ object MacWakeScan {
         val settings = ScanSettings.Builder()
             // Low power: Wi-Fi and Bluetooth share the radio, and a low-latency scan running while
             // LocalDrop was open cut receiving from 29 to 10 MB/s; TransferService also pauses this
-            // scan while it transfers (see pause). A Mac with files is noticed after 2 to 9 s
-            // either way: balanced (twice the listening) measured the same, so the wait is in how
-            // Android reports background matches, not in the scan's duty cycle.
+            // scan while it transfers (see pause).
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
@@ -140,15 +138,19 @@ class MacWakeReceiver : BroadcastReceiver() {
             return
         }
         for (mac in macs) {
-            if (now - (lastWakeAt[mac.deviceId] ?: Long.MIN_VALUE / 2) < REPEAT_INTERVAL_MS) continue
-            lastWakeAt[mac.deviceId] = now
+            if (now < (quietUntil[mac.deviceId] ?: Long.MIN_VALUE)) continue
             Log.i(TAG, "${mac.deviceId} has files for this phone")
             try {
                 TransferService.receive(context, mac.deviceId)
+                // The service takes it from here and ignores a Mac it already receives from; this
+                // only spares it the burst of repeats. Long enough to swallow the next files sent
+                // a few seconds later was the slow wake-up's real cause: 7 to 11 s, not the scan.
+                quietUntil[mac.deviceId] = now + START_REPEAT_MS
             } catch (e: IllegalStateException) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || e !is ForegroundServiceStartNotAllowedException) throw e
                 Log.i(TAG, "No companion association: asking with a notification")
                 notifyTapToReceive(context, mac.deviceName)
+                quietUntil[mac.deviceId] = now + REPEAT_INTERVAL_MS
             }
         }
     }
@@ -181,10 +183,13 @@ class MacWakeReceiver : BroadcastReceiver() {
 
     private companion object {
         const val TAG = "LD/wake"
+        /** Between "tap to receive" notifications, and log lines about other phones' files. */
         const val REPEAT_INTERVAL_MS = 15_000L
+        /** After receiving was started: the advertising repeats many times a second. */
+        const val START_REPEAT_MS = 3_000L
 
         /** Per Mac and process; a new process (after the app was closed) starts receiving at once. */
-        val lastWakeAt = HashMap<String, Long>()
+        val quietUntil = HashMap<String, Long>()
 
         /** Deliveries for other phones are only logged, at most this often. */
         var lastOtherAt = Long.MIN_VALUE / 2
