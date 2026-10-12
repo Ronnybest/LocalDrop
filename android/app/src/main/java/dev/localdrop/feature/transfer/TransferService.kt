@@ -56,6 +56,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -159,13 +160,15 @@ class TransferService : Service() {
         createChannels(this)
         scope.launch { manager.state.collect(::onState) }
         // A request shown quietly on the home screen alerts once the user leaves it unanswered.
+        // Leaving means gone for a moment: the activity pauses briefly for a system dialog or a
+        // gesture too, and comes back within a second.
         scope.launch {
-            HomeVisibility.cardMac.collect { cardMac ->
+            HomeVisibility.cardMac.collectLatest { cardMac ->
+                val mac = receiving ?: return@collectLatest
+                if (cardMac == mac.deviceId) return@collectLatest
+                delay(LEFT_HOME_AFTER_MS)
                 val state = manager.state.value
-                val mac = receiving
-                if (mac != null && cardMac != mac.deviceId && state is TransferState.AwaitingLocalDecision && !incomingAlerted) {
-                    showIncoming(state)
-                }
+                if (receiving == mac && state is TransferState.AwaitingLocalDecision && !incomingAlerted) showIncoming(state)
             }
         }
     }
@@ -1002,6 +1005,7 @@ class TransferService : Service() {
         private const val CHANNEL_RESULTS = "transfer_results"
         private const val CHANNEL_PAIRING = "pairing"
         const val CHANNEL_INCOMING = "incoming"
+        private const val LEFT_HOME_AFTER_MS = 2_000L
         const val INCOMING_NOTIFICATION_ID = 4
         const val INCOMING_GROUP = "incoming"
         private const val APK_MIME_TYPE = "application/vnd.android.package-archive"
