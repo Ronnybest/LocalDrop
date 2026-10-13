@@ -63,7 +63,8 @@ nonisolated final class TransferSender {
 
         let answer: Message
         do {
-            answer = try await channel.receive(timeout: Self.acceptanceTimeout, stage: "acceptance")
+            guard let received = try await acceptance(transferId) else { return .cancelled }
+            answer = received
         } catch SessionError.timeout {
             // Unanswered on the phone: not retried, or the phone would be asked again and again.
             try? await channel.send(TransferMessages.cancel(transferId, reason: "timeout"))
@@ -84,6 +85,25 @@ nonisolated final class TransferSender {
         await coordinator.deliveryStarted(deliveryId)
         Log.transfer.info("Delivery accepted: sending \(sending.count) file(s)")
         return try await stream(sending, transferId: transferId)
+    }
+
+    /// The phone's answer to the request, or nil when this Mac's user cancels it first: the phone
+    /// is told and closes its request (messages.md), and the connection closes with the wait.
+    private func acceptance(_ transferId: Data) async throws -> Message? {
+        let channel = channel
+        let token = token
+        return try await withThrowingTaskGroup(of: Message?.self) { group in
+            group.addTask { try await channel.receive(timeout: Self.acceptanceTimeout, stage: "acceptance") }
+            group.addTask {
+                while !token.isCancelled { try await Task.sleep(for: .milliseconds(250)) }
+                try? await channel.send(TransferMessages.cancel(transferId, reason: "user_cancelled"))
+                Log.transfer.info("Delivery request cancelled on this Mac")
+                return nil
+            }
+            let first = try await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
     }
 
     private func stream(_ infos: [TransferFileInfo], transferId: Data) async throws -> DeliveryOutcome {

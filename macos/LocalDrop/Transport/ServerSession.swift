@@ -200,7 +200,7 @@ nonisolated final class ServerSession {
 
     /// The phone asked for what this Mac has for it (protocol.md §2.8): every waiting delivery
     /// in turn, then `nothing_pending`.
-    /// - Returns: false when the phone cancelled: it has closed the session, and so has this Mac.
+    /// - Returns: false after a cancel from either side: the session ends with it (protocol.md §5).
     private func serveDeliveries(_ handshake: Handshake) async throws -> Bool {
         while let delivery = await coordinator.takeDelivery(for: handshake.peer) {
             do {
@@ -213,7 +213,10 @@ nonisolated final class ServerSession {
                     outcome = try await sender.run()
                 }
                 await coordinator.deliveryFinished(delivery.id, outcome: outcome)
-                if case .cancelledByPeer = outcome { return false }
+                switch outcome {
+                case .cancelledByPeer, .cancelled: return false
+                default: break
+                }
             } catch {
                 let reason = (error as? SessionError)?.description ?? String(describing: error)
                 await coordinator.deliveryFinished(delivery.id, outcome: .interrupted(reason))
