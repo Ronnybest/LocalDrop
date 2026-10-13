@@ -48,7 +48,8 @@ fun MacSheet(
     canBeMain: Boolean,
     /** Shown by LocalDrop on the Mac too; null until this phone's key is read. */
     verificationCode: String?,
-    linked: Boolean,
+    /** Whether receiving in the background is set up; null where Android doesn't need it. */
+    linked: Boolean?,
     onDismiss: () -> Unit,
     onMakeMain: () -> Unit,
     onReceiveAutomatically: (Boolean) -> Unit,
@@ -75,7 +76,7 @@ fun MacSheet(
                 if (canBeMain) add(Toggle(R.string.sheet_main_mac, R.string.sheet_main_mac_body, device.isDefault, !device.isDefault) { onMakeMain() })
                 if (device.canSend) {
                     add(Toggle(R.string.action_receive_automatically, R.string.sheet_auto_body, device.receiveAutomatically, true, onReceiveAutomatically))
-                    add(Toggle(R.string.action_receive_in_background, R.string.sheet_background_body, linked, true, onReceiveInBackground))
+                    if (linked != null) add(Toggle(R.string.action_receive_in_background, R.string.sheet_background_body, linked, true, onReceiveInBackground))
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(Segments.Gap)) {

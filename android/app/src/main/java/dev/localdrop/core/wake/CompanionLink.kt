@@ -23,6 +23,13 @@ import dev.localdrop.core.protocol.ProtocolConstants
 object CompanionLink {
     private const val TAG = "LD/wake"
 
+    /**
+     * Only from Android 12: before it a background app may start a foreground service anyway, so
+     * receiving in the background works without the link (and Android 10 doesn't even show the
+     * dialog).
+     */
+    val needed: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
     fun isLinked(context: Context): Boolean {
         val manager = context.getSystemService(CompanionDeviceManager::class.java) ?: return false
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

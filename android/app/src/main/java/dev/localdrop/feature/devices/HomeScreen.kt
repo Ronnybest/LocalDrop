@@ -491,7 +491,7 @@ fun HomeScreen(
             }
             item(key = "hint") {
                 Hint(
-                    linkFor = devices.filter { it.canSend }.maxByOrNull { it.lastSeenMs }?.takeIf { !linked },
+                    linkFor = devices.filter { it.canSend }.maxByOrNull { it.lastSeenMs }?.takeIf { CompanionLink.needed && !linked },
                     onLink = ::requestLink,
                     modifier = Modifier.animateItem(),
                 )
@@ -560,7 +560,7 @@ fun HomeScreen(
             device = device,
             canBeMain = devices.size > 1,
             verificationCode = verificationCodes[device.deviceId],
-            linked = linked,
+            linked = linked.takeIf { CompanionLink.needed },
             onDismiss = { sheetFor = null },
             onMakeMain = {
                 haptic(Haptic.TOGGLE_ON)
