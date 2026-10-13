@@ -6,9 +6,9 @@
 
 **Send photos, files and text between Android and your Mac — straight from the share sheet, the way AirDrop does it.**
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.txt) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE.txt) ![Android](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white)
 
-[Architecture](docs/architecture.md) · [Protocol](protocol/protocol.md) · [Developer notes](docs/development.md) · [Русский](README.ru.md)
+[Install](#install) · [Architecture](docs/architecture.md) · [Protocol](protocol/protocol.md) · [Developer notes](docs/development.md) · [Privacy](https://ronnybest.github.io/LocalDrop/privacy/) · [Русский](README.ru.md)
 
 </div>
 
@@ -20,9 +20,18 @@ Gallery → Share → MacBook Pro → Done
 
 Getting a photo from an Android phone onto a Mac usually means a cable, a cloud drive or a messenger chat with yourself. Dewlet makes the Mac a target in the Android share sheet. Pick a photo, tap your MacBook, and the file is in Downloads a moment later — without opening an app, an account or the internet.
 
+## Install
+
+| | |
+| --- | --- |
+| **Android** | Dewlet is in testing on Google Play: join [the testers' group](https://groups.google.com/g/dewlet-testers) with your Google account, then open [the testing link](https://play.google.com/apps/testing/com.zepponapps.localdrop) and install it. Or download `Dewlet-<version>.apk` from [Releases](https://github.com/Ronnybest/LocalDrop/releases) — the same APK Google Play installs, with its signature, so the two update each other. |
+| **Mac** | Download `Dewlet-<version>.dmg` from [Releases](https://github.com/Ronnybest/LocalDrop/releases/latest), open it and drag Dewlet to Applications. Signed with Developer ID and notarized by Apple. The Mac App Store version is in review. |
+
+Coming from Local Drop or a Dewlet build before 0.1.1 (3) on the Mac? Delete the old app, forget the Mac on the phone and pair again: the Mac app now has its App Store identifier and starts without the old pairings.
+
 ## Features
 
-- **And back.** Start dragging files anywhere on the Mac and your phones slide in at the edge of the screen: drop the files on one. Or use **Share › Dewlet** in Finder, Photos and other apps, or ✈ next to the phone in the menu. The phone wakes up for them by itself — Dewlet doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
+- **And back.** Start dragging files anywhere on the Mac and a small tab appears at the right edge of the screen: drag the files onto it, your phones slide out, drop the files on one. Or use **Share › Dewlet** in Finder, Photos and other apps, or ✈ next to the phone in the menu. The phone wakes up for them by itself — Dewlet doesn't have to be open — and asks **Accept** or **Decline** in a notification, or saves them right away for a Mac you trust that much. Only the phone the files are for picks them up: other phones nearby don't even connect.
 - **Progress in sight.** On Android 16 and later a transfer is a Live Update: a chip with the percentage in the status bar and on the lock screen, like the drop filling up in the Mac's menu bar.
 - **Your Mac in the share sheet.** Every paired Mac is a Direct Share target. A plain **Dewlet** target sends to your default Mac in one tap.
 - **Paired once, trusted for good.** A 6-digit code on both screens pairs a phone and a Mac. After that they recognize each other by their keys, and a changed key is never trusted silently.
@@ -32,7 +41,7 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 - **Accept automatically, per device.** On the Mac, choose what each phone may save without asking: photos and videos, files under 100 MB, everything — or nothing at all.
 - **Text and links to the clipboard, both ways.** On the phone, share text, use **Send to Mac** in the text selection menu, or the **Clipboard to Mac** Quick Settings tile. On the Mac, share a page from Safari or selected text with **Share › Dewlet**, or right-click your phone in the menu and choose **Send Clipboard**. Links open with one tap or click.
 - **As fast as your network.** Speed depends on how the devices are connected and on the network itself: a few MB/s on 2.4 GHz Wi-Fi, 100 MB/s and more over a fast 5 GHz link such as the phone's hotspot. Every file is checked with SHA-256 before it is saved.
-- **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers.
+- **Private by design.** End-to-end encrypted over the local network only: no cloud, no accounts, no mobile data, no servers. The only thing that ever leaves your devices is an Android crash report through Firebase Crashlytics, and only until you turn it off in Settings; the Mac app sends nothing. See the [privacy policy](https://ronnybest.github.io/LocalDrop/privacy/).
 - **A Mac app that stays out of the way.** A menu bar drop that fills up while files come and go, Liquid Glass on macOS 26, notifications with **Show in Finder**, opens at login if you want it to.
 - **English and Russian** on both platforms.
 
@@ -46,8 +55,8 @@ Getting a photo from an Android phone onto a Mac usually means a cable, a cloud 
 
 ## Quick start
 
-1. Build and run the Mac app (see [Building from source](#building-from-source)). A drop appears in the menu bar.
-2. Build and install the Android app, open **Dewlet** and tap **Add a Mac**.
+1. Install the Mac app (see [Install](#install), or [build it](#building-from-source)) and start it. A drop appears in the menu bar.
+2. Install the Android app, open **Dewlet** and tap **Add a Mac**.
 3. On the Mac, open the menu and turn on **Visible to new devices**. Tap your Mac on the phone and check that both screens show the same code.
 4. That is it: share any photo or file, pick your Mac in the share sheet, and it lands in Downloads.
 
@@ -99,7 +108,7 @@ To build a Release copy, install it to `/Applications` and start it:
 DEVELOPMENT_TEAM=<your team ID> macos/scripts/install.sh
 ```
 
-A DMG for people outside development — signed with Developer ID and notarized by Apple — is built by `DEVELOPMENT_TEAM=<your team ID> macos/scripts/release.sh`. It needs a paid Apple Developer membership, a **Developer ID Application** certificate and notary credentials saved once with `xcrun notarytool store-credentials localdrop-notary`; the script names the profile and never sees the password.
+A DMG for people outside development — signed with Developer ID and notarized by Apple — is built by `DEVELOPMENT_TEAM=<your team ID> macos/scripts/release.sh`; the Mac App Store package by `macos/scripts/appstore.sh`. It needs a paid Apple Developer membership, a **Developer ID Application** certificate and notary credentials saved once with `xcrun notarytool store-credentials localdrop-notary`; the script names the profile and never sees the password.
 
 Run the Mac tests with `xcodebuild test -project macos/LocalDrop.xcodeproj -scheme LocalDrop -destination 'platform=macOS'` (add the same signing settings as above).
 
