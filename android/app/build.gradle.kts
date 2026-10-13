@@ -17,7 +17,7 @@ android {
         applicationId = "com.zepponapps.localdrop"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
+        versionCode = 5
         versionName = "0.1.0"
         buildConfigField("boolean", "CRASH_REPORTS", "true")
     }
