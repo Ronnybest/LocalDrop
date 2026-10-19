@@ -10,6 +10,8 @@
 	<false/>
 	<key>LSFileQuarantineEnabled</key>
 	<true/>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Dewlet saves the files you send from your phone to your Downloads folder. For example, a photo you share from your phone to this Mac appears in Downloads.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_localdrop._tcp</string>

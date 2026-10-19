@@ -44,13 +44,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Dewlet uses Bluetooth so that your Android devices can find this Mac nearby."
+            "value" : "Dewlet uses Bluetooth so that your paired phone can find this Mac nearby. For example, when you share a photo on your phone, this Mac shows up as a destination right away."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dewlet использует Bluetooth, чтобы ваши Android-устройства находили этот Mac рядом."
+            "state" : "translated",
+            "value" : "Dewlet использует Bluetooth, чтобы привязанный телефон находил этот Mac рядом. Например, когда вы делитесь фото на телефоне, этот Mac сразу появляется среди получателей."
           }
         }
       }
@@ -62,13 +62,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Dewlet receives files directly from your devices over the local network."
+            "value" : "Dewlet sends and receives files directly between this Mac and your paired phone over the local network. For example, a video you share from your phone arrives over your Wi-Fi without going through the internet."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dewlet получает файлы напрямую с ваших устройств по локальной сети."
+            "state" : "translated",
+            "value" : "Dewlet передаёт файлы напрямую между этим Mac и привязанным телефоном по локальной сети. Например, видео, которым вы поделились с телефона, приходит по Wi-Fi, минуя интернет."
+          }
+        }
+      }
+    },
+    "NSDownloadsFolderUsageDescription" : {
+      "comment" : "Privacy - Downloads Folder Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dewlet saves the files you send from your phone to your Downloads folder. For example, a photo you share from your phone to this Mac appears in Downloads."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewlet сохраняет в папку «Загрузки» файлы, которые вы отправляете с телефона. Например, фото, которым вы поделились с телефона на этот Mac, появится в «Загрузках»."
           }
         }
       }

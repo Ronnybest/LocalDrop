@@ -365,7 +365,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -373,8 +373,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Dewlet";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Dewlet uses Bluetooth so that your Android devices can find this Mac nearby.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Dewlet receives files directly from your devices over the local network.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Dewlet uses Bluetooth so that your paired phone can find this Mac nearby. For example, when you share a photo on your phone, this Mac shows up as a destination right away.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Dewlet sends and receives files directly between this Mac and your paired phone over the local network. For example, a video you share from your phone arrives over your Wi-Fi without going through the internet.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -398,7 +398,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -406,8 +406,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Dewlet";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Dewlet uses Bluetooth so that your Android devices can find this Mac nearby.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Dewlet receives files directly from your devices over the local network.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Dewlet uses Bluetooth so that your paired phone can find this Mac nearby. For example, when you share a photo on your phone, this Mac shows up as a destination right away.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Dewlet sends and receives files directly between this Mac and your paired phone over the local network. For example, a video you share from your phone arrives over your Wi-Fi without going through the internet.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -429,7 +429,7 @@
 				CODE_SIGN_ENTITLEMENTS = Support/LocalDropShare.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -457,7 +457,7 @@
 				CODE_SIGN_ENTITLEMENTS = Support/LocalDropShare.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -484,7 +484,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 0.1.1;
@@ -502,7 +502,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RD3M3SSSYJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 0.1.1;
