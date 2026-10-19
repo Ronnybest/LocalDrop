@@ -7,7 +7,8 @@ commas), description 4000 characters. Apple trademarks (AirDrop, Handoff) stay o
 
 ## App information
 
-- Name: Dewlet
+- Name: Dewlet in every language: no "Mac" or "Android" in the name or subtitle (App Review 5.2.5 and
+  2.3.10, 18 October 2026). If the Russian name is refused as taken, "Dewlet — обмен файлами".
 - Bundle ID: com.zepponapps.localdrop.mac · SKU: dewlet-mac
 - Category: Utilities; secondary: Productivity
 - Content rights: no third-party content
@@ -27,7 +28,7 @@ crash reports, no accounts. Transfers go only to the user's own paired phone.
 
 ### Subtitle
 
-Files between Android and Mac
+Share files with your phone
 
 ### Promotional text
 
@@ -35,7 +36,7 @@ Send photos, videos, files and copied text between your Android phone and your M
 
 ### Keywords
 
-android,phone,file transfer,share,photos,send,receive,wifi,bluetooth,nearby,clipboard,local,sync
+phone,file transfer,share,photos,videos,send,receive,wifi,bluetooth,nearby,clipboard,local,sync
 
 ### Description
 
@@ -77,7 +78,7 @@ The first App Store release of Dewlet.
 
 ### Subtitle
 
-Файлы между Android и Mac
+Обмен файлами с телефоном
 
 ### Promotional text
 
@@ -85,7 +86,7 @@ The first App Store release of Dewlet.
 
 ### Keywords
 
-андроид,телефон,передача файлов,поделиться,фото,отправить,принять,wifi,bluetooth,рядом,буфер обмена
+телефон,передача файлов,поделиться,фото,видео,отправить,принять,wifi,bluetooth,рядом,буфер обмена
 
 ### Description
 
@@ -164,3 +165,11 @@ Sent with a recording on a Mac with the phone mirrored (scrcpy), and kept in the
 >    only Bluetooth and the local network (Bonjour, direct TCP) to the user's own phone.
 > 5. Regional differences — none; no internet connection needed.
 > 6. Regulated industries or third-party material — not applicable.
+
+## App Review: 18 October 2026, build 0.1.1 (3)
+
+- 5.2.5: "Mac" in the name and subtitle. 2.3.10: "Android" in the name. Fixed in the metadata
+  above: Dewlet alone as the name, subtitles without either word, "android" out of the keywords.
+  The description still says what the app works with (Requirements), which is what it is for.
+- 5.1.1(ii): no Downloads folder purpose string. Build 0.1.1 (4) adds NSDownloadsFolderUsageDescription
+  and rewrites the Bluetooth and local network ones, each with an example of the use.
