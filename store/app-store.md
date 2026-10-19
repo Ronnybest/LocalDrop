@@ -129,11 +129,11 @@ Dewlet соединяет ваш Mac и Android-телефон. Фото, вид
 - Sign-in required: no.
 - Notes (while Dewlet for Android is in closed testing):
 
-> Dewlet transfers files between this Mac and the user's own Android phone. Dewlet for Android is in closed testing on Google Play before its public release, so the attached video shows the whole flow end to end: https://youtu.be/IsIvW3kN3sc
+> Dewlet transfers files between this Mac and the user's own phone. The companion app, Dewlet for Android, is in closed testing on Google Play before its public release, so the attached video shows the whole flow end to end: https://youtu.be/IsIvW3kN3sc
 >
-> To try it on an Android phone (Android 10+): join https://groups.google.com/g/dewlet-testers with a Google account, then open the Google Play testing link https://play.google.com/apps/testing/com.zepponapps.localdrop and install Dewlet.
+> To try it with a phone (Android 10+): join https://groups.google.com/g/dewlet-testers with a Google account, then open the Google Play testing link https://play.google.com/apps/testing/com.zepponapps.localdrop and install Dewlet.
 >
-> Pair: click the drop in the menu bar and turn on "Visible to new devices"; on the phone tap "Add a Mac" and confirm the same code on both screens. Then share a photo from the phone to the Mac, or drag a file to the right edge of the Mac's screen to send it to the phone.
+> Pair: click the drop in the menu bar and turn on "Visible to new devices"; on the phone tap "Add a Mac" and confirm the same code on both screens. Then share a photo from the phone to the Mac. To send from the Mac, start dragging a file: a small tab appears at the right edge of the screen; drag the file onto it and drop it on the phone that slides out.
 >
 > No account or sign-in. Launch at login stays off until the user turns it on in the menu or in Settings. The privacy policy is linked in Settings › General › About.
 
