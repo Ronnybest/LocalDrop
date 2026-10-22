@@ -136,6 +136,8 @@ Dewlet соединяет ваш Mac и Android-телефон. Фото, вид
 > Pair: click the drop in the menu bar and turn on "Visible to new devices"; on the phone tap "Add a Mac" and confirm the same code on both screens. Then share a photo from the phone to the Mac. To send from the Mac, start dragging a file: a small tab appears at the right edge of the screen; drag the file onto it and drop it on the phone that slides out.
 >
 > No account or sign-in. Launch at login stays off until the user turns it on in the menu or in Settings. The privacy policy is linked in Settings › General › About.
+>
+> Network server entitlement: the phone connects to the Mac, so Dewlet listens for incoming TCP connections on the local network and advertises that port over Bonjour (_localdrop._tcp, declared in NSBonjourServices). Every file, photo or text the phone sends arrives through this listener; without com.apple.security.network.server the Mac cannot receive anything. A new phone can pair only while the user has turned on "Visible to new devices" and confirmed the same code on both screens; transfers are end-to-end encrypted.
 
   Once the Android app is public, replace the second paragraph with its store link:
   https://play.google.com/store/apps/details?id=com.zepponapps.localdrop
@@ -173,3 +175,20 @@ Sent with a recording on a Mac with the phone mirrored (scrcpy), and kept in the
   The description still says what the app works with (Requirements), which is what it is for.
 - 5.1.1(ii): no Downloads folder purpose string. Build 0.1.1 (4) adds NSDownloadsFolderUsageDescription
   and rewrites the Bluetooth and local network ones, each with an example of the use.
+
+## App Review: 20 October 2026, build 0.1.1 (4), network server entitlement
+
+Automated check: com.apple.security.network.server without matching functionality. The
+entitlement stays: the Mac receives through its own TCP listener (BSD sockets in
+`TCPListener.swift`, published over Bonjour), which a static scan for NWListener does not see.
+Answered in Resolution Center and added to the Notes above:
+
+> Dewlet needs com.apple.security.network.server because the Mac is the receiving side of every
+> transfer. The app opens a TCP listening socket on the local network and advertises it over
+> Bonjour as _localdrop._tcp (declared in NSBonjourServices). The user's paired phone discovers
+> this service and connects to it to send files, photos and copied text to the Mac; without the
+> entitlement the Mac cannot accept these incoming connections and receives nothing. A new phone
+> can pair only while the user has turned on "Visible to new devices" and confirmed the same code
+> on both screens, and transfers are end-to-end encrypted. The listener is implemented with BSD
+> sockets and DNS-SD rather than Network.framework, which may be why the automated analysis did
+> not detect it. We have added this explanation to the App Review Information notes.
