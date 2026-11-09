@@ -9,6 +9,9 @@ commas), description 4000 characters. Apple trademarks (AirDrop, Handoff) stay o
 
 - Name: Dewlet in every language: no "Mac" or "Android" in the name or subtitle (App Review 5.2.5 and
   2.3.10, 18 October 2026). If the Russian name is refused as taken, "Dewlet — обмен файлами".
+- No Android or Google Play anywhere users see it: name, subtitle, promotional text, keywords,
+  description, screenshots (2.3.10, 27 October 2026). The phone is "your phone"; which phones are
+  supported is on the developer website (Marketing URL). The Review Notes may name them.
 - Bundle ID: com.zepponapps.localdrop.mac · SKU: dewlet-mac
 - Category: Utilities; secondary: Productivity
 - Content rights: no third-party content
@@ -32,7 +35,7 @@ Share files with your phone
 
 ### Promotional text
 
-Send photos, videos, files and copied text between your Android phone and your Mac — straight over your Wi-Fi, end-to-end encrypted. No cable, no cloud, no account.
+Send photos, videos, files and copied text between your phone and your Mac — straight over your Wi-Fi, end-to-end encrypted. No cable, no cloud, no account.
 
 ### Keywords
 
@@ -40,7 +43,7 @@ phone,file transfer,share,photos,videos,send,receive,wifi,bluetooth,nearby,clipb
 
 ### Description
 
-Dewlet connects your Mac and your Android phone. Photos, videos, files and copied text go straight from one to the other over your Wi-Fi — no cable, no cloud, no messages to yourself.
+Dewlet connects your Mac and your phone. Photos, videos, files and copied text go straight from one to the other over your Wi-Fi — no cable, no cloud, no messages to yourself.
 
 FROM PHONE TO MAC
 • Share from any app on the phone and pick your Mac: the files are in your Downloads a moment later.
@@ -67,7 +70,7 @@ STAYS OUT OF THE WAY
 • Opens at login if you want it to.
 
 REQUIREMENTS
-• An Android phone (Android 10 or later) with Dewlet for Android from Google Play.
+• The free Dewlet app on your phone. Supported phones are listed on the developer website.
 • Bluetooth and Wi-Fi on both devices, on the same network or the phone's hotspot.
 
 ### What's New (0.1.1)
@@ -82,7 +85,7 @@ The first App Store release of Dewlet.
 
 ### Promotional text
 
-Фото, видео, файлы и скопированный текст между Android-телефоном и Mac — напрямую по Wi-Fi, со сквозным шифрованием. Без кабеля, облака и аккаунта.
+Фото, видео, файлы и скопированный текст между телефоном и Mac — напрямую по Wi-Fi, со сквозным шифрованием. Без кабеля, облака и аккаунта.
 
 ### Keywords
 
@@ -90,7 +93,7 @@ The first App Store release of Dewlet.
 
 ### Description
 
-Dewlet соединяет ваш Mac и Android-телефон. Фото, видео, файлы и скопированный текст идут напрямую с одного устройства на другое по Wi-Fi — без кабеля, облака и сообщений самому себе.
+Dewlet соединяет ваш Mac и телефон. Фото, видео, файлы и скопированный текст идут напрямую с одного устройства на другое по Wi-Fi — без кабеля, облака и сообщений самому себе.
 
 С ТЕЛЕФОНА НА MAC
 • Поделитесь из любого приложения на телефоне и выберите свой Mac — через мгновение файлы уже в «Загрузках».
@@ -117,7 +120,7 @@ Dewlet соединяет ваш Mac и Android-телефон. Фото, вид
 • Открывается при входе в систему, если вы этого хотите.
 
 ТРЕБОВАНИЯ
-• Android-телефон (Android 10 или новее) с Dewlet для Android из Google Play.
+• Бесплатное приложение Dewlet на телефоне. Поддерживаемые телефоны указаны на сайте разработчика.
 • Bluetooth и Wi-Fi на обоих устройствах, в одной сети или через точку доступа телефона.
 
 ### Что нового (0.1.1)
@@ -192,3 +195,10 @@ Answered in Resolution Center and added to the Notes above:
 > on both screens, and transfers are end-to-end encrypted. The listener is implemented with BSD
 > sockets and DNS-SD rather than Network.framework, which may be why the automated analysis did
 > not detect it. We have added this explanation to the App Review Information notes.
+
+## App Review: 27 October 2026, build 0.1.1 (4)
+
+- 2.3.10 again: the description still named Android and Google Play (Requirements, first line,
+  promotional text). Removed in both languages; Requirements now point to the developer website
+  for supported phones. Metadata only, same build; the network server entitlement answer was
+  accepted (not raised again).
