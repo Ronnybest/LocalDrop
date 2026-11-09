@@ -21,8 +21,13 @@ nonisolated enum ProtocolConstants {
     static let pairingNamePrefix = "P"
     static let shortIdLength = 6
 
+    #if os(macOS)
     /// What this Mac can do (protocol.md §2.6).
     static let capabilities = ["files", "multipleFiles", "text", "clipboardReceive", "autoAccept", "presenceToken", "send"]
+    #else
+    /// What this iPhone can do (protocol.md §2.6), the same as an Android phone.
+    static let capabilities = ["files", "multipleFiles", "text", "receive", "clipboardReceive"]
+    #endif
     /// A phone that can receive from this Mac (protocol.md §2.6).
     static let receiveCapability = "receive"
     /// A device that takes `text` straight to its clipboard (protocol.md §2.6).
@@ -38,5 +43,9 @@ nonisolated enum ProtocolConstants {
     /// Sender-side chunk size. Not part of the wire contract; receivers accept up to `maxChunkSize`.
     static let chunkSize = 256 * 1024
 
+    #if os(macOS)
     static let platform = "macos"
+    #else
+    static let platform = "ios"
+    #endif
 }
