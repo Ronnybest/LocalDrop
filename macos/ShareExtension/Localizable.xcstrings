@@ -69,18 +69,18 @@
         }
       }
     },
-    "No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once.": {
+    "No phone can receive yet. Pair a phone with Dewlet and open Dewlet on it once.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once."
+            "value": "No phone can receive yet. Pair a phone with Dewlet and open Dewlet on it once."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока нет телефона, который может принимать. Привяжите Android-телефон к Dewlet и один раз откройте на нём Dewlet."
+            "value": "Пока нет телефона, который может принимать. Привяжите телефон к Dewlet и один раз откройте на нём Dewlet."
           }
         }
       }

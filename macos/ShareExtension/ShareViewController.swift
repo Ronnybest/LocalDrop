@@ -228,7 +228,7 @@ private struct ShareView: View {
             switch model.phase {
             case .choosing:
                 if model.phones.isEmpty {
-                    Text("No phone can receive yet. Pair an Android phone with Dewlet and open Dewlet on it once.")
+                    Text("No phone can receive yet. Pair a phone with Dewlet and open Dewlet on it once.")
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
