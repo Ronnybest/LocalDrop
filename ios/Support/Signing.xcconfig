@@ -1,0 +1,2 @@
+// Signing stays out of git: put DEVELOPMENT_TEAM = <team ID> in Signing.local.xcconfig (ignored).
+#include? "Signing.local.xcconfig"

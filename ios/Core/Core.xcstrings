@@ -1,0 +1,410 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ can no longer be read. It may have been moved or deleted.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удаётся прочитать %@. Возможно, файл перемещён или удалён."
+          }
+        }
+      }
+    },
+    "%@ cancelled the transfer.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ отменил передачу."
+          }
+        }
+      }
+    },
+    "%@ closed the connection (%@).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ закрыл соединение (%2$@)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ closed the connection (%2$@)."
+          }
+        }
+      }
+    },
+    "%@ closed the connection because pairing wasn’t confirmed in time.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ закрыл соединение: привязку не подтвердили вовремя."
+          }
+        }
+      }
+    },
+    "%@ couldn’t save the file.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не смог сохранить файл."
+          }
+        }
+      }
+    },
+    "%@ couldn’t verify this iPhone’s identity.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не смог подтвердить подлинность этого iPhone."
+          }
+        }
+      }
+    },
+    "%@ declined the transfer.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ отклонил передачу."
+          }
+        }
+      }
+    },
+    "%@ didn’t respond to the request.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не ответил на запрос."
+          }
+        }
+      }
+    },
+    "%@ is asleep. Wake it up and try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ спит. Разбудите его и попробуйте снова."
+          }
+        }
+      }
+    },
+    "%@ is busy with other devices. Try again in a moment.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ занят другими устройствами. Попробуйте чуть позже."
+          }
+        }
+      }
+    },
+    "%@ is no longer paired with this iPhone. Add it again in Dewlet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ больше не привязан к этому iPhone. Добавьте его снова в Dewlet."
+          }
+        }
+      }
+    },
+    "%@ is receiving another transfer. Try again in a moment.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ сейчас принимает другую передачу. Попробуйте чуть позже."
+          }
+        }
+      }
+    },
+    "%@ isn’t paired with this iPhone. On the Mac, click Dewlet in the menu bar, turn on “Visible to new devices”, then try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не привязан к этому iPhone. На Mac нажмите Dewlet в строке меню, включите «Виден новым устройствам» и попробуйте снова."
+          }
+        }
+      }
+    },
+    "%@ no longer trusts this iPhone. Add the Mac again to pair.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ больше не доверяет этому iPhone. Добавьте Mac снова, чтобы привязать его."
+          }
+        }
+      }
+    },
+    "%@ refused the connection. Make sure Dewlet is running on it.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ отклонил подключение. Проверьте, что на нём запущен Dewlet."
+          }
+        }
+      }
+    },
+    "%@ rejected the transfer (%@).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ отклонил передачу (%2$@)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ rejected the transfer (%2$@)."
+          }
+        }
+      }
+    },
+    "%@ sent an unexpected response.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ прислал неожиданный ответ."
+          }
+        }
+      }
+    },
+    "%@ stopped responding.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ перестал отвечать."
+          }
+        }
+      }
+    },
+    "%@ uses an incompatible version of Dewlet. Update the app on both devices.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На %@ несовместимая версия Dewlet. Обновите приложение на обоих устройствах."
+          }
+        }
+      }
+    },
+    "%lld files": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файл"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файлов"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld файла"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "A file was damaged in transit (checksum mismatch) and wasn’t saved. Try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл повреждён при передаче (не совпала контрольная сумма) и не сохранён. Попробуйте снова."
+          }
+        }
+      }
+    },
+    "Can’t find %@ on this network. Make sure the Mac is awake, Dewlet is running on it, and both devices are on the same Wi-Fi.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удаётся найти %@ в этой сети. Проверьте, что Mac не спит, на нём запущен Dewlet, а оба устройства подключены к одной сети Wi-Fi."
+          }
+        }
+      }
+    },
+    "Can’t reach %@. Make sure both devices are on the same Wi-Fi network. Some public and guest networks block connections between devices.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удаётся связаться с %@. Проверьте, что оба устройства в одной сети Wi-Fi. Некоторые публичные и гостевые сети блокируют соединения между устройствами."
+          }
+        }
+      }
+    },
+    "Connect to Wi-Fi, or turn on Personal Hotspot on this iPhone and connect the Mac to it. Dewlet sends files directly over the local network and never uses mobile data.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключитесь к Wi-Fi или включите режим модема на этом iPhone и подключите к нему Mac. Dewlet передаёт файлы напрямую по локальной сети и никогда не использует мобильный интернет."
+          }
+        }
+      }
+    },
+    "Couldn’t save on this iPhone. Free up some storage and try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить на этом iPhone. Освободите место и попробуйте снова."
+          }
+        }
+      }
+    },
+    "Couldn’t verify the identity of %@. The connection was closed to keep your data safe.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось подтвердить подлинность %@. Соединение закрыто, чтобы защитить ваши данные."
+          }
+        }
+      }
+    },
+    "Data from %@ failed decryption. The connection was closed to keep your data safe.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось расшифровать данные от %@. Соединение закрыто, чтобы защитить ваши данные."
+          }
+        }
+      }
+    },
+    "Dewlet can’t reach %@: allow Local Network for Dewlet in Settings.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet не может связаться с %@: разрешите Dewlet доступ к локальной сети в Настройках."
+          }
+        }
+      }
+    },
+    "Pairing was cancelled.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка отменена."
+          }
+        }
+      }
+    },
+    "Pairing was declined on %@.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка отклонена на %@."
+          }
+        }
+      }
+    },
+    "Text": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст"
+          }
+        }
+      }
+    },
+    "The connection to %@ was lost.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединение с %@ прервалось."
+          }
+        }
+      }
+    },
+    "There isn’t enough free space on %@.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На %@ недостаточно свободного места."
+          }
+        }
+      }
+    },
+    "This iPhone’s security key is unavailable. Unlock your iPhone and try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ безопасности этого iPhone недоступен. Разблокируйте iPhone и попробуйте снова."
+          }
+        }
+      }
+    },
+    "Transfer cancelled.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Передача отменена."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

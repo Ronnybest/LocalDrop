@@ -5,3 +5,7 @@ xcuserdata/
 *.xcuserstate
 DerivedData/
 *.xcresult
+
+# iOS
+ios/build/
+ios/Support/Signing.local.xcconfig

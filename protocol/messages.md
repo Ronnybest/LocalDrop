@@ -17,7 +17,7 @@
 | `minV` | uint | минимальная поддерживаемая версия |
 | `id` | tstr | deviceId |
 | `name` | tstr | имя устройства ("Pixel 5") |
-| `platform` | tstr | `android` / `macos` / ... |
+| `platform` | tstr | `android` / `ios` / `macos` / ... |
 | `idKey` | bstr(65) | identity public key, P-256, X9.63 uncompressed (`04‖X‖Y`) |
 | `eph` | bstr(65) | ephemeral ECDH public key, P-256, X9.63 uncompressed |
 | `nonceCommit` | bstr(32) | `SHA-256(clientNonce)` |

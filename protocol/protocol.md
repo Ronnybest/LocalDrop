@@ -1,6 +1,6 @@
 # LocalDrop Protocol v1
 
-Документ — единственный источник правды для всех реализаций (Android, macOS).
+Документ — единственный источник правды для всех реализаций (Android, iOS, macOS).
 Реализации не должны полагаться на поведение, которое здесь не описано.
 
 ```
@@ -16,10 +16,10 @@ protocolVersion = 1
 | Роль | Кто в v1 | Что делает |
 |------|----------|------------|
 | **Responder** (server) | macOS | BLE peripheral, GATT server, TCP listener, Bonjour |
-| **Initiator** (client) | Android | BLE central/scanner, открывает TCP-соединение |
+| **Initiator** (client) | Android, iOS | BLE central/scanner, открывает TCP-соединение |
 
 Направление передачи файла не зависит от роли: после handshake любая сторона может стать
-отправителем. Соединение всегда открывает Initiator — Android не держит порт открытым в фоне.
+отправителем. Соединение всегда открывает Initiator — телефон не держит порт открытым в фоне.
 Чтобы получить файлы от Responder'а, Initiator подключается и отправляет `receive_ready`
 (messages.md); о том, что пора подключиться, Responder сообщает рекламой (§2.8).
 
@@ -85,7 +85,7 @@ Initiator подключается к GATT, запрашивает MTU 247 (best
 | `v` | uint | protocolVersion Responder'а |
 | `id` | tstr | deviceId (UUID, lowercase, с дефисами) |
 | `name` | tstr | человекочитаемое имя ("MacBook Pro") |
-| `platform` | tstr | `"macos"`, `"android"` |
+| `platform` | tstr | `"macos"`, `"android"`, `"ios"` |
 | `port` | uint | TCP-порт listener'а |
 | `addrs` | array of tstr | IPv4/IPv6 адреса локальных интерфейсов (без loopback) |
 | `fp` | bstr(32) | SHA-256 fingerprint identity public key |

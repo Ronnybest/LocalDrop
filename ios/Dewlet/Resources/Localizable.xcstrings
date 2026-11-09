@@ -1,0 +1,1264 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ is already paired" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ уже привязан"
+          }
+        }
+      }
+    },
+    "%@ of %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "%@ received" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ получен"
+          }
+        }
+      }
+    },
+    "%@ was damaged in transit and was not saved" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ повреждён при передаче и не сохранён"
+          }
+        }
+      }
+    },
+    "%@/s" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/с"
+          }
+        }
+      }
+    },
+    "%lld files" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файла"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файлов"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файл"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файла"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files received" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file received"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files received"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файла получено"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файлов получено"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файл получен"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld файла получено"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "A Mac with nothing paired yet is ready without it." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если к Mac ещё ничего не привязано, этого не нужно."
+          }
+        }
+      }
+    },
+    "A photo" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "фото"
+          }
+        }
+      }
+    },
+    "A video" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видео"
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
+    "Accept" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принять"
+          }
+        }
+      }
+    },
+    "Add Again" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить снова"
+          }
+        }
+      }
+    },
+    "Add a Mac" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить Mac"
+          }
+        }
+      }
+    },
+    "Busy with another device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занят другим устройством"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить"
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменено"
+          }
+        }
+      }
+    },
+    "Cancelled on the other device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменено на другом устройстве"
+          }
+        }
+      }
+    },
+    "Closed by the other device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыто другим устройством"
+          }
+        }
+      }
+    },
+    "Connected" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключено"
+          }
+        }
+      }
+    },
+    "Connecting to %@…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение к %@…"
+          }
+        }
+      }
+    },
+    "Connection closed by the other device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое устройство закрыло соединение"
+          }
+        }
+      }
+    },
+    "Copied to %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировано на %@"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать"
+          }
+        }
+      }
+    },
+    "Could not save the file" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить файл"
+          }
+        }
+      }
+    },
+    "Could not save the trusted device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить доверенное устройство"
+          }
+        }
+      }
+    },
+    "Couldn’t pair" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось привязать"
+          }
+        }
+      }
+    },
+    "Couldn’t receive from %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось получить от %@"
+          }
+        }
+      }
+    },
+    "Couldn’t send to %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось отправить на %@"
+          }
+        }
+      }
+    },
+    "Decline" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отклонить"
+          }
+        }
+      }
+    },
+    "Decryption failed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка расшифровки"
+          }
+        }
+      }
+    },
+    "Device identity check failed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось подтвердить подлинность устройства"
+          }
+        }
+      }
+    },
+    "Dewlet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewlet"
+          }
+        }
+      }
+    },
+    "Dewlet can’t look for Macs. Allow Local Network for Dewlet in Settings." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewlet не может искать Mac. Разрешите Dewlet доступ к локальной сети в Настройках."
+          }
+        }
+      }
+    },
+    "Dewlet can’t start" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewlet не удаётся запустить"
+          }
+        }
+      }
+    },
+    "Dewlet isn’t allowed to add to Photos, so photos and videos stay in Files." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewlet не разрешено добавлять в «Фото», поэтому фото и видео остаются в «Файлах»."
+          }
+        }
+      }
+    },
+    "Dewlet on the Mac shows the same code in Settings › Devices, under the shield next to this iPhone. If it ever differs, forget the Mac and pair again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такой же код показывает Dewlet на Mac: Настройки › Устройства, щит рядом с этим iPhone. Если он когда-нибудь будет другим — забудьте Mac и привяжите заново."
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлы"
+          }
+        }
+      }
+    },
+    "Files from this Mac are saved right away. Text and links always go to the clipboard." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлы с этого Mac сохраняются сразу. Текст и ссылки всегда попадают в буфер обмена."
+          }
+        }
+      }
+    },
+    "Forget" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забыть"
+          }
+        }
+      }
+    },
+    "Forget %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забыть %@?"
+          }
+        }
+      }
+    },
+    "Forget This Mac" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забыть этот Mac"
+          }
+        }
+      }
+    },
+    "From %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "От %@"
+          }
+        }
+      }
+    },
+    "In the Files app › Dewlet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В приложении «Файлы» › Dewlet"
+          }
+        }
+      }
+    },
+    "Incompatible Dewlet version — update Dewlet on both devices" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Несовместимая версия Dewlet — обновите Dewlet на обоих устройствах"
+          }
+        }
+      }
+    },
+    "It’s on the home screen, ready to send to." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Он уже на главном экране — можно отправлять."
+          }
+        }
+      }
+    },
+    "Kept in Files: Dewlet isn’t allowed to add to Photos. Allow it in Settings." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остались в «Файлах»: Dewlet не разрешено добавлять в «Фото». Разрешите это в Настройках."
+          }
+        }
+      }
+    },
+    "Last seen" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Был в сети"
+          }
+        }
+      }
+    },
+    "Link from %@ copied" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка от %@ скопирована"
+          }
+        }
+      }
+    },
+    "Looking for %@…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ищем %@…"
+          }
+        }
+      }
+    },
+    "Looking for Macs on this network…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ищем Mac в этой сети…"
+          }
+        }
+      }
+    },
+    "Macs on this network" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac в этой сети"
+          }
+        }
+      }
+    },
+    "Macs that are already paired aren’t listed." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macs that are already paired aren’t listed."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уже привязанные Mac здесь не показываются."
+          }
+        }
+      }
+    },
+    "Make sure %@ shows the same code:" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убедитесь, что %@ показывает тот же код:"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя"
+          }
+        }
+      }
+    },
+    "Name on your Mac" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя на Mac"
+          }
+        }
+      }
+    },
+    "Network error" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка сети"
+          }
+        }
+      }
+    },
+    "No longer on this iPhone" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Больше нет на этом iPhone"
+          }
+        }
+      }
+    },
+    "No response in time" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет ответа вовремя"
+          }
+        }
+      }
+    },
+    "Not enough disk space" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недостаточно места на диске"
+          }
+        }
+      }
+    },
+    "Not paired — add it again" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не привязан — добавьте его снова"
+          }
+        }
+      }
+    },
+    "Not paired — turn on “Visible to new devices” to pair" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не привязано — включите «Виден новым устройствам», чтобы привязать"
+          }
+        }
+      }
+    },
+    "Nothing sent or received yet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока ничего не отправлено и не получено"
+          }
+        }
+      }
+    },
+    "On %@, click the drop in the menu bar and turn on “Visible to new devices”. Then try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На %@ нажмите на каплю в строке меню и включите «Виден новым устройствам». Затем попробуйте снова."
+          }
+        }
+      }
+    },
+    "On your Mac, click the drop in the menu bar and turn on “Visible to new devices”." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На Mac нажмите на каплю в строке меню и включите «Виден новым устройствам»."
+          }
+        }
+      }
+    },
+    "Open" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть Настройки"
+          }
+        }
+      }
+    },
+    "Pair" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привязать"
+          }
+        }
+      }
+    },
+    "Pair with %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привязать %@?"
+          }
+        }
+      }
+    },
+    "Pair your Mac once. After that, send photos and files from here, or share them from any app and pick your Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привяжите Mac один раз. Дальше отправляйте фото и файлы отсюда или делитесь ими из любого приложения и выбирайте свой Mac."
+          }
+        }
+      }
+    },
+    "Paired with %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ привязан"
+          }
+        }
+      }
+    },
+    "Pairing declined" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привязка отклонена"
+          }
+        }
+      }
+    },
+    "Pairing declined on the other device" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привязка отклонена на другом устройстве"
+          }
+        }
+      }
+    },
+    "Paste it on the Mac with ⌘V." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте на Mac сочетанием ⌘V."
+          }
+        }
+      }
+    },
+    "Photos" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фото"
+          }
+        }
+      }
+    },
+    "Photos and videos in Photos, the rest in Files" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фото и видео — в «Фото», остальное — в «Файлах»"
+          }
+        }
+      }
+    },
+    "Preparing…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подготовка…"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности"
+          }
+        }
+      }
+    },
+    "Receive from %@?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receive from %@?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принять от %@?"
+          }
+        }
+      }
+    },
+    "Receive without asking" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принимать без вопроса"
+          }
+        }
+      }
+    },
+    "Received files are in the Files app › On My iPhone › Dewlet. Text and links go to the clipboard." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полученные файлы — в приложении «Файлы» › На iPhone › Dewlet. Текст и ссылки попадают в буфер обмена."
+          }
+        }
+      }
+    },
+    "Receiving" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приём"
+          }
+        }
+      }
+    },
+    "Receiving %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приём %@"
+          }
+        }
+      }
+    },
+    "Recent" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недавние"
+          }
+        }
+      }
+    },
+    "Removed from trusted devices" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалено из доверенных устройств"
+          }
+        }
+      }
+    },
+    "Replaced by a new connection" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заменено новым подключением"
+          }
+        }
+      }
+    },
+    "Save photos and videos to Photos" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранять фото и видео в «Фото»"
+          }
+        }
+      }
+    },
+    "Saved to Photos" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранено в «Фото»"
+          }
+        }
+      }
+    },
+    "Send files to your Mac" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляйте файлы на Mac"
+          }
+        }
+      }
+    },
+    "Sending %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправка %@"
+          }
+        }
+      }
+    },
+    "Sent to %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправлено на %@"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "Share photos and files from any app and pick %@. To send to this iPhone, drag files to the right edge of the Mac’s screen." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Делитесь фото и файлами из любого приложения и выбирайте %@. Чтобы отправить на этот iPhone, перетащите файлы к правому краю экрана Mac."
+          }
+        }
+      }
+    },
+    "Show Received Files" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать полученные файлы"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст"
+          }
+        }
+      }
+    },
+    "Text from %@ copied" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст от %@ скопирован"
+          }
+        }
+      }
+    },
+    "The other device sent unexpected data" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое устройство прислало неожиданные данные"
+          }
+        }
+      }
+    },
+    "The other device stopped responding" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое устройство перестало отвечать"
+          }
+        }
+      }
+    },
+    "The security key of %@ has changed. This happens after reinstalling Dewlet — or if another device is impersonating it. Continue only if the device is in front of you." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ безопасности %@ изменился. Так бывает после переустановки Dewlet — или если другое устройство выдаёт себя за него. Продолжайте, только если устройство перед вами."
+          }
+        }
+      }
+    },
+    "To %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На %@"
+          }
+        }
+      }
+    },
+    "To send to this iPhone, use Share › Dewlet on the Mac, or drag files to the right edge of its screen and drop them on this iPhone." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы отправить на этот iPhone, выберите на Mac «Поделиться» › Dewlet или перетащите файлы к правому краю экрана и бросьте их на этот iPhone."
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторить"
+          }
+        }
+      }
+    },
+    "Turn on “Visible to new devices”" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Виден новым устройствам»"
+          }
+        }
+      }
+    },
+    "Verification code" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код проверки"
+          }
+        }
+      }
+    },
+    "Verifying…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка…"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
+          }
+        }
+      }
+    },
+    "Waiting for %@ to accept…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ждём подтверждения на %@…"
+          }
+        }
+      }
+    },
+    "Waiting for %@…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание %@…"
+          }
+        }
+      }
+    },
+    "Waiting for confirmation on %@…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание подтверждения на %@…"
+          }
+        }
+      }
+    },
+    "Your Macs show this iPhone under this name, from the next time it connects." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Под этим именем ваши Mac видят этот iPhone — со следующего подключения."
+          }
+        }
+      }
+    },
+    "You’ll need to pair again before sending files to this Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы снова отправлять файлы на этот Mac, его нужно будет привязать заново."
+          }
+        }
+      }
+    },
+    "about %@ left" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "осталось ≈ %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

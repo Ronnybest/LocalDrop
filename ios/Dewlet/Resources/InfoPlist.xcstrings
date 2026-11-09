@@ -1,0 +1,60 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet"
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "comment": "Privacy - Local Network Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet sends and receives files directly between this iPhone and your paired Mac over your Wi-Fi. For example, a photo you share to your Mac arrives without going through the internet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet передаёт и принимает файлы напрямую между этим iPhone и привязанным Mac по вашей сети Wi-Fi. Например, фото, которое вы отправляете на Mac, приходит на него, минуя интернет."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "comment": "Privacy - Photo Library Additions Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet saves the photos and videos you send from your Mac to your photo library. For example, a video you drag onto this iPhone on your Mac appears in Photos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dewlet сохраняет в медиатеку фото и видео, которые вы отправляете с Mac. Например, видео, которое вы на Mac перетащили на этот iPhone, появится в «Фото»."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -36,6 +36,13 @@ LocalDrop/
 │   │   ├── Transport/        TCP listener (BSD-сокеты, DispatchIO) + Bonjour (dns_sd)
 │   │   └── UI/               SwiftUI-представления меню
 │   └── Support/              Info.plist, entitlements
+├── ios/
+│   ├── Dewlet.xcodeproj      файлы протокола, крипто и транспорта берёт из macos/LocalDrop по ссылке
+│   ├── Core/                 клиент (Initiator): handshake, привязка, передача, Bonjour, MacLink;
+│   │                         собирается и в приложение, и в Share Extension
+│   ├── Dewlet/               приложение: AppModel, экраны SwiftUI, ресурсы
+│   ├── ShareExtension/       «Поделиться» › Dewlet
+│   └── DewletTests/          тесты клиента против поддельного Mac из кода самого Mac
 └── android/
     └── app/src/main/java/dev/localdrop/
         ├── app/              Application, MainActivity, AppContainer
@@ -191,6 +198,34 @@ LOCALDROP_MAC_PORT=<порт из меню Mac> LOCALDROP_MAC_ID=<deviceId Mac> 
 ```
 
 minSdk 29 (Android 10), targetSdk 36. Установка: `./gradlew installDebug`.
+
+### iOS
+
+```bash
+cd ios && xcodebuild -project Dewlet.xcodeproj -scheme Dewlet -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' -derivedDataPath build build
+```
+
+Тесты (в том числе общие с Mac `ProtocolVectorsTests`):
+
+```bash
+cd ios && xcodebuild test -project Dewlet.xcodeproj -scheme Dewlet \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build
+```
+
+- Без `CODE_SIGNING_ALLOWED=NO`: без подписи в симуляторе нет App Group и Keychain.
+- Команда для сборки на устройство — в `ios/Support/Signing.local.xcconfig`
+  (`DEVELOPMENT_TEAM = …`, файл в `.gitignore`).
+- Интеграционный тест против запущенного Mac (только handshake, привязку не подтверждает):
+  `TEST_RUNNER_LOCALDROP_MAC_PORT=<порт> xcodebuild test …`.
+- Общие файлы Mac (`Protocol/`, `Crypto/`, `Transport/FrameConnection.swift`, `TCPSocket.swift`,
+  `SessionError.swift`, `Transfer/IncomingFileWriter.swift`, `App/Log.swift`) входят в iOS-таргеты
+  списком в pbxproj. Меняя их, собирать оба приложения; различия — только под `#if os(macOS)`.
+- В симуляторе нет Bluetooth: Mac находится по Bonjour, приём с Mac — пока приложение открыто
+  (одна сессия на Mac, `receive_ready` каждые 4 с).
+
+iOS 18+, только iPhone. Bundle id `com.zepponapps.localdrop.ios`, App Group
+`group.com.zepponapps.localdrop.ios`.
 
 ### Релиз для Google Play
 
