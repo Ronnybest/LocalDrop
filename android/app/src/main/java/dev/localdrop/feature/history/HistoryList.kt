@@ -39,6 +39,7 @@ import dev.localdrop.app.ui.segmentColors
 import dev.localdrop.app.ui.segmentShape
 import dev.localdrop.app.ui.segmentShapes
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -135,17 +136,17 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, style: Direc
             if (style == DirectionStyle.BADGE) DirectionBadge(entry.incoming, Modifier.align(Alignment.BottomEnd).offset(x = 5.dp, y = 5.dp))
         }
     }
+    // With large text a column for the time would leave the name a few letters: it goes under the name.
+    val large = LocalDensity.current.fontScale > 1.3f
+    val time = shortTime(entry.timeMs)
     val supporting: @Composable () -> Unit = {
-        Text(
-            when (style) {
-                DirectionStyle.BADGE -> entry.peerName
-                DirectionStyle.TEXT -> stringResource(if (entry.incoming) R.string.history_from else R.string.history_to, entry.peerName)
-            },
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        val peer = when (style) {
+            DirectionStyle.BADGE -> entry.peerName
+            DirectionStyle.TEXT -> stringResource(if (entry.incoming) R.string.history_from else R.string.history_to, entry.peerName)
+        }
+        Text(if (large) "$peer · $time" else peer, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis)
     }
-    val trailing: @Composable () -> Unit = { Text(shortTime(entry.timeMs), style = MaterialTheme.typography.labelMedium) }
+    val trailing: @Composable () -> Unit = { Text(time, style = MaterialTheme.typography.labelMedium) }
     val headline: @Composable () -> Unit = { Text(title, maxLines = 2, overflow = TextOverflow.MiddleEllipsis) }
     SegmentedListItem(
         onClick = onClick,
@@ -153,7 +154,7 @@ private fun HistoryRow(entry: HistoryEntry, shapes: ListItemShapes, style: Direc
         colors = segmentColors(),
         leadingContent = leading,
         supportingContent = supporting,
-        trailingContent = trailing,
+        trailingContent = if (large) null else trailing,
         content = headline,
     )
 }

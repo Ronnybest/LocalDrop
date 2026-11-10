@@ -42,7 +42,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -88,9 +92,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -232,44 +239,81 @@ private class ClipboardSend(val deviceId: String, val startedMs: Long) {
 
 private enum class ClipboardState { IDLE, SENDING, DONE }
 
-/** Files and the clipboard as one connected group: the pressed button widens, the other yields. */
+/**
+ * Files and the clipboard as one connected group: the pressed button widens, the other yields.
+ * With large text or display size, when a label wouldn't fit in half the width, one under the other.
+ */
 @Composable
 private fun SendButtons(clipboard: ClipboardState, onFiles: () -> Unit, onClipboard: () -> Unit) {
     val filesPress = remember { MutableInteractionSource() }
     val clipboardPress = remember { MutableInteractionSource() }
-    ButtonGroup(
-        overflowIndicator = {},
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        customItem(
-            buttonGroupContent = {
-                Button(
-                    onClick = onFiles,
-                    shapes = ButtonShapes(ButtonGroupDefaults.connectedLeadingButtonShape, ButtonGroupDefaults.connectedLeadingButtonPressShape),
-                    interactionSource = filesPress,
-                    modifier = Modifier.weight(1f).animateWidth(filesPress),
-                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
-                ) {
-                    Icon(painterResource(R.drawable.ic_upload), null, Modifier.size(ButtonDefaults.IconSize))
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.action_send_files), maxLines = 1, softWrap = false)
-                }
-            },
-            menuContent = {},
-        )
-        customItem(
-            buttonGroupContent = {
-                ClipboardButton(clipboard, onClipboard, clipboardPress, Modifier.weight(1f).animateWidth(clipboardPress))
-            },
-            menuContent = {},
-        )
+    val files: @Composable (ButtonShapes, Modifier) -> Unit = { shapes, modifier ->
+        Button(
+            onClick = onFiles,
+            shapes = shapes,
+            interactionSource = filesPress,
+            modifier = modifier,
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+        ) {
+            Icon(painterResource(R.drawable.ic_upload), null, Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.action_send_files), maxLines = 1, softWrap = false)
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val measurer = rememberTextMeasurer()
+        val style = MaterialTheme.typography.labelLarge
+        val labels = listOf(stringResource(R.string.action_send_files), stringResource(R.string.action_send_clipboard), stringResource(R.string.history_sent))
+        val direction = LocalLayoutDirection.current
+        val padding = ButtonDefaults.ButtonWithIconContentPadding
+        val widest = with(LocalDensity.current) { labels.maxOf { measurer.measure(it, style).size.width }.toDp() }
+        val around = padding.calculateStartPadding(direction) + padding.calculateEndPadding(direction) + ButtonDefaults.IconSize + ButtonDefaults.IconSpacing
+        if (widest + around > (maxWidth - ButtonGroupDefaults.ConnectedSpaceBetween) / 2) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                files(ButtonDefaults.shapes(), Modifier.fillMaxWidth())
+                ClipboardButton(clipboard, onClipboard, clipboardPress, ButtonDefaults.shapes(), Modifier.fillMaxWidth())
+            }
+            return@BoxWithConstraints
+        }
+        ButtonGroup(
+            overflowIndicator = {},
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            customItem(
+                buttonGroupContent = {
+                    files(
+                        ButtonShapes(ButtonGroupDefaults.connectedLeadingButtonShape, ButtonGroupDefaults.connectedLeadingButtonPressShape),
+                        Modifier.weight(1f).animateWidth(filesPress),
+                    )
+                },
+                menuContent = {},
+            )
+            customItem(
+                buttonGroupContent = {
+                    ClipboardButton(
+                        clipboard,
+                        onClipboard,
+                        clipboardPress,
+                        ButtonShapes(ButtonGroupDefaults.connectedTrailingButtonShape, ButtonGroupDefaults.connectedTrailingButtonPressShape),
+                        Modifier.weight(1f).animateWidth(clipboardPress),
+                    )
+                },
+                menuContent = {},
+            )
+        }
     }
 }
 
 /** "Clipboard", the expressive loading indicator while it goes (past half a second), then a check. */
 @Composable
-private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, interactionSource: MutableInteractionSource, modifier: Modifier) {
+private fun ClipboardButton(
+    state: ClipboardState,
+    onClick: () -> Unit,
+    interactionSource: MutableInteractionSource,
+    shapes: ButtonShapes,
+    modifier: Modifier,
+) {
     var spinner by remember { mutableStateOf(false) }
     LaunchedEffect(state) {
         spinner = false
@@ -282,7 +326,7 @@ private fun ClipboardButton(state: ClipboardState, onClick: () -> Unit, interact
     // Stays enabled-looking while busy: a greyed button would flash too.
     FilledTonalButton(
         onClick = { if (state == ClipboardState.IDLE) onClick() },
-        shapes = ButtonShapes(ButtonGroupDefaults.connectedTrailingButtonShape, ButtonGroupDefaults.connectedTrailingButtonPressShape),
+        shapes = shapes,
         interactionSource = interactionSource,
         modifier = modifier,
         contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
@@ -736,7 +780,8 @@ private fun PresencePill(presence: DevicePresence) {
 private fun StatusPill(text: String, highlighted: Boolean) {
     val container = if (highlighted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
     val content = if (highlighted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-    Surface(shape = CircleShape, color = container, contentColor = content) {
+    // A pill on one line (24 dp high); wrapped with large text, small corners that don't cut the words.
+    Surface(shape = RoundedCornerShape(12.dp), color = container, contentColor = content) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Box(Modifier.size(6.dp).background(if (highlighted) MaterialTheme.colorScheme.primary else content, CircleShape))
             Text(text, style = MaterialTheme.typography.labelMedium)
@@ -848,7 +893,8 @@ private fun HintCard(title: String, body: String, action: String, onAction: () -
             if (detail != null) {
                 Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 8.dp))
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            // With large text the action goes to a line of its own rather than being squeezed.
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onLater) { Text(stringResource(R.string.action_later)) }
                 TextButton(onClick = onAction) { Text(action) }
             }
@@ -879,10 +925,10 @@ private fun OtherMacRow(device: TrustedDevice, presence: DevicePresence?, waitin
                 presence?.nearby == true -> stringResource(R.string.presence_nearby)
                 else -> stringResource(R.string.trusted_last_seen, relativeTime(device.lastSeenMs))
             }
-            Text(status, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(status, maxLines = 2, overflow = TextOverflow.Ellipsis)
         },
         leadingContent = { MacAvatar(AvatarState.IDLE, size = 40.dp) },
-        content = { Text(device.deviceName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        content = { Text(device.deviceName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
     )
 }
 

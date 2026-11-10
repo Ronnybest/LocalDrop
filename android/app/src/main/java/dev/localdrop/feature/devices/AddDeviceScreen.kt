@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,11 +33,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,7 +79,10 @@ fun AddDeviceScreen(
         if (viewModel.state.value is DiscoveryState.Blocked) viewModel.retry()
     }
 
+    // A large title that folds into a regular bar as the content scrolls.
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.add_mac_title)) },
@@ -84,6 +91,7 @@ fun AddDeviceScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
+                scrollBehavior = scroll,
             )
         },
     ) { padding ->
@@ -102,8 +110,9 @@ fun AddDeviceScreen(
         ) { current ->
             when (current) {
                 null -> Unit
-                is DiscoveryState.Blocked -> Column { DiscoveryBlockerCard(current.blocker, viewModel::retry) }
-                is DiscoveryState.Failed -> Column {
+                // Scrolls with large text or display size: the card's button, the way on, is last.
+                is DiscoveryState.Blocked -> Column(Modifier.verticalScroll(rememberScrollState())) { DiscoveryBlockerCard(current.blocker, viewModel::retry) }
+                is DiscoveryState.Failed -> Column(Modifier.verticalScroll(rememberScrollState())) {
                     MessageCard(
                         title = stringResource(R.string.discovery_failed_title),
                         body = current.message,

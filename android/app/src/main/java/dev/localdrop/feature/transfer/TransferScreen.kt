@@ -125,9 +125,10 @@ fun TransferScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedButton(onClick = onDeclineIncoming) { Text(stringResource(R.string.action_decline)) }
-                        Button(onClick = onAcceptIncoming) { Text(stringResource(R.string.action_accept)) }
+                    // One under the other, as when pairing: side by side, Accept was squeezed with large text.
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onAcceptIncoming, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_accept)) }
+                        OutlinedButton(onClick = onDeclineIncoming, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_decline)) }
                     }
                 }
                 is TransferState.Receiving -> ProgressContent(state.progress, verifying = false, onCancel, receivingFrom = state.peerName)
@@ -251,6 +252,8 @@ private fun ProgressContent(progress: TransferProgress, verifying: Boolean, onCa
                 Formatter.formatShortFileSize(context, progress.totalBytes),
             ),
             style = MaterialTheme.typography.bodySmall,
+            // Measured after the percentage, so only the bytes wrap when the line is tight.
+            modifier = Modifier.weight(1f),
         )
         Text("${(fraction * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
     }

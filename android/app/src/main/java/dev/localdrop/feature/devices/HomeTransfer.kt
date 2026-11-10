@@ -3,6 +3,7 @@ package dev.localdrop.feature.devices
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -39,7 +40,8 @@ internal fun TransferInCard(state: TransferState, onCancel: () -> Unit, onAccept
                 TransferText.what(context, state.summary.fileCount, state.summary.firstFileName),
                 stringResource(R.string.notification_incoming_text, Formatter.formatShortFileSize(context, state.summary.totalBytes)),
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Side by side while both labels fit; with large text each takes its own line.
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onDecline, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_decline)) }
                 Button(onClick = onAccept, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_accept)) }
             }
@@ -80,7 +82,14 @@ private fun Progress(progress: TransferProgress, onCancel: () -> Unit) {
             stringResource(R.string.card_left).takeIf { left != null },
             if (progress.fileCount > 1) stringResource(R.string.notification_file_index, progress.fileIndex + 1, progress.fileCount) else what,
         ).joinToString(" · ")
-        Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
+        // A file name keeps one line, cut in the middle; "left · file 2 of 10" may take two.
+        Text(
+            detail,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = if (progress.fileCount > 1) 2 else 1,
+            overflow = TextOverflow.MiddleEllipsis,
+        )
     }
     WavyProgress(fraction)
     FilledTonalButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_cancel)) }
@@ -113,14 +122,16 @@ internal fun FinishedInCard(entry: HistoryEntry) {
             style = MaterialTheme.typography.headlineMediumEmphasized,
             color = MaterialTheme.colorScheme.primary,
         )
-        Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.MiddleEllipsis)
+        // Wraps in full: the size and the time come last, and a cut over two lines has no ellipsis.
+        Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun Lines(title: String, detail: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
+        // A file name (always with a detail) keeps one line; "Connecting…" alone wraps.
+        Text(title, style = MaterialTheme.typography.titleMedium, maxLines = if (detail != null) 1 else Int.MAX_VALUE, overflow = TextOverflow.MiddleEllipsis)
         if (detail != null) Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

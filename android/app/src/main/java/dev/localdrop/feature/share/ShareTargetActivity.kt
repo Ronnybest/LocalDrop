@@ -12,6 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -110,7 +112,8 @@ class ShareTargetActivity : ComponentActivity() {
                     onDismissRequest = ::finish,
                     title = { Text(stringResource(R.string.share_pick_title)) },
                     text = {
-                        Column {
+                        // The dialog doesn't scroll its text: with large text, Macs past its height would be out of reach.
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
                             macs.forEach { mac ->
                                 ListItem(
                                     modifier = Modifier.clickable { send(mac, shared) },
@@ -133,7 +136,7 @@ class ShareTargetActivity : ComponentActivity() {
                 AlertDialog(
                     onDismissRequest = ::finish,
                     title = { Text(stringResource(R.string.share_no_devices_title)) },
-                    text = { Text(stringResource(R.string.share_no_devices_body)) },
+                    text = { Text(stringResource(R.string.share_no_devices_body), Modifier.verticalScroll(rememberScrollState())) },
                     confirmButton = {
                         TextButton(onClick = {
                             startActivity(Intent(this, MainActivity::class.java))
